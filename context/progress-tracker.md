@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Phase 1 — UI foundation. Spec 04 complete; spec 02 phone check pending.
+- Phase 1 — UI foundation. Spec 05 in progress; spec 02 phone check pending.
 
 ## Current Goal
 
-- 04 Muscle Map complete. Next planned: 05 Exercise Level Screen.
+- 05 Exercise Level Screen.
 
 ## Roadmap
 
@@ -57,6 +57,7 @@ Specs 01–08 are written. Specs 09+ are written one at a time after the previou
 
 ## In Progress
 
+- 05 exercise-level-screen — game rules, local level card, and calibrate/adjust sheets implemented. All 12 tests, lint, build, and 360 px browser flows pass. Real-phone check pending: submit stays visible with the keyboard open.
 - 02 app-shell — routes, navigation, viewport metadata, and PWA icons implemented. Lint, build, browser layout, and manifest checks passed; real-phone install check pending.
 
 ## Open Questions

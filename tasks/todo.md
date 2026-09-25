@@ -84,3 +84,25 @@ Implemented the static catalog and three browse routes. A direct comparison agai
 ## Review
 
 Implemented all 27 typed muscle regions, mirrored body geometry, token-based intensity, group crops, accessible labels, and catalog integration without client state or new dependencies. All seven tests, lint, and production build pass. A negative TypeScript check rejected both a missing head and an empty path tuple. Playwright checked all seven specified exercises at 360 px: 64 px thumbnails, uncropped full maps, expected labels and region fills, and no horizontal overflow. The groups grid remains text-only; browser console has no errors. Screenshots and a local review gallery are in `.playwright-mcp/spec04/`. User approved all seven screenshot pairs on 2026-09-25. Spec 02's phone check remains pending.
+
+# 05 Exercise Level Screen
+
+## Specification
+
+- Goal: implement spec 05 with local state only.
+- Scope: pure game rules and tests, locked/level card, shared calibrate/adjust bottom sheet below Targets.
+- Decisions: reuse installed shadcn components; native form validation; no persistence or round behavior.
+- Acceptance: specified game tests and browser flows pass at 360px, lint/build pass, and user checks submit visibility with the real phone keyboard.
+
+## Tasks
+
+- [x] Read spec and context; mark tracker in progress.
+- [x] Implement pure game functions and tests.
+- [x] Implement level card and shared weight sheet; integrate into the server page.
+- [x] Verify calibration, adjustment, validation, focus, reload reset, and mobile layout; run tests/lint/build.
+- [x] Commit, push, open PR, merge, and sync local main.
+- [ ] User confirms the real-phone keyboard check.
+
+## Review
+
+Implemented pure game rules and the local exercise level screen using existing shadcn components. All 12 tests, lint, and production build pass. Playwright at 360 × 640 verified locked/calibrated states, equipment defaults, focus on open, Enter submission, adjustment prefill and unchanged level, rounded values, gains, canceled draft reset, reload reset, disabled Start round, accessible progress, long exercise names, no horizontal overflow, and no console errors. Empty, zero, negative, and out-of-range weight/step values are blocked; allowed limits succeed. Screenshots are in `.playwright-mcp/spec05/`. A separate code review found no actionable issues. The real-phone keyboard check remains pending under the workflow rules; spec 02’s phone check also remains pending.
