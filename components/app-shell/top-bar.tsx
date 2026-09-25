@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { UserButton } from "@clerk/nextjs";
 
 export function TopBar() {
   return (
@@ -7,7 +8,7 @@ export function TopBar() {
         <Link href="/" className="font-display text-xl font-bold text-copy">
           Gym AI
         </Link>
-        <div />
+        <UserButton appearance={{ elements: { userButtonTrigger: "min-h-11 min-w-11 justify-center" } }} />
       </div>
     </header>
   );

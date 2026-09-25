@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Phase 1 — UI foundation. Spec 06 in progress; specs 02 and 05 phone checks pending.
+- Phase 1 — UI foundation. Spec 07 in progress; specs 02, 05, and 06 phone checks pending.
 
 ## Current Goal
 
-- 06 Round Flow.
+- 07 Clerk Auth.
 
 ## Roadmap
 
@@ -57,6 +57,7 @@ Specs 01–08 are written. Specs 09+ are written one at a time after the previou
 
 ## In Progress
 
+- 07 auth — provider/theme, protected app layout, public auth pages, proxy, user menu, and env example implemented. Lint, build, 17 tests, and public asset checks pass. Blocked on Clerk API keys: CLI doctor reports them missing and auth routes fail at runtime. Login, redirects, mobile auth UI, and installed-phone checks remain unverified.
 - 06 round-flow — timestamp timer, reps logging, wake lock, and level-up feedback implemented with local state. All 17 tests, lint, build, and 360 px browser checks pass. Real-phone checks pending: countdown recovery after 30 seconds locked and screen staying awake during a round.
 - 05 exercise-level-screen — game rules, local level card, and calibrate/adjust sheets implemented. All 12 tests, lint, build, and 360 px browser flows pass. Real-phone check pending: submit stays visible with the keyboard open.
 - 02 app-shell — routes, navigation, viewport metadata, and PWA icons implemented. Lint, build, browser layout, and manifest checks passed; real-phone install check pending.

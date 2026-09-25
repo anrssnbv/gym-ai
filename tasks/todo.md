@@ -128,3 +128,26 @@ Implemented pure game rules and the local exercise level screen using existing s
 ## Review
 
 Implemented spec 06 with pure set rules, timestamp countdown, Screen Wake Lock cleanup/reacquisition, native reps validation, one-save guard, result messages, and level-up feedback. All 17 tests, lint, and production build pass. Playwright at 360 × 640 verified the complete 10-rep/12-rep loop, both timer durations, all result bands, invalid inputs, duplicate submission, early next round, cancellation numbering, expiry vibration once, simulated 30-second clock recovery on visibility change, wake-lock release/reacquisition and denial/late-resolution handling, reduced motion, overlay tap/timeout and focus restoration, reload reset, and no horizontal overflow. Current browser console has no errors. Code review found a focus restoration issue that was fixed and verified. Screenshots are in `.playwright-mcp/spec06/`. Real-device sleep recovery and screen-awake behavior remain pending for the user; earlier phone checks remain pending.
+
+# 07 Clerk Auth
+
+## Specification
+
+- Goal: add Clerk auth using the requested Clerk skill and spec 07.
+- Scope: provider/theme, proxy, protected app layout, public sign-in/sign-up, user menu, env example.
+- Decisions: reuse installed Clerk packages; preserve existing environment keys; use auth.protect next to protected content.
+- Acceptance: signed-out redirects, public assets, themed auth pages at 360px, lint/build, doctor, and user sign-up/sign-out and installed-phone verification.
+
+## Tasks
+
+- [x] Read Clerk skill, auth spec, existing integration, and Next.js proxy guide.
+- [x] Scaffold Clerk and implement theme, routes, access checks, and user controls.
+- [ ] Configure Clerk keys; initializer stalled during automatic setup.
+- [ ] Verify doctor, redirects, public assets, mobile layout, lint/build, and tests.
+- [x] Push branch and open draft PR.
+- [ ] Merge and sync main after live auth verification.
+- [ ] User confirms sign-up/sign-out and installed-phone email-code authentication.
+
+## Review
+
+Clerk CLI scaffolded proxy, provider, auth pages, and URL environment settings. Added spec 07 theme, access check, auth branding, default user menu, redirect settings, and tracked env example. Lint, production build, and all 17 tests pass. Public manifest and icon endpoints return 200 signed out. Code review found no actionable issues. CLI doctor reports missing Clerk API keys; automatic initialization stalled and was stopped. Auth pages currently fail with Clerk’s missing-key error, so signed-out redirects, rendered form layout, sign-up/sign-out, and installed-phone behavior remain unverified. No environment files were read or printed. Draft PR remains unmerged pending configuration and verification.
