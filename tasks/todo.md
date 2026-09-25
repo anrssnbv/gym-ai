@@ -145,9 +145,10 @@ Implemented spec 06 with pure set rules, timestamp countdown, Screen Wake Lock c
 - [x] Link GYM-AI and configure development keys through authenticated Clerk CLI.
 - [x] Verify doctor, redirects, public assets, mobile layout, lint/build, and tests.
 - [x] Push branch and open draft PR.
-- [ ] Merge and sync main after live auth verification.
-- [ ] User confirms sign-up/sign-out and installed-phone email-code authentication.
+- [x] Merge and sync main after live auth verification.
+- [x] User confirms sign-in/sign-out; CLI confirms email-code authentication enabled.
+- [ ] User confirms installed-phone email-code authentication.
 
 ## Review
 
-Linked the user-specified GYM-AI app through Clerk CLI and configured local development keys without reading or printing environment files. Provider/theme, protected layout, branded auth pages, user menu, redirect settings, env example, and auto-proxy matcher are implemented. Doctor, lint, production build, and all 17 tests pass. Signed-out /, /exercises/chest, and /workout redirect to /sign-in; manifest/icons remain public. Both auth pages render the app theme at 360px without tabs or horizontal overflow. No Clerk deprecation warnings appeared. User sign-up/sign-out and installed-phone verification remain pending; production instance is not configured.
+Linked the user-specified GYM-AI app through Clerk CLI and configured local development keys without reading or printing environment files. Provider/theme, protected layout, branded auth pages, user menu, redirect settings, env example, and auto-proxy matcher are implemented. Doctor, lint, production build, and all 17 tests pass. Signed-out /, /exercises/chest, and /workout redirect to /sign-in; manifest/icons remain public. Both auth pages render the app theme at 360px without tabs or horizontal overflow. No Clerk deprecation warnings appeared. User confirmed successful sign-in/sign-out. Clerk auth_email configuration confirms email_code as its sign-in and verification strategy. Installed-phone verification remains pending; production instance is not configured.
