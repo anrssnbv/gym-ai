@@ -294,3 +294,23 @@ Implemented spec 12 as read-only queries and Server Component UI; no actions or 
 ## Review
 
 Implemented spec 13 with existing Sheet/Button/Badge patterns, generated Radix toggles, client-safe plan types, and a six-exercise sample. No actions, AI calls, database changes, or added package dependencies. All 28 tests, lint, TypeScript, production build, and diff checks pass. Playwright verified Home and empty Workout defaults, 44px targets, touch/keyboard selection, accessible checked states, selected-item guards, retained duration/focus after preview, disabled Start, Escape focus restoration, and a scrollable 90dvh sheet without horizontal overflow at 360 × 640. No page errors. Visuals inspected in .playwright-mcp/spec13-form.png and spec13-preview.png. Review confirmed direct reuse and no extra abstractions. Existing unrelated review-file deletion remains outside this commit.
+
+# 14 AI Workout Generator
+
+## Specification
+
+- Goal: implement spec 14 backend exactly.
+- Scope: additive plan/generation migration, pure planning helpers/schema, user-scoped history, OpenAI generation, and authenticated preview action.
+- Decisions: reuse transaction retries for atomic attempt limits; no UI or session writes; preserve local schema limits.
+- Acceptance: helper/schema tests, scoped history and quota checks, migration status, real pull-plan smoke test, lint/build without a key.
+
+## Tasks
+
+- [x] Read spec and mark in progress.
+- [x] Implement migration, helpers/schema/tests, context, AI call, and action.
+- [x] Verify database boundaries, selection rules, API smoke test, lint, and build.
+- [ ] Update review/tracker, push, create/merge PR, and sync local main.
+
+## Review
+
+Implemented spec 14 with an additive JSON plan column and PlanGeneration table, pure planning rules and Zod schemas, scoped 30-day history, OpenAI 7.23 Structured Outputs, and authenticated preview generation. Reused the existing serializable transaction helper to atomically reserve daily attempts before the paid call. No UI changes or session writes. All 38 unit tests, 28 PostgreSQL integration checks, lint, TypeScript, diff checks, and production build with OPENAI_API_KEY overridden empty pass. Tests cover 0/1/2 calibrated candidates, focus filtering, text/array constraints, Auto ties, history/ownership boundaries, rolling quota, concurrent last-slot attempts, missing key, failures, and duplicate collapse. Real gpt-5.4-mini smoke test returned three valid pull exercises in 5.3 seconds; no model/reasoning/schema fallback needed. Independent review found no issues. Temporary database fixtures cleaned. Set Default project monthly OpenAI limit to $10 with hard enforcement and verified it persisted. Vercel deferred by user. Existing review-file deletion remains outside the commit.

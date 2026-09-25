@@ -26,9 +26,18 @@ model WorkoutSession {
   userId    String
   startedAt DateTime  @default(now())
   endedAt   DateTime?
+  plan      Json?
   sets      SetLog[]
 
   @@index([userId, startedAt])
+}
+
+model PlanGeneration {
+  id        String   @id @default(cuid())
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
 }
 
 model SetLog {
