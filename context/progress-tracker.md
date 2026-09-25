@@ -4,16 +4,19 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Phase 4 — AI coach implemented through spec 15; specs 02, 05, 06, 07, 10, and 15 physical-phone checks pending.
+- Phase 5 — training preferences implemented through spec 16; specs 02, 05, 06, 07, 10, 15, and 16 physical-phone checks pending.
 
 ## Current Goal
 
-- Specs 01–15 implemented. QA fixes complete: five confirmed defects and both plan-validation gaps addressed. Physical-phone checks remain; Vercel deferred by user.
+- Specs 01–15 implemented. QA fixes complete: five confirmed defects and both plan-validation gaps addressed. Physical-phone checks remain; Vercel test deployment requested, setup instructions supplied.
+- Spec 16 implemented: profile storage/action, onboarding/edit UI, and personalized AI generation. All 50 unit tests, 56 database checks, lint, TypeScript, production build, and Playwright checks pass; physical-phone acceptance remains.
+- Spec 16 delivery: [PR #18 — Implement training profile onboarding and personalized plans](https://github.com/anrssnbv/gym-ai/pull/18).
+- Vercel deployment is user-managed. The automatic PR deployment failed before compilation with Prisma P1013 (invalid database URL scheme); the user requested GitHub delivery without deployment work. Vercel environment values were not changed.
 - QA delivery: [PR #17 — Fix training integrity and application QA findings](https://github.com/anrssnbv/gym-ai/pull/17).
 
 ## Roadmap
 
-All specs 01–15 are written. 09–15 were written after 08, against the code as built. If a unit changes names or contracts, update the later specs before running them (see `ai-workflow-rules.md` → Writing The Next Spec).
+All specs 01–16 are written. 09–15 were written after 08; 16 was written after the QA fixes, against the code as built. If a unit changes names or contracts, update the later specs before running them (see `ai-workflow-rules.md` → Writing The Next Spec).
 
 ### Phase 1 — UI foundation (no backend)
 
@@ -41,6 +44,10 @@ All specs 01–15 are written. 09–15 were written after 08, against the code a
 - [x] 13 generate-sheet-ui — "Generate workout" sheet (duration + focus) with a static plan preview
 - [x] 14 ai-workout-generator — migration (`plan` on `WorkoutSession`, `PlanGeneration`), planning helpers + tests, Auto resolution, OpenAI Structured Outputs + Zod, 10 plans/day limit. Backend only.
 - [ ] 15 wire-ai-workout — generate → preview → start (attach to the active session or create one) → play the plan on `/workout`
+
+### Phase 5 — Training preferences
+
+- [ ] 16 training-profile-onboarding — four-step first-sign-in survey (goal, experience, days/session time, equipment), owned Prisma training profile, later editing, and integration with the existing AI generator. See `feature-specs/16-training-profile-onboarding.md` for ordered implementation checkpoints and acceptance checks. Weekly hours are derived; current training history and game rules are preserved.
 
 ### Backlog (not planned)
 
@@ -70,6 +77,8 @@ All specs 01–15 are written. 09–15 were written after 08, against the code a
 
 ## In Progress
 
+- 16 training-profile-onboarding — implemented and independently reviewed. Additive migration preserves training rows; four-step survey, editing, auth/profile gates, equipment filtering, experience limits, schedule-aware Auto, and stale-preview validation verified. All 50 unit tests, 56 PostgreSQL checks, lint, TypeScript, production build, migration status, and diff checks pass. Playwright verified signup, keyboard/mobile layout, offline/lost-response retry, separate-context persistence, database-outage recovery, one live personalized plan and completed workout, and history preservation after editing. Temporary accounts/data cleaned. Remaining: physical-phone signup → survey → workout and installed-app reopening.
+
 - 15 wire-ai-workout — real generation/regeneration, calibrated preview, validated start/attach, persisted checklist, Extra sets, exercise steps, and plan summaries implemented. All 39 unit tests, 38 PostgreSQL integration checks, lint, TypeScript, production build, and 360 × 640 touch-browser checks pass. Verified all six focus choices, Auto selecting the oldest pattern, inline offline retries for Generate/Regenerate/Start, 10-attempt quota, unknown-ID rejection through the browser, zero-set banner/stat exclusion, full nine-set plan plus Extra, manual attachment without another session, reload/separate desktop-context persistence, and empty-Workout Start. Prompt clarifies the existing calibrated-candidate cap with exact eligible IDs/counts; server rules remain unchanged. Temporary accounts/data cleaned. Remaining: user plays a complete generated workout on a physical phone.
 
 
@@ -91,6 +100,7 @@ The user answers these. Defaults are already written into the context files and 
 
 ## Architecture Decisions
 
+- Training preferences use one owned `TrainingProfile` row keyed by Clerk ID; missing/malformed profiles require onboarding, while read failures show Retry. Only five preference fields enter AI context. Equipment filtering and experience limits apply at generation and Start; historical plans and manual logging remain independent.
 - Round timer starts on "Start round" (1–2 min); reps can be logged at any moment of the round; the remaining time is rest. Confirmed by the user 2026-09-25 (rejected: a rest timer that starts after logging).
 - Any set with 12+ reps levels up immediately; the next set uses the new weight. Confirmed by the user 2026-09-25 (rejected: level up only when all planned sets hit 12).
 - Single-user data, no collaboration → no Liveblocks, Trigger.dev or Blob storage (ghost-ai used them; this app doesn't need them).

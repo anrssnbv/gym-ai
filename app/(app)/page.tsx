@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ChevronRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GenerateSheet } from "@/components/workout/generate-sheet";
@@ -9,13 +10,14 @@ import { requireUserId } from "@/lib/auth";
 import { EXERCISES, MUSCLE_GROUPS, MUSCLE_HEADS } from "@/lib/catalog";
 import type { MuscleHeadId } from "@/lib/catalog";
 import { formatDuration, formatVolume, heatLevel, rankFor } from "@/lib/game";
-import { getActiveSession, getDashboard, getProgressMap } from "@/lib/queries";
+import { getActiveSession, getDashboard, getProgressMap, getTrainingProfile } from "@/lib/queries";
 
 export default async function HomePage() {
   const userId = await requireUserId();
-  const [dashboard, progress, active] = await Promise.all([
-    getDashboard(userId), getProgressMap(userId), getActiveSession(userId),
+  const [dashboard, progress, active, profile] = await Promise.all([
+    getDashboard(userId), getProgressMap(userId), getActiveSession(userId), getTrainingProfile(userId),
   ]);
+  if (!profile) redirect("/onboarding");
   const rank = rankFor(dashboard.power);
   const intensity: Partial<Record<MuscleHeadId, 1 | 2 | 3>> = {};
   const activity: string[] = [];
@@ -55,7 +57,7 @@ export default async function HomePage() {
         )}
       </section>
 
-      <GenerateSheet progress={progress} hasActiveWorkout={!!active}>
+      <GenerateSheet progress={progress} hasActiveWorkout={!!active} defaultDurationMin={profile.sessionMinutes}>
         <Button className="h-11 w-full rounded-xl bg-ai text-on-brand hover:bg-ai/90">
           <Sparkles className="size-5" aria-hidden="true" />Generate workout
         </Button>

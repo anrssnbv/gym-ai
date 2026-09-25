@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  candidateExercises, dedupeExercises, estimatePlanMinutes, isValidPlanSelection, maxExercises, resolveAutoFocus,
+  candidateExercises, dedupeExercises, estimatePlanMinutes, isValidPlanSelection, maxExercises, resolveAutoFocus, resolveProfileAutoFocus, profilePlanLimits,
   type WorkoutPlan,
 } from "./plan.ts";
 import { planOutputSchema, workoutPlanSchema } from "./plan-schema.ts";
@@ -119,4 +119,35 @@ test("selection counts only calibrated focus candidates and rejects off-focus ex
     exercises: [{ exerciseId: "leg-press", sets: 3, note: "Keep control." }, ...plan.exercises.slice(1)],
   }, {}), false);
   assert.equal(isValidPlanSelection({ ...plan, exercises: plan.exercises.slice(0, 2) }, {}), false);
+});
+
+
+test("profile schedule and experience limits preserve explicit duration boundaries", () => {
+  for (const days of [1, 3]) assert.equal(resolveProfileAutoFocus({}, days), "full_body");
+  for (const days of [4, 7]) {
+    assert.equal(resolveProfileAutoFocus({}, days), "push");
+    assert.equal(resolveProfileAutoFocus({ push: new Date() }, days), "pull");
+  }
+  for (const experience of ["new", "beginner", "regular", "experienced"] as const) {
+    for (const duration of [30, 45, 60, 90] as const) {
+      const beginner = experience === "new" || experience === "beginner";
+      assert.deepEqual(profilePlanLimits(duration, experience), { maxExercises: beginner ? 4 : maxExercises(duration), maxSets: beginner ? 3 : 5 });
+    }
+  }
+  const schema = planOutputSchema(candidateExercises("pull").map(({ id }) => id), 4, 3);
+  assert.equal(schema.safeParse(plan).success, true);
+  assert.equal(schema.safeParse({ ...plan, exercises: plan.exercises.map(e => ({ ...e, sets: 4 })) }).success, false);
+});
+
+test("equipment filters calibration counts at zero, one and two eligible exercises", () => {
+  const candidates = candidateExercises("full_body", ["dumbbell"]);
+  assert.ok(candidates.every(e => e.equipment === "dumbbell"));
+  assert.deepEqual(candidateExercises("pull", []), []);
+  const selected: WorkoutPlan = { ...plan, focus: "full_body", exercises: candidates.slice(0, 3).map(e => ({ exerciseId: e.id, sets: 3, note: "Control." })) };
+  for (const count of [0, 1, 2]) {
+    const levels: Record<string, number> = { "barbell-bench-press": 2, "lat-pulldown": 3, ...Object.fromEntries(candidates.slice(0, count).map(e => [e.id, 1])) };
+    assert.equal(isValidPlanSelection(selected, levels, ["dumbbell"]), true);
+    assert.equal(isValidPlanSelection({ ...selected, exercises: [...selected.exercises, { exerciseId: candidates[3].id, sets: 2, note: "Control." }] }, levels, ["dumbbell"]), false);
+  }
+  assert.equal(isValidPlanSelection(plan, {}, ["dumbbell"]), false);
 });

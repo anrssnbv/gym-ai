@@ -1,4 +1,5 @@
-import { EXERCISES, getExercise, type Exercise, type ExerciseId, type Pattern } from "./catalog.ts";
+import { EXERCISES, getExercise, type Equipment, type Exercise, type ExerciseId, type Pattern } from "./catalog.ts";
+import type { TrainingProfile } from "./training-profile.ts";
 import { roundSeconds } from "./game.ts";
 
 export const FOCUSES = ["push", "pull", "legs", "upper", "full_body"] as const;
@@ -16,7 +17,7 @@ export const FOCUS_LABELS: Record<FocusChoice, string> = {
 };
 
 export const FOCUS_HINTS: Record<FocusChoice, string> = {
-  auto: "Picks push, pull or legs — whichever you trained longest ago.",
+  auto: "Uses your weekly schedule and recent training.",
   push: "Chest, shoulders, triceps.",
   pull: "Back, biceps, rear delts.",
   legs: "Quads, hamstrings, glutes, calves, abs.",
@@ -43,8 +44,9 @@ export const FOCUS_PATTERNS: Record<Focus, Pattern[]> = {
   full_body: ["push", "pull", "legs", "core"],
 };
 
-export function candidateExercises(focus: Focus): Exercise[] {
-  return EXERCISES.filter((exercise) => FOCUS_PATTERNS[focus].includes(exercise.pattern));
+export function candidateExercises(focus: Focus, equipment?: Equipment[]): Exercise[] {
+  return EXERCISES.filter((exercise) => FOCUS_PATTERNS[focus].includes(exercise.pattern) &&
+    (equipment === undefined || equipment.includes(exercise.equipment)));
 }
 
 export function resolveAutoFocus(
@@ -59,6 +61,15 @@ export function resolveAutoFocus(
 
 export function maxExercises(durationMin: (typeof DURATIONS_MIN)[number]): number {
   return { 30: 4, 45: 5, 60: 6, 90: 8 }[durationMin];
+}
+
+export function resolveProfileAutoFocus(lastTrained: Parameters<typeof resolveAutoFocus>[0], daysPerWeek: number): Focus {
+  return daysPerWeek <= 3 ? "full_body" : resolveAutoFocus(lastTrained);
+}
+
+export function profilePlanLimits(durationMin: (typeof DURATIONS_MIN)[number], experience: TrainingProfile["experience"]) {
+  const beginner = experience === "new" || experience === "beginner";
+  return { maxExercises: beginner ? Math.min(maxExercises(durationMin), 4) : maxExercises(durationMin), maxSets: beginner ? 3 : 5 };
 }
 
 export function estimatePlanMinutes(plan: WorkoutPlan): number {
@@ -79,8 +90,8 @@ export function dedupeExercises(plan: WorkoutPlan): WorkoutPlan {
   };
 }
 
-export function isValidPlanSelection(plan: WorkoutPlan, levels: Record<string, number>): boolean {
-  const candidates = candidateExercises(plan.focus);
+export function isValidPlanSelection(plan: WorkoutPlan, levels: Record<string, number>, equipment?: Equipment[]): boolean {
+  const candidates = candidateExercises(plan.focus, equipment);
   const ids = new Set(candidates.map(({ id }) => id));
   if (plan.exercises.length < 3 || plan.exercises.some(({ exerciseId }) => !ids.has(exerciseId))) {
     return false;

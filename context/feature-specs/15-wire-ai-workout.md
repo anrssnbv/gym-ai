@@ -2,12 +2,14 @@ Connect the AI coach end to end. The Generate sheet calls `generateWorkout`, the
 
 ## Start Action
 
-The shared `workoutPlanSchema` also rejects duplicate exercise IDs and exercises outside the declared focus. Apply these local refinements on Start and stored-plan reads; keep the provider output schema unchanged. Invalid stored plans fall back to the manual view without deleting sets. Do not recheck historical plans against today's calibration count.
+The shared `workoutPlanSchema` also rejects duplicate exercise IDs and exercises outside the declared focus. Apply these local refinements on Start and stored-plan reads. The provider schema uses spec 16's filtered IDs and experience limits; stored-plan parsing retains global limits. Invalid stored plans fall back to the manual view without deleting sets. Do not recheck Start or historical plans against today's calibration count, and do not apply today's profile to already-started/historical plan reads.
 
 Add `startWorkout({ plan })` to `actions/workout.ts` (same action rules as spec 09):
 
 - parse `plan` with `workoutPlanSchema`; anything outside the catalog → `Invalid input`
 - one serializable transaction with the bounded conflict retries from spec 09, using `findOpenSession(tx, userId, now)` for the shared lookup:
+  - before changing any session, load/validate the owned current profile. Missing/invalid profile returns `Complete your Training preferences before generating a workout.`
+  - unavailable equipment, more than four exercises for new/beginner, or more than three sets on any exercise for new/beginner returns `Your Training preferences no longer match this plan. Generate a new workout.` No session is created, attached or closed. Goal/days/duration edits alone do not invalidate the preview; requested-duration checks remain at generation.
   - an active session exists (not stale) → set its `plan` (resolved focus is already inside the validated JSON), so the plan attaches to the workout already running
   - a stale open session exists → close it at its last activity (`sessionEnd`), then create a new one
   - otherwise → create a session with `plan` (`startedAt` = now)
@@ -26,7 +28,8 @@ Extend `lib/queries.ts`:
 
 `components/workout/generate-sheet.tsx`:
 
-- new props: `progress: Record<string, { level: number; weightKg: number }>` (the plain object from `getProgressMap`) and `hasActiveWorkout: boolean`. Home and the Workout empty state pass them.
+- Props: `progress: Record<string, { level: number; weightKg: number }>` (the plain object from `getProgressMap`), `hasActiveWorkout: boolean`, and required `defaultDurationMin: TrainingProfile['sessionMinutes']`. Home and the Workout empty state load the owned profile and pass its preferred duration.
+- Seed duration once per mount. Explicit input survives Regenerate, reopening the same sheet, and background refresh. New mounts after editing preferences use the saved default. Auto's hint is `Uses your weekly schedule and recent training.` The sheet offers a labelled Training preferences link for editing and actionable profile/equipment errors.
 - `Generate` calls `callAction(() => generateWorkout({ durationMin, focus }))` in a transition:
   - pending: the button shows `Planning…` with a pulsing `Sparkles` (`motion-safe:animate-pulse`), and the inputs are disabled
   - error: the message in `text-danger` above the button; Generate retries
@@ -70,7 +73,8 @@ Extend `lib/queries.ts`:
 
 ## Check When Done
 
-- Generate with Auto returns a plan in under ~20 s that uses only catalog exercises; its focus is the push/pull/legs pattern trained longest ago
+- Generate with Auto uses eligible catalog equipment and profile volume limits: Full body for 1–3 planned days, otherwise the oldest-trained push/pull/legs pattern. Explicit focus and requested duration win over defaults.
+- Editing equipment/experience in another tab after preview makes incompatible Start requests fail without changing sessions. Existing active/history plans remain usable after those edits.
 - Push, Pull, Legs, Upper and Full body each return matching exercises (no Leg Press on Upper)
 - airplane mode (DevTools offline) → an error, and Generate works again once back online
 - with 10 `PlanGeneration` rows from the last 24 h (insert them in `npx prisma studio`), Generate shows the daily-limit error and OpenAI isn't called

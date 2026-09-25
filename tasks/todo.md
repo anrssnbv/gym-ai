@@ -1,3 +1,46 @@
+# 16 Training profile — implementation
+
+## Specification
+
+- Goal: implement spec 16 exactly and deliver through the established branch/PR workflow.
+- Scope: additive profile storage, four-step survey, editing and routing, profile-aware AI planning, tests and documentation.
+- Decisions: reuse current packages/actions; preserve training history and manual game rules; leave the unrelated review-file deletion untouched.
+- Acceptance: checkpoint tests, complete unit/database suites, lint/build, Playwright signup/survey/edit/generation/ownership/retry flows, one live personalized plan, cleaned test data, merged PR and synced main/development. Track physical-phone acceptance separately.
+
+## Tasks
+
+- [x] Read spec and mark tracker in progress; create feature branch.
+- [x] Implement and verify profile storage, validation, query, and action.
+- [x] Implement and verify onboarding, editing, and route boundaries.
+- [x] Integrate profile defaults, candidate filters, limits, Auto, and Start validation.
+- [x] Run regression/build/browser checks and review; clean test fixtures.
+- [x] Synchronize specs/context and open delivery PR #18.
+- [x] Prepare verified PR for merge and main/development sync; deployment is user-managed.
+
+## Review
+
+Implemented all three checkpoints with no new packages or environment variables. Additive migration preserved existing training rows. All 50 unit tests, 56 PostgreSQL integration checks, lint, TypeScript, production build, migration status, and diff checks pass. Playwright verified signup, onboarding/editing, mobile layout, keyboard controls, exact totals, auth redirects, offline and committed-save retry, cross-context preferences, malformed profiles, actual database-outage recovery, stale-preview rejection, and one live personalized plan played to completion after equipment preferences changed. Old-tab logging committed once before onboarding. Independent UI/backend reviews found no actionable issues. Both temporary accounts and all owned rows were cleaned. Physical-phone/installed-app checks remain manual; real OAuth-provider interaction was not repeated. Delivery is in progress.
+
+# 16 Training profile — specification only
+
+## Specification
+
+- Goal: design the first-sign-in survey and write `context/feature-specs/16-training-profile-onboarding.md`.
+- Scope: questions, persistence, onboarding/edit flows, integration with the existing workout generator, and acceptance criteria. No application implementation or migration execution.
+- Decisions: four short steps; derive weekly hours from days and session minutes; collect equipment access; preserve the existing game rules and training history.
+- Acceptance: exact data/action/UI contracts, first-use and returning-user behavior, errors/retries, ownership, candidate filtering, and testable personalization rules. Mark planned behavior separately from current implementation.
+
+## Tasks
+
+- [x] Read the spec template, current auth/AI code, catalog, and context docs.
+- [x] Analyze integration risks with an independent read-only review.
+- [x] Write spec 16 and synchronize planned context/roadmap entries.
+- [x] Review contracts and edge cases; verify the documentation diff.
+
+## Review
+
+Wrote spec 16 against the current auth, Prisma, catalog, and AI contracts. It defines a four-step survey, atomic owned profile storage, onboarding/edit routes, weekly time derivation, equipment-aware generation, explicit beginner limits, and schedule-aware Auto selection. Independent review identified the existing root-layout revalidation redirect during old-tab saves; the spec now states that committed mutations persist before onboarding and includes a regression check. Planned sections in the roadmap, product overview, and architecture distinguish the design from current behavior. Documentation diff, required sections, code fences, and whitespace checks pass. No application code, migration, package, or environment changes; application tests were not rerun for this documentation-only task. The unrelated review-file deletion remains untouched.
+
 # 01 Design System
 
 ## Specification

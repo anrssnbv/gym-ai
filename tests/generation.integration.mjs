@@ -22,11 +22,12 @@ const ids = ['barbell-bench-press', 'incline-bench-press', 'machine-chest-press'
 const output = { title: 'Push', summary: 'A balanced session.', exercises: ids.map(exerciseId => ({exerciseId, sets:3, note:'Move with control.'})) };
 const limit = {ok:false,error:'Daily limit reached (10 plans). Try again tomorrow.'};
 const retry = {ok:false,error:"Couldn't generate a workout. Try again."};
+const profile = { goal: "build_muscle", experience: "experienced", daysPerWeek: 4, sessionMinutes: 60, equipment: ["barbell", "dumbbell", "machine", "cable"] };
 const users = [];
 function asUser(run) {
   const state = {userId:`spec14-generation-${randomUUID()}`, invalidations:[], calls:0, generatePlan:async(input)=>{state.calls++;state.input=input;return structuredClone(output);}};
   users.push(state.userId);
-  return actionContext.run(state,()=>run(state));
+  return actionContext.run(state,async()=>{ await prisma.trainingProfile.create({data:{userId:state.userId,...profile}}); return run(state); });
 }
 test('generation action guards and quota against PostgreSQL', async(t)=>{
  const originalKey = process.env.OPENAI_API_KEY;
@@ -78,6 +79,34 @@ test('generation action guards and quota against PostgreSQL', async(t)=>{
    assert.equal(await prisma.planGeneration.count({where:{userId:s.userId}}),4);
    assert.equal(await prisma.workoutSession.count({where:{userId:s.userId}}),0);
   }));
+  await t.test('missing or malformed profiles and insufficient candidates consume no attempts',()=>asUser(async s=>{
+   await prisma.trainingProfile.delete({where:{userId:s.userId}});
+   const missing={ok:false,error:'Complete your Training preferences before generating a workout.'};
+   assert.deepEqual(await generateWorkout({durationMin:60,focus:'auto'}),missing);
+   await prisma.trainingProfile.create({data:{userId:s.userId,...profile,daysPerWeek:0}});
+   assert.deepEqual(await generateWorkout({durationMin:60,focus:'auto'}),missing);
+   await prisma.trainingProfile.update({where:{userId:s.userId},data:{daysPerWeek:4,equipment:['barbell']}});
+   assert.deepEqual(await generateWorkout({durationMin:60,focus:'pull'}),{ok:false,error:'Not enough exercises for this focus and equipment. Choose another focus or update Training preferences.'});
+   assert.equal(s.calls,0);
+   assert.equal(await prisma.planGeneration.count({where:{userId:s.userId}}),0);
+  }));
+  await t.test('beginner output limits and equipment are enforced even for a mocked provider',()=>asUser(async s=>{
+   const {candidateExercises}=await import('../lib/plan.ts');
+   await prisma.trainingProfile.update({where:{userId:s.userId},data:{experience:'beginner',daysPerWeek:3,sessionMinutes:90,equipment:['dumbbell']}});
+   const candidates=candidateExercises('full_body',['dumbbell']);
+   const valid={...output,exercises:candidates.slice(0,3).map(e=>({exerciseId:e.id,sets:3,note:'Control.'}))};
+   await prisma.exerciseProgress.createMany({data:['barbell-bench-press','lat-pulldown'].map(exerciseId=>({userId:s.userId,exerciseId,weightKg:10,startWeightKg:10,stepKg:2.5}))});
+   s.generatePlan=async input=>{s.input=input;return valid;};
+   assert.deepEqual(await generateWorkout({durationMin:30,focus:'auto'}),{ok:true,data:{...valid,focus:'full_body'}});
+   assert.equal(s.input.durationMin,30);
+   s.generatePlan=async()=>({...valid,exercises:valid.exercises.map(e=>({...e,sets:4}))});
+   assert.deepEqual(await generateWorkout({durationMin:90,focus:'auto'}),retry);
+   await prisma.exerciseProgress.createMany({data:candidates.slice(0,5).map(e=>({userId:s.userId,exerciseId:e.id,weightKg:10,startWeightKg:10,stepKg:2.5}))});
+   s.generatePlan=async()=>({...valid,exercises:candidates.slice(0,5).map(e=>({exerciseId:e.id,sets:1,note:'Control.'}))});
+   assert.deepEqual(await generateWorkout({durationMin:90,focus:'auto'}),retry);
+   s.generatePlan=async()=>output;
+   assert.deepEqual(await generateWorkout({durationMin:60,focus:'push'}),retry);
+  }));
   await t.test('rolling limit ignores old attempts and isolates other users; concurrent last slot admits one',()=>asUser(async s=>{
    await prisma.planGeneration.createMany({data:[...Array.from({length:9},()=>({userId:s.userId})),{userId:s.userId,createdAt:new Date(Date.now()-24*60*60*1000-1000)},...Array.from({length:10},()=>({userId:users[0]}))]});
    const results=await Promise.all([generateWorkout({durationMin:60,focus:'push'}),generateWorkout({durationMin:60,focus:'push'})]);
@@ -90,6 +119,8 @@ test('generation action guards and quota against PostgreSQL', async(t)=>{
  } finally {
   if(originalKey===undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY=originalKey;
   await prisma.planGeneration.deleteMany({where:{userId:{in:users}}});
+  await prisma.trainingProfile.deleteMany({where:{userId:{in:users}}});
+  await prisma.exerciseProgress.deleteMany({where:{userId:{in:users}}});
   await prisma.$disconnect();
  }
 });

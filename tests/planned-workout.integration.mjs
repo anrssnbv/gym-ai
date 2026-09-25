@@ -28,11 +28,12 @@ const invalidPlans = [
   { ...plan, exercises: [plan.exercises[0], plan.exercises[0], plan.exercises[2]] },
   { ...plan, focus: "pull" },
 ];
+const profile = { goal: "build_muscle", experience: "experienced", daysPerWeek: 4, sessionMinutes: 60, equipment: ["barbell", "dumbbell", "machine", "cable"] };
 const users = [];
 function asUser(run) {
   const state = { userId: `spec15-test-${randomUUID()}`, invalidations: [] };
   users.push(state.userId);
-  return actionContext.run(state, () => run(state));
+  return actionContext.run(state, async () => { await prisma.trainingProfile.create({data:{userId:state.userId,...profile}}); return run(state); });
 }
 function success(result) { assert.equal(result.ok, true, result.error); return result.data; }
 const setData = (userId, sessionId, exerciseId = ids[0]) => ({ userId, sessionId, exerciseId, level: 1, weightKg: 20, reps: 8 });
@@ -127,6 +128,38 @@ test("planned workout actions and queries against PostgreSQL", async (t) => {
       assert.equal(await getActivePlanStep(userId, ids[0]), null);
       assert.deepEqual((await getSessionDetail(userId, sessionId)).plan, plan);
     }));
+    await t.test("current preferences reject incompatible previews without altering active or stale sessions; history and manual actions survive", () => asUser(async ({ userId }) => {
+      const {sessionId}=success(await startWorkout({plan}));
+      success(await calibrateExercise({exerciseId:ids[0],weightKg:20,stepKg:2.5}));
+      const snapshot=await getSessionDetail(userId,sessionId);
+      const mismatch={ok:false,error:"Your Training preferences no longer match this plan. Generate a new workout."};
+      for (const stale of [false,true]) {
+        if(stale) await prisma.workoutSession.update({where:{id:sessionId,userId},data:{startedAt:new Date(Date.now()-4*60*60*1000)}});
+        const before=await getSessionDetail(userId,sessionId);
+        await prisma.trainingProfile.update({where:{userId},data:{equipment:['dumbbell']}});
+        assert.deepEqual(await startWorkout({plan}),mismatch);
+        assert.deepEqual(await getSessionDetail(userId,sessionId),before);
+        await prisma.trainingProfile.update({where:{userId},data:{equipment:profile.equipment,experience:'new'}});
+        assert.deepEqual(await startWorkout({plan:{...plan,exercises:plan.exercises.map(e=>({...e,sets:4}))}}),mismatch);
+        const {candidateExercises}=await import('../lib/plan.ts');
+        assert.deepEqual(await startWorkout({plan:{...plan,exercises:candidateExercises('push').slice(0,5).map(e=>({exerciseId:e.id,sets:1,note:'Control.'}))}}),mismatch);
+        assert.deepEqual(await getSessionDetail(userId,sessionId),before);
+        await prisma.trainingProfile.delete({where:{userId}});
+        assert.deepEqual(await startWorkout({plan}),{ok:false,error:'Complete your Training preferences before generating a workout.'});
+        assert.deepEqual(await getSessionDetail(userId,sessionId),before);
+        await prisma.trainingProfile.create({data:{userId,...profile}});
+      }
+      assert.equal(await prisma.workoutSession.count({where:{userId}}),1);
+      assert.deepEqual((await getSessionDetail(userId,sessionId)).plan,snapshot.plan);
+      await prisma.trainingProfile.update({where:{userId},data:{goal:'weight_management',daysPerWeek:1,sessionMinutes:30}});
+      success(await startWorkout({plan})); // Goal/schedule edits do not invalidate a preview.
+      await prisma.trainingProfile.delete({where:{userId}});
+      const setId=randomUUID();
+      success(await logSet({setId,exerciseId:ids[0],reps:8,expectedLevel:1,expectedWeightKg:20,expectedStepKg:2.5}));
+      success(await undoLastSet({exerciseId:ids[0],setId}));
+      success(await finishWorkout());
+      assert.deepEqual((await getSessionDetail(userId,sessionId)).plan,plan);
+    }));
     await t.test("null and invalid stored plans fall back to manual workouts", () => asUser(async ({ userId }) => {
       const session = await prisma.workoutSession.create({ data: { userId } });
       assert.equal((await getSessionDetail(userId, session.id)).plan, null);
@@ -143,6 +176,7 @@ test("planned workout actions and queries against PostgreSQL", async (t) => {
     await prisma.setLog.deleteMany({ where: { userId: { in: users } } });
     await prisma.workoutSession.deleteMany({ where: { userId: { in: users } } });
     await prisma.exerciseProgress.deleteMany({ where: { userId: { in: users } } });
+    await prisma.trainingProfile.deleteMany({ where: { userId: { in: users } } });
     await prisma.$disconnect();
   }
 });

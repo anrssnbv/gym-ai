@@ -3,6 +3,14 @@ import { isSessionStale, powerLevel, roundKg, sessionEndAt, type LevelState } fr
 import { prisma } from "@/lib/prisma";
 import { getExercise, type MuscleGroupId, type MuscleHeadId } from "@/lib/catalog";
 import { workoutPlanSchema } from "@/lib/plan-schema";
+import type { TrainingProfile } from "@/lib/training-profile";
+import { trainingProfileSchema, trainingProfileSelect } from "@/lib/training-profile-schema";
+
+export async function getTrainingProfile(userId: string): Promise<TrainingProfile | null> {
+  const row = await prisma.trainingProfile.findUnique({ where: { userId }, select: trainingProfileSelect });
+  const parsed = trainingProfileSchema.safeParse(row);
+  return parsed.success ? parsed.data : null;
+}
 
 export async function findOpenSession(db: Prisma.TransactionClient, userId: string, now: Date) {
   const session = await db.workoutSession.findFirst({
@@ -61,6 +69,7 @@ export async function getProgressMap(userId: string): Promise<Record<string, { l
 }
 
 export interface PlanningContext {
+  profile: TrainingProfile | null;
   lastTrained: Partial<Record<"push" | "pull" | "legs", Date>>;
   daysSinceGroup: Partial<Record<MuscleGroupId, number>>;
   recentSessions: { daysAgo: number; exercises: { id: string; sets: number; bestReps: number }[] }[];
@@ -70,13 +79,14 @@ export interface PlanningContext {
 export async function getPlanningContext(userId: string, now = new Date()): Promise<PlanningContext> {
   const day = 24 * 60 * 60 * 1000;
   const since = new Date(now.getTime() - 30 * day);
-  const [sets, progress] = await Promise.all([
+  const [sets, progress, profile] = await Promise.all([
     prisma.setLog.findMany({
       where: { userId, session: { userId }, createdAt: { gte: since, lte: now } },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       select: { exerciseId: true, reps: true, createdAt: true, sessionId: true, session: { select: { startedAt: true } } },
     }),
     prisma.exerciseProgress.findMany({ where: { userId }, select: { exerciseId: true, level: true } }),
+    getTrainingProfile(userId),
   ]);
   const lastTrained: PlanningContext["lastTrained"] = {};
   const daysSinceGroup: PlanningContext["daysSinceGroup"] = {};
@@ -99,6 +109,7 @@ export async function getPlanningContext(userId: string, now = new Date()): Prom
     session.exercises.set(set.exerciseId, entry);
   }
   return {
+    profile,
     lastTrained,
     daysSinceGroup,
     recentSessions: [...sessions.entries()]

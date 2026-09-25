@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Sparkles, X } from "lucide-react";
 import { generateWorkout, startWorkout } from "@/actions/workout";
 import { Button } from "@/components/ui/button";
@@ -10,17 +11,19 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { PlanPreview } from "@/components/workout/plan-preview";
 import { callAction } from "@/lib/action-result";
 import { DURATIONS_MIN, FOCUS_CHOICES, FOCUS_HINTS, FOCUS_LABELS, type FocusChoice, type WorkoutPlan } from "@/lib/plan";
+import type { TrainingProfile } from "@/lib/training-profile";
 
 const toggleClass = "h-11 min-w-0 rounded-xl border-line px-2 data-[state=on]:border-ai/50 data-[state=on]:bg-ai-dim data-[state=on]:text-ai";
 
-export function GenerateSheet({ children, progress, hasActiveWorkout }: {
+export function GenerateSheet({ children, progress, hasActiveWorkout, defaultDurationMin }: {
   children: ReactNode;
   progress: Record<string, { level: number; weightKg: number }>;
   hasActiveWorkout: boolean;
+  defaultDurationMin: TrainingProfile["sessionMinutes"];
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [durationMin, setDurationMin] = useState<(typeof DURATIONS_MIN)[number]>(60);
+  const [durationMin, setDurationMin] = useState<(typeof DURATIONS_MIN)[number]>(defaultDurationMin);
   const [focus, setFocus] = useState<FocusChoice>("auto");
   const [preview, setPreview] = useState(false);
   const [plan, setPlan] = useState<WorkoutPlan | null>(null);
@@ -87,6 +90,7 @@ export function GenerateSheet({ children, progress, hasActiveWorkout }: {
             <Sparkles className="size-5 text-ai" aria-hidden="true" />Generate workout
           </SheetTitle>
           <SheetDescription>Choose your time and training focus.</SheetDescription>
+          <Link href="/settings/training" className="inline-flex min-h-11 items-center text-sm text-ai underline underline-offset-4">Training preferences</Link>
         </SheetHeader>
         <SheetClose asChild>
           <Button variant="ghost" size="icon" className="absolute top-2 right-2 size-11 rounded-xl" aria-label="Close">
