@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test lib/*.test.ts"
+    "test": "node --test lib/*.test.ts components/muscle-map/*.test.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.7",

@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Phase 1 — UI foundation. Spec 03 complete; spec 02 phone check pending.
+- Phase 1 — UI foundation. Spec 04 complete; spec 02 phone check pending.
 
 ## Current Goal
 
-- Confirm the 02 App Shell phone install check before spec 04.
+- 04 Muscle Map complete. Next planned: 05 Exercise Level Screen.
 
 ## Roadmap
 
@@ -19,7 +19,7 @@ Specs 01–08 are written. Specs 09+ are written one at a time after the previou
 - [x] 01 design-system — shadcn/ui (Radix), dark game tokens, fonts, icons
 - [ ] 02 app-shell — mobile shell: top bar, bottom tabs, placeholder pages, PWA manifest and icons
 - [x] 03 exercise-catalog — `lib/catalog.ts` + groups grid + group list + exercise page header, first `npm test`
-- [ ] 04 muscle-map — SVG body map with one region per head, on the exercise list and exercise page
+- [x] 04 muscle-map — SVG body map with one region per head, on the exercise list and exercise page
 - [ ] 05 exercise-level-screen — `lib/game.ts` (calibrate, adjust) + tests, level card, calibrate and adjust sheets (local state)
 - [ ] 06 round-flow — level-up rules + tests, round timer, log reps sheet, level-up overlay (local state)
 
@@ -52,6 +52,8 @@ Specs 01–08 are written. Specs 09+ are written one at a time after the previou
 
 - 01 design-system — theme tokens, fonts, and temporary component preview. Lint, build, and 360 px browser checks passed.
 - 03 exercise-catalog — 10 groups, 27 heads, 50 exercises, catalog tests, and browse routes. Tests, lint, build, and 360 px browser checks passed.
+
+- 04 muscle-map — all 27 head regions, group thumbnails, and full exercise maps. Tests, lint, build, type coverage, and 360 px browser checks passed. User approved all seven screenshot pairs on 2026-09-25.
 
 ## In Progress
 
