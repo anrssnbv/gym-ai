@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { GenerateSheet } from "@/components/workout/generate-sheet";
 import { LocalTime } from "@/components/local-time";
 import { MuscleMap } from "@/components/muscle-map/muscle-map";
 import { Progress } from "@/components/ui/progress";
@@ -49,6 +51,12 @@ export default async function HomePage() {
           </div>
         )}
       </section>
+
+      <GenerateSheet>
+        <Button className="h-11 w-full rounded-xl bg-ai text-on-brand hover:bg-ai/90">
+          <Sparkles className="size-5" aria-hidden="true" />Generate workout
+        </Button>
+      </GenerateSheet>
 
       <dl className="grid grid-cols-2 gap-3">
         {stats.map((stat) => (

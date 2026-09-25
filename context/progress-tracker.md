@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Phase 3 — Core loop on real data. Spec 12 complete; specs 02, 05, 06, 07, and 10 phone checks pending.
+- Phase 4 — AI coach. Spec 13 complete; specs 02, 05, 06, 07, and 10 phone checks pending.
 
 ## Current Goal
 
-- 12 Dashboard complete. Next planned: 13 Generate Sheet UI.
+- 14 AI Workout Generator — next: planning rules, generation limits, and AI backend.
 
 ## Roadmap
 
@@ -37,7 +37,7 @@ All specs 01–15 are written. 09–15 were written after 08, against the code a
 
 ### Phase 4 — AI coach
 
-- [ ] 13 generate-sheet-ui — "Generate workout" sheet (duration + focus) with a static plan preview
+- [x] 13 generate-sheet-ui — "Generate workout" sheet (duration + focus) with a static plan preview
 - [ ] 14 ai-workout-generator — migration (`plan` on `WorkoutSession`, `PlanGeneration`), planning helpers + tests, Auto resolution, OpenAI Structured Outputs + Zod, 10 plans/day limit. Backend only.
 - [ ] 15 wire-ai-workout — generate → preview → start (attach to the active session or create one) → play the plan on `/workout`
 
@@ -62,6 +62,8 @@ All specs 01–15 are written. 09–15 were written after 08, against the code a
 - 11 wire-workout-session — active-workout banner, browser-local elapsed time, session detail query, grouped sets/totals, Finish, and summaries implemented. All 26 tests, lint, TypeScript, build, and 360 × 640 browser checks pass. Verified offline Finish retry, active-summary redirect, cross-user 404, exact idle boundary, timer/visibility expiry, stale-session rollover, zero-set durations, and local times.
 
 - 12 dashboard — rank/power card, workout/time/volume/unlocked stats, seven-day primary-muscle heat map, and recent summaries implemented. All 28 unit tests, 16 database integration checks, lint, TypeScript, production build, and 360 × 640 browser checks pass. Verified empty accounts, database totals, rolling-window and idle boundaries, active/empty exclusions, ownership, typed intensity/activity labels, rank accessibility, Diamond state, and all five recent links.
+
+- 13 generate-sheet-ui — client-safe plan types, controlled duration/focus toggles, sample pull-day preview, and Home/empty-Workout triggers. All 28 tests, lint, TypeScript, production build, and 360 × 640 browser checks pass. Verified both defaults, keyboard/touch selection, accessible radio states, reselection guards, retained choices, disabled Start, scrolling, no horizontal overflow or page errors, and Escape focus restoration. UI only; AI wiring follows in specs 14–15.
 
 ## In Progress
 
