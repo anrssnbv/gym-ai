@@ -40,11 +40,10 @@ test('generation action guards and quota against PostgreSQL', async(t)=>{
    delete process.env.OPENAI_API_KEY;
    try { assert.deepEqual(await generateWorkout({durationMin:60,focus:'auto'}),{ok:false,error:'AI coach is not configured.'}); }
    finally { process.env.OPENAI_API_KEY='test-no-network'; }
-   const fakeSecret='fake-secret-value';
-   process.env.OPENAI_API_KEY=`${fakeSecret}\nNEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/`;
+   const malformedKeys=['fake-secret-value\nNEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/','fake-secret-value\u007f'];
    const logs=[];
    const log=t.mock.method(console,'error',(...args)=>logs.push(args));
-   try { assert.deepEqual(await generateWorkout({durationMin:60,focus:'auto'}),{ok:false,error:'AI coach is not configured.'}); }
+   try { for(const key of malformedKeys) { process.env.OPENAI_API_KEY=key; assert.deepEqual(await generateWorkout({durationMin:60,focus:'auto'}),{ok:false,error:'AI coach is not configured.'}); } }
    finally { log.mock.restore(); process.env.OPENAI_API_KEY='test-no-network'; }
    assert.deepEqual(logs,[]);
    assert.equal(await prisma.planGeneration.count({where:{userId:s.userId}}),0);

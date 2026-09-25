@@ -71,7 +71,7 @@ export async function generateWorkout(input: unknown): Promise<ActionResult<Work
     const candidates = candidateExercises(focus, profile.equipment);
     if (candidates.length < 3) return { ok: false, error: "Not enough exercises for this focus and equipment. Choose another focus or update Training preferences." };
     const limits = profilePlanLimits(durationMin, profile.experience);
-    if (!process.env.OPENAI_API_KEY || /\s/.test(process.env.OPENAI_API_KEY)) return configurationError;
+    if (!process.env.OPENAI_API_KEY || /[\s\p{Cc}]/u.test(process.env.OPENAI_API_KEY)) return configurationError;
     stage = "quota";
     if (await prisma.planGeneration.count({ where }) >= DAILY_PLAN_LIMIT) return dailyLimit;
     // Recheck and reserve atomically so concurrent requests cannot exceed the limit.
