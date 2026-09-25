@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Phase 3 — Core loop on real data. Spec 10 implemented; specs 02, 05, 06, 07, and 10 phone checks pending.
+- Phase 3 — Core loop on real data. Spec 11 complete; specs 02, 05, 06, 07, and 10 phone checks pending.
 
 ## Current Goal
 
-- 10 Wire Exercise Screen implemented and browser-verified, including touch-enabled mobile emulation to desktop sync. Physical-phone check remains pending.
+- 11 Wire Workout Session complete. Next planned: 12 Dashboard.
 
 ## Roadmap
 
@@ -32,7 +32,7 @@ All specs 01–15 are written. 09–15 were written after 08, against the code a
 
 - [x] 09 exercise-actions — `requireUserId()`, queries, session helpers, Server Actions: calibrate, adjust, log set (active session + `expectedLevel` + level-up in one transaction), undo, finish workout. Backend only.
 - [ ] 10 wire-exercise-screen — exercise screen, set history, undo and group power on the catalog use real data
-- [ ] 11 wire-workout-session — active-workout banner, `/workout` for manual sessions, finish + summary
+- [x] 11 wire-workout-session — active-workout banner, `/workout` for manual sessions, finish + summary
 - [ ] 12 dashboard — read-only: power level + rank, stats, 7-day muscle heat map, recent workouts
 
 ### Phase 4 — AI coach
@@ -58,6 +58,8 @@ All specs 01–15 are written. 09–15 were written after 08, against the code a
 - 08 prisma — Prisma 7, exact three-model schema, cached adapter client, init migration, and deployment/install scripts. Migration applied and up to date on the direct endpoint. Client regeneration without DATABASE_URL, generated-file lint exclusion, lint, and build verified.
 
 - 09 exercise-actions — authenticated user helper, scoped queries, shared action results, session rules, and five validated actions. Round-ID replay, rollback recovery, serializable retries, and concurrent calibration verified. All 23 unit tests, 11 integration checks against PostgreSQL, lint, and production build pass. Backend only; UI wiring follows in spec 10.
+
+- 11 wire-workout-session — active-workout banner, browser-local elapsed time, session detail query, grouped sets/totals, Finish, and summaries implemented. All 26 tests, lint, TypeScript, build, and 360 × 640 browser checks pass. Verified offline Finish retry, active-summary redirect, cross-user 404, exact idle boundary, timer/visibility expiry, stale-session rollover, zero-set durations, and local times.
 
 ## In Progress
 

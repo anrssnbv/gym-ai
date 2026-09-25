@@ -66,3 +66,22 @@ export async function getRecentSets(userId: string, exerciseId: string, take = 1
     select: { id: true, createdAt: true, weightKg: true, reps: true, level: true, leveledUp: true },
   });
 }
+
+export async function getSessionDetail(userId: string, sessionId: string) {
+  return prisma.workoutSession.findFirst({
+    where: { id: sessionId, userId },
+    select: {
+      id: true,
+      startedAt: true,
+      endedAt: true,
+      sets: {
+        where: { userId },
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+        select: {
+          id: true, exerciseId: true, weightKg: true, reps: true,
+          level: true, leveledUp: true, createdAt: true,
+        },
+      },
+    },
+  });
+}
