@@ -12,7 +12,7 @@ Update this file after every meaningful implementation change.
 
 ## Roadmap
 
-Specs 01–08 are written. Specs 09+ are written one at a time after the previous unit is done (see `ai-workflow-rules.md` → Writing The Next Spec).
+All specs 01–15 are written. 09–15 were written after 08, against the code as built. If a unit changes names or contracts, update the later specs before running them (see `ai-workflow-rules.md` → Writing The Next Spec).
 
 ### Phase 1 — UI foundation (no backend)
 
@@ -38,7 +38,7 @@ Specs 01–08 are written. Specs 09+ are written one at a time after the previou
 ### Phase 4 — AI coach
 
 - [ ] 13 generate-sheet-ui — "Generate workout" sheet (duration + focus) with a static plan preview
-- [ ] 14 ai-workout-generator — migration adding `focus` + `plan` to `WorkoutSession`, Auto resolution, history summary, OpenAI Structured Outputs + Zod, usage limit (see Open Question 5)
+- [ ] 14 ai-workout-generator — migration (`plan` on `WorkoutSession`, `PlanGeneration`), planning helpers + tests, Auto resolution, OpenAI Structured Outputs + Zod, 10 plans/day limit. Backend only.
 - [ ] 15 wire-ai-workout — generate → preview → start (attach to the active session or create one) → play the plan on `/workout`
 
 ### Backlog (not planned)
@@ -70,9 +70,9 @@ The user answers these. Defaults are already written into the context files and 
 
 1. ~~Round timer~~ — decided 2026-09-25, see Architecture Decisions.
 2. ~~Level-up with several sets~~ — decided 2026-09-25, see Architecture Decisions.
-3. **Focus options (before 13).** Default: Auto, Push, Pull, Legs, Upper, Full body. "Lower" is merged into Legs because they cover the same muscles.
-4. **Duration input (before 13).** Default: presets of 30 / 45 / 60 / 90 min instead of free "hours".
-5. **Personal or public app (before 14).** Clerk sign-ups are open by default and every generation is a paid OpenAI call. Default: set a budget cap on the OpenAI project and limit generation to 10 per user per day. If the app is only for you, restrict sign-ups in Clerk instead.
+3. **Focus options (before 13).** Default, used in specs 13–15: Auto, Push, Pull, Legs, Upper, Full body. "Lower" is merged into Legs because they cover the same muscles.
+4. **Duration input (before 13).** Default, used in specs 13–15: presets of 30 / 45 / 60 / 90 min instead of free "hours".
+5. **Personal or public app (before 14).** Clerk sign-ups are open by default and every generation is a paid OpenAI call. Default, used in spec 14: a budget cap on the OpenAI project plus 10 generations per user per day. If the app is only for you, also restrict sign-ups in Clerk.
 
 ## Architecture Decisions
 
@@ -95,11 +95,17 @@ The user answers these. Defaults are already written into the context files and 
 - Clerk's `shadcn` theme reads our shadcn variables, so auth screens match the app without manual color mapping.
 - PWA through `app/manifest.ts` only; no service worker until offline logging is planned.
 - Prisma is pinned to v7: npm's `latest` tag for `prisma` points to an 8.0 release candidate (checked 2026-09-25).
-- `WorkoutSession.focus` and `plan` are added in spec 14, when something first uses them.
+- `WorkoutSession.plan` is added in spec 14; its JSON contains the resolved focus, so no separate focus column is stored.
 - Tests use Node's built-in runner (`node --test`) with native type stripping; no test framework.
+- Every write action ends with `revalidatePath('/', 'layout')`; pages pass saved state to client components as props, so the UI never keeps a second copy of database state (from spec 10).
+- Calibrate is an idempotent `upsert` (a double tap returns the existing row) instead of an "already calibrated" error.
+- Dates render through `LocalTime` / `ElapsedTime` on the client only, avoiding UTC-vs-local hydration mismatches.
+- AI: `gpt-5.4-mini` via openai 7 `responses.parse` + `zodTextFormat`; the client is created per call, so a missing key never breaks the build. Daily limit via `PlanGeneration` rows written before each call.
+- An AI plan started during a running workout attaches to that session instead of starting a second one.
 
 ## Session Notes
 
 - Next.js 16.3.6, React 19.2.8, Tailwind CSS v4, TypeScript strict, Node 24.12.
-- The project is not a git repository yet (see `ai-workflow-rules.md` → Before Moving To The Next Unit).
+- Git repo on GitHub; each spec lands as one PR from `development` into `main`.
+- shadcn 4.21 installs the `cn` package (github.com/shadcn-ui/cn) instead of clsx + tailwind-merge; `lib/utils.ts` re-exports it. This is expected.
 - `context/feature-specs/_templates/` holds the spec template and the prompt for writing the next spec.

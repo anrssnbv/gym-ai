@@ -173,3 +173,22 @@ Linked the user-specified GYM-AI app through Clerk CLI and configured local deve
 ## Review
 
 Implemented the exact schema and Prisma 7 configuration, adapter singleton, generated-file ignores, env example, and install/deploy scripts. The init migration is applied; migrate status reports up to date through db.prisma.io. Verified its unique exercise constraint, all three SetLog indexes, and cascade deletion. The supplied pooled URL was converted to the documented direct hostname only after successfully testing it with the same credentials. An isolated installation with no environment file or DATABASE_URL generated the client, then regenerated it after its output was moved aside. The tool policy rejected deletion, so a reversible move provided the equivalent missing-output test. ESLint confirms the generated client is ignored. Lint and production build pass. Independent review found no code gaps. No UI, queries, actions, seeds, or extra models were added.
+
+# Specs 09–15 Review Reconciliation
+
+## Specification
+
+- Goal: verify the supplied review against current specs and resolve confirmed gaps before implementation.
+- Scope: specs 09–15 and matching context docs; no application code or database changes.
+- Decisions: preserve existing draft work; reuse shared action/session contracts; keep scope to concrete inconsistencies.
+- Acceptance: findings saved with dispositions, cross-spec contracts agree, and uncertain API claims checked against official docs.
+
+## Tasks
+
+- [x] Read the current specs and context; identify fixes already present.
+- [x] Validate findings and update affected contracts and acceptance checks.
+- [x] Save review findings and verify consistency across the specs and context.
+
+## Review
+
+Saved findings and dispositions in `context/feature-specs/09-15-review.md`. Reconciled action error/retry contracts, scoped idempotency, session expiry and concurrency, heat-map accessibility/types, toggles, plan props/storage, and new-user planning. The OpenAI length-limit concern is qualified against current official documentation rather than assumed true. Existing draft files were preserved and revised in place; no application code or database changes. `git diff --check` passes.

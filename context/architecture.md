@@ -26,7 +26,9 @@ Not used, on purpose (ghost-ai needed them, gym-ai doesn't):
 - `app/sign-in`, `app/sign-up` — Clerk pages, outside the shell.
 - `actions/` — Server Actions. The only code that writes to the database or calls OpenAI.
 - `lib/catalog.ts` — static exercise catalog: muscle groups, heads, exercises with movement patterns. Source of truth for exercise IDs.
-- `lib/game.ts` — pure game rules: target reps, round length, level-up, session staleness, power level, rank. No I/O, no runtime imports.
+- `lib/game.ts` — pure game rules: target reps, round length, level-up, session staleness, power level, rank, number formatting. No I/O, no runtime imports.
+- `lib/plan.ts` — pure planning rules, safe for the client: foci, durations, the `WorkoutPlan` type, focus → candidate exercises, Auto resolution, the daily AI limit. Its only runtime import is `./catalog.ts`.
+- `lib/plan-schema.ts` — server-only Zod schemas for the AI output and stored plans, kept separate so Zod never ships to the phone.
 - `lib/auth.ts` — `requireUserId()`: the one way queries and actions get the current user.
 - `lib/queries.ts` — read helpers, always scoped by `userId`.
 - `lib/prisma.ts` — Prisma client singleton.
@@ -40,8 +42,9 @@ Not used, on purpose (ghost-ai needed them, gym-ai doesn't):
 
 - **PostgreSQL (Prisma)**: user state only.
   - `ExerciseProgress` — one row per user + exercise: level, current weight, step, start weight.
-  - `WorkoutSession` — start and end time. Spec 14 adds the resolved focus and the AI plan JSON.
+  - `WorkoutSession` — start and end time. Spec 14 adds the AI plan JSON, including its resolved focus; no duplicate focus column.
   - `SetLog` — every logged round: exercise, level attempted, weight, reps, leveled-up flag.
+  - `PlanGeneration` — one row per AI generation attempt, for the daily limit (spec 14).
 - **Code (`lib/catalog.ts`)**: exercises, muscle groups, heads. Database rows reference exercises by string ID.
 - **Clerk**: identity and profile. No local User table; every `userId` column holds the Clerk user ID.
 - **Browser**: nothing required. Timer state lives in component state.
@@ -65,10 +68,11 @@ Computed from rows when read, never stored:
 
 ## Workout Session Model
 
-- The active session is the user's latest `WorkoutSession` with `endedAt = null` whose last activity (its latest set, otherwise `startedAt`) is less than 3 hours old.
+- The active session is the user's latest `WorkoutSession` with `endedAt = null` whose last activity (its latest set, otherwise `startedAt`) is no more than 3 hours old.
 - Logging a set attaches it to the active session. If there is none, a stale open session is first closed at its last activity time, then a new session is created. This happens inside the action; there are no cron jobs.
-- **Finish workout** sets `endedAt = now`, or the last activity time if the session is already stale.
-- Starting an AI workout attaches the plan to the active session if there is one, otherwise it creates a new session.
+- **Finish workout** sets `endedAt = now`, or the last activity time if the session is already stale. With no sets, last activity is `startedAt`; stale zero-set sessions have zero duration and all zero-set sessions are excluded from stats.
+- `findOpenSession` centralizes open-session lookup; every reader/writer uses the same staleness rules. The banner rechecks expiry while mounted and on visibility changes.
+- Starting an AI workout attaches the plan to the active session if there is one, otherwise it creates a new session. Session mutations use serializable transactions with bounded conflict retries so concurrent requests preserve this rule.
 - Stats count only sessions with at least one set. Duration = session end − `startedAt`.
 - One pure helper in `lib/game.ts` decides staleness and end time, so every read and write uses the same 3-hour rule.
 
@@ -82,13 +86,14 @@ Computed from rows when read, never stored:
 ## AI Generation Model
 
 - Entry point: the `generateWorkout` Server Action.
-- Auto is resolved in code before the AI call: push, pull or legs, whichever pattern was trained longest ago (never trained = oldest; ties in that order). The AI and the stored session get the resolved focus.
+- Auto is resolved in code before the AI call: push, pull or legs, whichever pattern was trained longest ago (never trained = oldest; ties in that order). The AI receives the resolved focus, which is stored in the plan JSON.
 - Candidates: catalog exercises whose `pattern` belongs to the focus: push → push; pull → pull; legs → legs + core; upper → push + pull; full body → all.
 - Input: duration, focus, candidates, and a compact history summary computed in code (last 3 sessions, days since each muscle group was trained, current levels). No names or emails are sent to OpenAI.
-- Output: OpenAI Structured Outputs parsed with a Zod schema whose `exerciseId` is an enum of the candidate IDs, sets 1–5, exercise count limited by duration.
-- The plan is only a preview until the user taps Start.
+- Output: OpenAI Structured Outputs (`client.responses.parse` with `zodTextFormat` from `openai/helpers/zod`), validated by a Zod schema whose `exerciseId` is an enum of the candidate IDs, sets 1–5, 3 to `maxExercises(duration)` exercises.
+- The plan is only a preview until the user taps Start. Start attaches it to the active session, or creates a session.
 - The AI never produces weights, reps or level changes.
-- The model name lives in one constant in `lib/ai.ts`: OpenAI's current small model that supports Structured Outputs (check the OpenAI docs when implementing).
+- Limit: 10 generations per user per rolling 24 h, counted in `PlanGeneration`. A row is written before each OpenAI call, because every call costs money.
+- The model name lives in one constant in `lib/ai.ts`: `gpt-5.4-mini` (the newest small model in openai 7.23), fallback `gpt-5-mini`. The client is created inside the call, so a missing key never breaks the build.
 
 ## Invariants
 

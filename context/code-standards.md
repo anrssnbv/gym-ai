@@ -34,8 +34,10 @@
 ## Server Actions
 
 - Files live in `actions/` with `"use server"` at the top.
-- Fixed order: `requireUserId()` → Zod parse → query scoped by `userId` → write → `revalidatePath` → return.
-- Actions the UI reacts to return `{ ok: true, data }` or `{ ok: false, error }`. Expected validation errors are returned, not thrown.
+- Fixed order: `requireUserId()` → Zod parse → query scoped by `userId` → write → `revalidatePath('/', 'layout')` → return. Revalidating the root layout re-renders the current page at once and clears the client cache; every page is per-user and cheap.
+- Pages pass saved state to client components as props. Client components keep only UI state (open sheets, the running round, pending) and never mirror database state in `useState`.
+- Actions explicitly return `Promise<ActionResult<T>>` from `lib/action-result.ts`: `{ ok: true, data } | { ok: false, error, stale?: boolean }`. Every client invocation uses `callAction`, which catches thrown transport/server failures and returns an inline retryable error. Expected validation errors are returned, not thrown. Pending/submission guards reset in `finally`.
+- Every Prisma filter, including nested relation reads and writes by ID, includes `userId`; raw SQL parameterizes it. Round IDs are created once and reused for the same submission payload on retry.
 - Game math comes from `lib/game.ts`; actions don't compute levels themselves.
 - Writes that must stay consistent (log a set + level up, undo) run in one `prisma.$transaction`.
 - Submit buttons are disabled while their action is pending.
@@ -52,7 +54,7 @@
 ## Data
 
 - Weights are in kg, stored as `Float` and rounded with `roundKg()` (2 decimals) before saving and before comparing.
-- Timestamps are stored in UTC. Dates and times are formatted only in client components, so they use the browser's timezone.
+- Timestamps are stored in UTC. Dates and times are shown only through `LocalTime` / `ElapsedTime` (`components/local-time.tsx`), which format in the browser's timezone and render nothing on the server.
 - Time windows are rolling ("last 7 days"), never calendar weeks, so the server needs no user timezone.
 - Derived numbers (best reps, power level, totals, volume) are computed from rows, not stored. See Derived Values in `architecture.md`.
 

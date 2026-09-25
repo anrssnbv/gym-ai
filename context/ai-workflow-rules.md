@@ -39,7 +39,7 @@ Don't modify these unless a spec says so:
 
 ## Writing The Next Spec
 
-Specs after 08 are written one at a time, after the previous unit is done, using `feature-specs/_templates/generate-spec-prompt.md` and `feature-specs/_templates/spec-template.md`. That way each spec matches the code as it was actually built.
+Specs 09–15 were written on 2026-09-25, after 08 was done, against the code as built. If a unit ends up with different names or contracts than its spec (files, props, action results), update the later specs before running them. New units get written with `feature-specs/_templates/generate-spec-prompt.md` and `feature-specs/_templates/spec-template.md`.
 
 ## Testing On A Phone
 
