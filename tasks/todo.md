@@ -309,7 +309,7 @@ Implemented spec 13 with existing Sheet/Button/Badge patterns, generated Radix t
 - [x] Read spec and mark in progress.
 - [x] Implement migration, helpers/schema/tests, context, AI call, and action.
 - [x] Verify database boundaries, selection rules, API smoke test, lint, and build.
-- [ ] Update review/tracker, push, create/merge PR, and sync local main.
+- [x] Update review/tracker, push, create/merge PR, and sync local main.
 
 ## Review
 
