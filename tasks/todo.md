@@ -14,7 +14,8 @@
 - [x] Implement and verify onboarding, editing, and route boundaries.
 - [x] Integrate profile defaults, candidate filters, limits, Auto, and Start validation.
 - [x] Run regression/build/browser checks and review; clean test fixtures.
-- [ ] Synchronize specs/context and deliver through PR; sync main/development.
+- [x] Synchronize specs/context and open delivery PR #18.
+- [ ] Merge PR and sync main/development.
 
 ## Review
 

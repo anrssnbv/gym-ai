@@ -10,6 +10,7 @@ Update this file after every meaningful implementation change.
 
 - Specs 01–15 implemented. QA fixes complete: five confirmed defects and both plan-validation gaps addressed. Physical-phone checks remain; Vercel test deployment requested, setup instructions supplied.
 - Spec 16 implemented: profile storage/action, onboarding/edit UI, and personalized AI generation. All 50 unit tests, 56 database checks, lint, TypeScript, production build, and Playwright checks pass; physical-phone acceptance remains.
+- Spec 16 delivery: [PR #18 — Implement training profile onboarding and personalized plans](https://github.com/anrssnbv/gym-ai/pull/18).
 - QA delivery: [PR #17 — Fix training integrity and application QA findings](https://github.com/anrssnbv/gym-ai/pull/17).
 
 ## Roadmap
