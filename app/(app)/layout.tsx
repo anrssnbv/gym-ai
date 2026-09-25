@@ -1,7 +1,9 @@
 import { BottomNav } from "@/components/app-shell/bottom-nav";
 import { TopBar } from "@/components/app-shell/top-bar";
+import { auth } from "@clerk/nextjs/server";
 
-export default function AppLayout({ children }: LayoutProps<"/">) {
+export default async function AppLayout({ children }: LayoutProps<"/">) {
+  await auth.protect();
   return (
     <div className="min-h-dvh bg-page">
       <TopBar />

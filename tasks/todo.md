@@ -128,3 +128,27 @@ Implemented pure game rules and the local exercise level screen using existing s
 ## Review
 
 Implemented spec 06 with pure set rules, timestamp countdown, Screen Wake Lock cleanup/reacquisition, native reps validation, one-save guard, result messages, and level-up feedback. All 17 tests, lint, and production build pass. Playwright at 360 × 640 verified the complete 10-rep/12-rep loop, both timer durations, all result bands, invalid inputs, duplicate submission, early next round, cancellation numbering, expiry vibration once, simulated 30-second clock recovery on visibility change, wake-lock release/reacquisition and denial/late-resolution handling, reduced motion, overlay tap/timeout and focus restoration, reload reset, and no horizontal overflow. Current browser console has no errors. Code review found a focus restoration issue that was fixed and verified. Screenshots are in `.playwright-mcp/spec06/`. Real-device sleep recovery and screen-awake behavior remain pending for the user; earlier phone checks remain pending.
+
+# 07 Clerk Auth
+
+## Specification
+
+- Goal: add Clerk auth using the requested Clerk skill and spec 07.
+- Scope: provider/theme, proxy, protected app layout, public sign-in/sign-up, user menu, env example.
+- Decisions: reuse installed Clerk packages; preserve existing environment keys; use auth.protect next to protected content.
+- Acceptance: signed-out redirects, public assets, themed auth pages at 360px, lint/build, doctor, and user sign-up/sign-out and installed-phone verification.
+
+## Tasks
+
+- [x] Read Clerk skill, auth spec, existing integration, and Next.js proxy guide.
+- [x] Scaffold Clerk and implement theme, routes, access checks, and user controls.
+- [x] Link GYM-AI and configure development keys through authenticated Clerk CLI.
+- [x] Verify doctor, redirects, public assets, mobile layout, lint/build, and tests.
+- [x] Push branch and open draft PR.
+- [x] Merge and sync main after live auth verification.
+- [x] User confirms sign-in/sign-out; CLI confirms email-code authentication enabled.
+- [ ] User confirms installed-phone email-code authentication.
+
+## Review
+
+Linked the user-specified GYM-AI app through Clerk CLI and configured local development keys without reading or printing environment files. Provider/theme, protected layout, branded auth pages, user menu, redirect settings, env example, and auto-proxy matcher are implemented. Doctor, lint, production build, and all 17 tests pass. Signed-out /, /exercises/chest, and /workout redirect to /sign-in; manifest/icons remain public. Both auth pages render the app theme at 360px without tabs or horizontal overflow. No Clerk deprecation warnings appeared. User confirmed successful sign-in/sign-out. Clerk auth_email configuration confirms email_code as its sign-in and verification strategy. Installed-phone verification remains pending; production instance is not configured.

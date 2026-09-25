@@ -1,5 +1,7 @@
+import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Oxanium } from "next/font/google";
+import { shadcn } from "@clerk/ui/themes";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -40,7 +42,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${oxanium.variable} dark h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ClerkProvider appearance={{ theme: shadcn }} signInUrl="/sign-in" signUpUrl="/sign-up" signInFallbackRedirectUrl="/" signUpForceRedirectUrl="/" afterSignOutUrl="/sign-in">
+          {children}
+        </ClerkProvider>
+      </body>
     </html>
   );
 }
