@@ -19,6 +19,7 @@ const generationSchema = z.object({
 });
 const dailyLimit = { ok: false, error: "Daily limit reached (10 plans). Try again tomorrow." } as const;
 const generationError = { ok: false, error: "Couldn't generate a workout. Try again." } as const;
+const configurationError = { ok: false, error: "AI coach is not configured." } as const;
 const startSchema = z.object({ plan: workoutPlanSchema });
 const missingProfile = { ok: false, error: "Complete your Training preferences before generating a workout." } as const;
 
@@ -58,6 +59,7 @@ export async function generateWorkout(input: unknown): Promise<ActionResult<Work
   const userId = await requireUserId();
   const parsed = generationSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
+  let stage = "context";
   try {
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const where = { userId, createdAt: { gte: since } };
@@ -69,8 +71,9 @@ export async function generateWorkout(input: unknown): Promise<ActionResult<Work
     const candidates = candidateExercises(focus, profile.equipment);
     if (candidates.length < 3) return { ok: false, error: "Not enough exercises for this focus and equipment. Choose another focus or update Training preferences." };
     const limits = profilePlanLimits(durationMin, profile.experience);
+    if (!process.env.OPENAI_API_KEY || /[\s\p{Cc}]/u.test(process.env.OPENAI_API_KEY)) return configurationError;
+    stage = "quota";
     if (await prisma.planGeneration.count({ where }) >= DAILY_PLAN_LIMIT) return dailyLimit;
-    if (!process.env.OPENAI_API_KEY) return { ok: false, error: "AI coach is not configured." };
     // Recheck and reserve atomically so concurrent requests cannot exceed the limit.
     const reservation = await serializableTransaction(async (tx) => {
       if (await tx.planGeneration.count({ where }) >= DAILY_PLAN_LIMIT) return dailyLimit;
@@ -78,15 +81,17 @@ export async function generateWorkout(input: unknown): Promise<ActionResult<Work
       return { ok: true, data: null };
     });
     if (!reservation.ok) return reservation;
+    stage = "provider";
     const output = await generatePlan({ focus, durationMin, context: { ...context, profile } });
+    stage = "validation";
     const selection = planOutputSchema(candidates.map(({ id }) => id), limits.maxExercises, limits.maxSets)
       .safeParse(dedupeExercises({ ...output, focus }));
     if (!selection.success) return generationError;
     const plan = { ...selection.data, focus };
     if (!isValidPlanSelection(plan, context.levels, profile.equipment) || estimatePlanMinutes(plan) > durationMin) return generationError;
     return { ok: true, data: plan };
-  } catch (error) {
-    console.error("Workout generation failed", error);
+  } catch {
+    console.error("Workout generation failed", { stage });
     return generationError;
   }
 }

@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "node --test lib/*.test.ts components/muscle-map/*.test.ts",
-    "test:integration": "node --test tests/*.integration.mjs",
+    "test:integration": "node --test --test-concurrency=1 tests/*.integration.mjs",
     "postinstall": "prisma generate",
     "vercel-build": "prisma migrate deploy && next build"
   },
