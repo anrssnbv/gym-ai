@@ -9,6 +9,7 @@ Update this file after every meaningful implementation change.
 ## Current Goal
 
 - Specs 01–16 implemented. QA fixes complete; physical-phone checks remain. Production is deployed at https://gym-ai-seven-alpha.vercel.app.
+- Production recovery: [PR #20](https://github.com/anrssnbv/gym-ai/pull/20) merged as `8140279` and deployed to both Vercel projects. Malformed OpenAI keys now fail before quota reservation, and generation logs omit exception values. The second project's Clerk 500 is resolved and its sign-in redirect works. Revoke/replace the exposed OpenAI key, install the replacement, and verify authenticated generation before closing PROD-01/02.
 - Spec 16 implemented: profile storage/action, onboarding/edit UI, and personalized AI generation. All 50 unit tests, 56 database checks, lint, TypeScript, production build, and Playwright checks pass; physical-phone acceptance remains.
 - Spec 16 delivery: [PR #18 — Implement training profile onboarding and personalized plans](https://github.com/anrssnbv/gym-ai/pull/18).
 - Vercel deployment — after explicit user request, updated the existing `DATABASE_URL` secret in Preview and Production from the verified local direct Prisma Postgres URL. Preview migration/build passed; redeployed merged `main` commit `9590880` to Production. Vercel reports Ready and aliases `gym-ai-seven-alpha.vercel.app`; a signed-out browser visit rendered Clerk sign-in without page errors. Earlier P1013 failures were from the old Vercel database value.

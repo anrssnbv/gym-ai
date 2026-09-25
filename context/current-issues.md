@@ -6,7 +6,7 @@ Scope: specs 01–15, Playwright MCP against `http://localhost:3100`, source rev
 
 ## Production issues found after deployment — 2026-09-25
 
-These are new findings from Vercel runtime logs and the deployed app. The original local QA audit below remains historical; its passing generation checks do not cover the current Vercel environment. **All three production findings are open.** Secret values are redacted here.
+These are new findings from Vercel runtime logs and the deployed app. The original local QA audit below remains historical; its passing generation checks do not cover the current Vercel environment. **PROD-03 is resolved; PROD-01 and PROD-02 remain open pending key rotation and live generation verification.** Secret values are redacted here.
 
 ### PROD-01 — P1: Generate workout always returns a retry error on the primary production site
 
@@ -25,11 +25,18 @@ These are new findings from Vercel runtime logs and the deployed app. The origin
 
 ### PROD-03 — P1: The second connected Vercel project returns HTTP 500 before authentication
 
+- **Status: Resolved 2026-09-25.** Replaced the project's Clerk publishable key with a non-secret Config value for Preview and Production, updated the secret key from the matching local Clerk instance, and allowed a fresh production deployment (`Dkg6Yw1wioNnU1NqhyAiC19bCJyn`, merge `8140279`). `GET https://gym-ai-z3nm.vercel.app/` now returns 307 to Clerk sign-in, which returns 200. The old deployment's 500 is no longer served at the alias.
 - **Observed evidence:** Project `gym-ai-z3nm` logged `@clerk/nextjs: Clerk keys are missing from your environment` for a production `GET /` at `2026-09-25 14:33:14 UTC`. A separate direct request to `https://gym-ai-z3nm.vercel.app/` returned HTTP 500. This is distinct from the primary `gym-ai-seven-alpha.vercel.app` site.
-- **Cause/status:** Clerk reports missing keys at runtime. Vercel lists Clerk variable names for this project, but their hidden values have not been verified; an empty or unusable value is plausible, not yet proven. Its build reported Ready, which did not verify the request path.
-- **Fix and acceptance:** If this second project should remain connected, set valid Clerk keys for its Production environment and redeploy; verify a signed-out `/` redirects to a rendered sign-in page. Otherwise disconnect the duplicate project from the repository so it stops deploying and reporting misleading green builds.
+- **Original assessment:** Clerk reported missing keys at runtime despite Vercel listing the variable names. A Ready build had not verified the request path. The publishable key's Secret storage type was incompatible with Vercel's `NEXT_PUBLIC_` variable requirement; correcting the key configuration and redeploying removed the 500.
+- **Acceptance:** The production alias redirects signed-out `/` to a rendered Clerk sign-in page. Whether the duplicate project is needed remains a separate project-management decision.
 
 The primary project's production logs also contain the PostgreSQL `sslmode=require` compatibility warning already listed under Terminal warnings below. It appeared on page requests and does not explain the Generate failure.
+
+### Recovery progress — 2026-09-25
+
+- [PR #20](https://github.com/anrssnbv/gym-ai/pull/20) merged as `8140279` and deployed to both projects. The action rejects malformed keys before reserving quota and logs only a fixed stage on failure; integration tests verify that fake secrets stay out of logs and attempts. The primary alias still redirects signed-out visitors to sign-in (307). No authenticated production generation has been claimed yet.
+- Unit tests 50/50, PostgreSQL integration tests 56/56 in serial mode, focused generation tests 10/10, lint, and production build passed. Parallel integration files repeatedly caused unrelated transaction retry exhaustion; the standard integration script now runs serially.
+- The exposed OpenAI key must still be revoked and replaced in the same $10-budget project. The replacement must then be installed as one clean secret in Vercel and a fresh deployment tested. This is the remaining gate for PROD-01 and PROD-02.
 
 **Original audit: 5 confirmed defects (2 high, 1 medium, 2 low), two validation gaps, and three observations.** The original reproductions below are retained as regression cases.
 
