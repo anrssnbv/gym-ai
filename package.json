@@ -10,6 +10,8 @@
     "test": "node --test lib/*.test.ts"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.9.7",
+    "@clerk/ui": "^1.36.0",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.4.0",
     "lucide-react": "^1.48.0",
