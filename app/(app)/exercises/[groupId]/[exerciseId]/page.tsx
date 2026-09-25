@@ -2,6 +2,7 @@ import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { ExerciseLevel } from "@/components/exercise/exercise-level";
 import { MuscleMap, exerciseIntensity } from "@/components/muscle-map/muscle-map";
 import { getExercise, getGroup, MUSCLE_HEADS } from "@/lib/catalog";
 
@@ -68,6 +69,7 @@ export default async function ExercisePage({
           </div>
         )}
       </section>
+      <ExerciseLevel key={exercise.id} exercise={exercise} />
     </section>
   );
 }
