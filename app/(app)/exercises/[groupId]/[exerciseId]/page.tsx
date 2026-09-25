@@ -3,9 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ExerciseLevel } from "@/components/exercise/exercise-level";
+import { SetHistory } from "@/components/exercise/set-history";
 import { MuscleMap, exerciseIntensity } from "@/components/muscle-map/muscle-map";
 import { getExercise, getGroup, MUSCLE_HEADS } from "@/lib/catalog";
 import { roundSeconds } from "@/lib/game";
+import { requireUserId } from "@/lib/auth";
+import { getLevelState, getRecentSets } from "@/lib/queries";
 
 export default async function ExercisePage({
   params,
@@ -16,6 +19,11 @@ export default async function ExercisePage({
   const group = getGroup(groupId);
   const exercise = getExercise(exerciseId);
   if (!group || !exercise || exercise.groupId !== groupId) notFound();
+  const userId = await requireUserId();
+  const [state, sets] = await Promise.all([
+    getLevelState(userId, exercise.id),
+    getRecentSets(userId, exercise.id, 10),
+  ]);
 
   return (
     <section>
@@ -70,7 +78,8 @@ export default async function ExercisePage({
           </div>
         )}
       </section>
-      <ExerciseLevel key={exercise.id} exercise={exercise} />
+      <ExerciseLevel key={exercise.id} exercise={exercise} state={state} />
+      <SetHistory exerciseId={exercise.id} sets={sets.map((set) => ({ ...set, createdAt: set.createdAt.toISOString() }))} />
     </section>
   );
 }

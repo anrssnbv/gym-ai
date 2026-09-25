@@ -3,6 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { MuscleMap, exerciseIntensity } from "@/components/muscle-map/muscle-map";
+import { requireUserId } from "@/lib/auth";
+import { formatKg } from "@/lib/game";
+import { getProgressMap } from "@/lib/queries";
 import {
   getExercisesByGroup,
   getGroup,
@@ -17,6 +20,8 @@ export default async function GroupPage({
   const { groupId } = await params;
   const group = getGroup(groupId);
   if (!group) notFound();
+  const userId = await requireUserId();
+  const progress = await getProgressMap(userId);
 
   return (
     <section>
@@ -41,7 +46,15 @@ export default async function GroupPage({
               className="w-16 shrink-0"
             />
             <div className="min-w-0 flex-1">
-              <h2 className="font-display text-lg text-copy">{exercise.name}</h2>
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <h2 className="font-display text-lg text-copy">{exercise.name}</h2>
+                {progress[exercise.id] && (
+                  <>
+                    <span className="font-display text-level">LV {progress[exercise.id].level}</span>
+                    <span className="text-sm text-copy-secondary">{formatKg(progress[exercise.id].weightKg)}</span>
+                  </>
+                )}
+              </div>
               <div className="mt-2 flex items-center gap-2">
                 <Badge variant="secondary" className="capitalize">
                   {exercise.equipment}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Lock, Play, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -9,18 +10,24 @@ import { RoundTimer } from "@/components/exercise/round-timer";
 import { LogRepsSheet } from "@/components/exercise/log-reps-sheet";
 import { LevelUpOverlay } from "@/components/exercise/level-up-overlay";
 import type { Exercise } from "@/lib/catalog";
-import { applySet, formatKg, roundSeconds, TARGET_REPS } from "@/lib/game";
+import { formatKg, roundSeconds, TARGET_REPS } from "@/lib/game";
 import type { LevelState } from "@/lib/game";
+import { calibrateExercise, adjustExercise, logSet } from "@/actions/exercise";
+import { callAction } from "@/lib/action-result";
 
 interface Round {
+  setId: string;
+  submittedReps: number | null;
   endsAt: number;
   number: number;
   state: LevelState;
   result: string | null;
 }
 
-export function ExerciseLevel({ exercise }: { exercise: Exercise }) {
-  const [state, setState] = useState<LevelState | null>(null);
+export function ExerciseLevel({ exercise, state }: { exercise: Exercise; state: LevelState | null }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   const [round, setRound] = useState<Round | null>(null);
   const [roundsLogged, setRoundsLogged] = useState(0);
   const [reward, setReward] = useState<LevelState | null>(null);
@@ -32,18 +39,46 @@ export function ExerciseLevel({ exercise }: { exercise: Exercise }) {
   const seconds = roundSeconds(exercise.compound);
 
   function startRound() {
-    if (!state) return;
-    setRound({ endsAt: Date.now() + seconds * 1000, number: roundsLogged + 1, state, result: null });
+    if (!state || pending) return;
+    setError(null);
+    setRound({ setId: crypto.randomUUID(), submittedReps: null, endsAt: Date.now() + seconds * 1000, number: roundsLogged + 1, state, result: null });
   }
 
-  function logReps(reps: number) {
-    if (!round || round.result !== null) return;
-    const outcome = applySet(round.state, reps);
-    setState(outcome.state);
-    setRoundsLogged((count) => count + 1);
-    const message = reps === 11 ? "So close" : reps >= 9 ? "Almost there" : "Keep going";
-    setRound({ ...round, result: outcome.leveledUp ? "Level cleared!" : `${message} — ${reps} / ${TARGET_REPS}` });
-    if (outcome.leveledUp) setReward(outcome.state);
+  function saveWeight(weightKg: number, stepKg: number): Promise<string | null> {
+    return new Promise((resolve) => {
+      startTransition(async () => {
+        const action = state ? adjustExercise : calibrateExercise;
+        const result = await callAction(() => action({ exerciseId: exercise.id, weightKg, stepKg }));
+        resolve(result.ok ? null : result.error);
+      });
+    });
+  }
+
+  function logReps(reps: number): Promise<string | null> {
+    if (!round || round.result !== null) return Promise.resolve(null);
+    const submittedReps = round.submittedReps ?? reps;
+    setRound({ ...round, submittedReps });
+    return new Promise((resolve) => {
+      startTransition(async () => {
+        const result = await callAction(() => logSet({
+          setId: round.setId, exerciseId: exercise.id, reps: submittedReps, expectedLevel: round.state.level,
+        }));
+        if (!result.ok) {
+          if (result.stale) {
+            setRound(null);
+            setError(result.error);
+            router.refresh();
+            resolve(null);
+          } else resolve(result.error);
+          return;
+        }
+        setRoundsLogged((count) => count + 1);
+        const message = submittedReps === 11 ? "So close" : submittedReps >= 9 ? "Almost there" : "Keep going";
+        setRound({ ...round, submittedReps, result: result.data.leveledUp ? "Level cleared!" : `${message} — ${submittedReps} / ${TARGET_REPS}` });
+        if (result.data.leveledUp) setReward(result.data.state);
+        resolve(null);
+      });
+    });
   }
 
   return (
@@ -55,8 +90,8 @@ export function ExerciseLevel({ exercise }: { exercise: Exercise }) {
             <h2 className="font-display text-xl">Unlock this exercise</h2>
             <p className="text-sm text-copy-muted">Pick a weight you can lift for 12 clean reps.</p>
           </div>
-          <WeightSheet mode="calibrate" exercise={exercise} onSave={setState}>
-            <Button className="h-11 w-full rounded-xl">Calibrate</Button>
+          <WeightSheet mode="calibrate" exercise={exercise} onSave={saveWeight}>
+            <Button disabled={pending} className="h-11 w-full rounded-xl">Calibrate</Button>
           </WeightSheet>
         </>
       ) : (
@@ -80,17 +115,18 @@ export function ExerciseLevel({ exercise }: { exercise: Exercise }) {
             </p>
           )}
           {round ? (
-            <RoundTimer key={round.endsAt} endsAt={round.endsAt} seconds={seconds} roundNumber={round.number} result={round.result} onCancel={() => setRound(null)} onNext={startRound} nextButtonRef={nextButton}>
-              <LogRepsSheet weightKg={round.state.weightKg} level={round.state.level} onSave={logReps} />
+            <RoundTimer key={round.setId} endsAt={round.endsAt} seconds={seconds} roundNumber={round.number} result={round.result} onCancel={() => setRound(null)} onNext={startRound} nextButtonRef={nextButton} pending={pending}>
+              <LogRepsSheet weightKg={round.state.weightKg} level={round.state.level} submittedReps={round.submittedReps} onSave={logReps} />
             </RoundTimer>
           ) : <div className="flex gap-3">
-            <Button onClick={startRound} className="h-11 flex-1 rounded-xl"><Play className="size-5" aria-hidden="true" />Start round</Button>
-            <WeightSheet mode="adjust" exercise={exercise} state={state} onSave={setState}>
-              <Button variant="outline" size="icon" className="size-11 rounded-xl" aria-label="Adjust weight"><SlidersHorizontal className="size-5" aria-hidden="true" /></Button>
+            <Button disabled={pending} onClick={startRound} className="h-11 flex-1 rounded-xl"><Play className="size-5" aria-hidden="true" />Start round</Button>
+            <WeightSheet mode="adjust" exercise={exercise} state={state} onSave={saveWeight}>
+              <Button disabled={pending} variant="outline" size="icon" className="size-11 rounded-xl" aria-label="Adjust weight"><SlidersHorizontal className="size-5" aria-hidden="true" /></Button>
             </WeightSheet>
           </div>}
         </>
       )}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       {reward && <LevelUpOverlay level={reward.level} weightKg={reward.weightKg} onClose={closeReward} />}
     </section>
   );

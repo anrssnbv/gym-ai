@@ -13,9 +13,10 @@ interface RoundTimerProps {
   onNext: () => void;
   nextButtonRef: Ref<HTMLButtonElement>;
   children: ReactNode;
+  pending?: boolean;
 }
 
-export function RoundTimer({ endsAt, seconds, roundNumber, result, onCancel, onNext, nextButtonRef, children }: RoundTimerProps) {
+export function RoundTimer({ endsAt, seconds, roundNumber, result, onCancel, onNext, nextButtonRef, children, pending = false }: RoundTimerProps) {
   const [remaining, setRemaining] = useState(() => Math.max(0, Math.ceil((endsAt - Date.now()) / 1000)));
 
   useEffect(() => {
@@ -83,10 +84,10 @@ export function RoundTimer({ endsAt, seconds, roundNumber, result, onCancel, onN
       {result === null ? (
         <div className="flex gap-3">
           {children}
-          <Button variant="secondary" className="h-11 rounded-xl" onClick={onCancel}>Cancel</Button>
+          <Button disabled={pending} variant="secondary" className="h-11 rounded-xl" onClick={onCancel}>Cancel</Button>
         </div>
       ) : (
-        <Button ref={nextButtonRef} autoFocus className="h-11 w-full rounded-xl" onClick={onNext}>Next round</Button>
+        <Button disabled={pending} ref={nextButtonRef} autoFocus className="h-11 w-full rounded-xl" onClick={onNext}>Next round</Button>
       )}
     </div>
   );
