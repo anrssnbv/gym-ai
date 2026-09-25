@@ -6,10 +6,11 @@ Scope: specs 01–15, Playwright MCP against `http://localhost:3100`, source rev
 
 ## Production issues found after deployment — 2026-09-25
 
-These are new findings from Vercel runtime logs and the deployed app. The original local QA audit below remains historical; its passing generation checks do not cover the current Vercel environment. **PROD-03 is resolved; PROD-01 and PROD-02 remain open pending key rotation and live generation verification.** Secret values are redacted here.
+These are findings from Vercel runtime logs and the deployed app. The original local QA audit below remains historical. **PROD-01, PROD-02, and PROD-03 were resolved on 2026-09-25.** Secret values are redacted here.
 
 ### PROD-01 — P1: Generate workout always returns a retry error on the primary production site
 
+- **Status: Resolved 2026-09-25.** The replacement key was installed as a Secret in Preview and Production for both Vercel projects. The primary Preview rebuild (`3oXy45ZSJKbHMgLub5CV2HQnTnEc`) passed, followed by a Production rebuild (`C2i5yUHZiVL33R44rYUuaZagtpjv`) at `https://gym-ai-seven-alpha.vercel.app`. A disposable signed-in account with a completed beginner training profile generated a 60-minute Push Day preview with three valid exercises. The database showed exactly one generation attempt, zero sessions, and zero sets before Start. The test account and all its scoped rows were removed. Preview's Vercel SSO prevented an authenticated browser run there; the live action was verified in Production.
 - **User report:** Open Generate workout, choose a duration and focus, then submit. The sheet displays `Couldn't generate a workout. Try again.` and no preview appears.
 - **Observed evidence:** In project `gym-ai`, Vercel logged a `POST /workout` at `2026-09-25 14:33:45 UTC` with HTTP 200 and `Workout generation failed TypeError: Headers.append: "Bearer [REDACTED]\nNEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/" is an invalid header value.` An earlier production request logged the same error. HTTP 200 is the Server Action transport status, not generation success.
 - **Cause:** The production `OPENAI_API_KEY` value contains a newline followed by another environment-variable assignment. The OpenAI SDK tries to use that entire value as the Bearer authorization header; header construction fails before an OpenAI request is sent. This is a Vercel secret-value configuration error. `actions/workout.ts` catches it and returns the generic message shown in the sheet.
@@ -18,6 +19,7 @@ These are new findings from Vercel runtime logs and the deployed app. The origin
 
 ### PROD-02 — P0: A production error log exposed the OpenAI API key
 
+- **Status: Resolved 2026-09-25.** The user confirmed revoking the exposed key and creating a replacement. The replacement passed a model-availability request, was installed without printing its value, and is active in fresh Vercel deployments. Code now logs only a fixed failure stage and rejects malformed keys before quota reservation. A sanitized scan of 13 new primary-deployment log records found no current key, Bearer value, or workout-generation failure. Two root-page log records were HTTP 200 with Clerk/SSL compatibility diagnostics, unrelated to generation. OpenAI's Default project displayed a $10 spend limit with hard rejection at the limit, $0.00 displayed spend, and 19 requests over the prior seven days. Earlier logs containing the old key remain historical, but revocation makes it unusable.
 - **Observed evidence:** The `Headers.append` exception above included the complete Bearer value in Vercel runtime logs. The value is intentionally omitted from this file.
 - **Cause:** `actions/workout.ts` logs the raw caught exception with `console.error("Workout generation failed", error)`. The invalid-header exception embeds the authorization value in its message.
 - **Impact:** Anyone with access to those logs could copy the key. Correcting the Vercel variable alone does not invalidate the disclosed key.
@@ -34,9 +36,9 @@ The primary project's production logs also contain the PostgreSQL `sslmode=requi
 
 ### Recovery progress — 2026-09-25
 
-- [PR #20](https://github.com/anrssnbv/gym-ai/pull/20) merged as `8140279` and deployed to both projects. The action rejects malformed keys before reserving quota and logs only a fixed stage on failure; integration tests verify that fake secrets stay out of logs and attempts. The primary alias still redirects signed-out visitors to sign-in (307). No authenticated production generation has been claimed yet.
+- [PR #20](https://github.com/anrssnbv/gym-ai/pull/20) merged as `8140279` and deployed to both projects. The action rejects malformed keys before reserving quota and logs only a fixed stage on failure; integration tests verify that fake secrets stay out of logs and attempts. Both projects were redeployed after secret rotation. The second project remained available at its alias (`7ddZP7y1wx19AvnFPRgt9wsLVexP`) with a 307 to rendered Clerk sign-in.
 - Unit tests 50/50, PostgreSQL integration tests 56/56 in serial mode, focused generation tests 10/10, lint, and production build passed. Parallel integration files repeatedly caused unrelated transaction retry exhaustion; the standard integration script now runs serially.
-- The exposed OpenAI key must still be revoked and replaced in the same $10-budget project. The replacement must then be installed as one clean secret in Vercel and a fresh deployment tested. This is the remaining gate for PROD-01 and PROD-02.
+- A read-only quota audit found three pre-recovery attempts across one user; that user was below the 10-attempt rolling limit. These rows will expire from the limit naturally after 24 hours; no real-user attempts or workout history were deleted.
 
 **Original audit: 5 confirmed defects (2 high, 1 medium, 2 low), two validation gaps, and three observations.** The original reproductions below are retained as regression cases.
 
