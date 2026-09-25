@@ -329,7 +329,7 @@ Implemented spec 14 with an additive JSON plan column and PlanGeneration table, 
 - [x] Read spec and mark in progress.
 - [x] Implement backend, sheet, and page wiring.
 - [x] Verify integration and browser flows; run tests/lint/build.
-- [ ] Update tracker/review, push, open/merge PR, and sync local main.
+- [x] Update tracker/review, push, open/merge PR, and sync local main.
 
 ## Review
 
