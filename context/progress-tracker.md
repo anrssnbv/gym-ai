@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Phase 3 — Core loop on real data. Spec 09 complete; specs 02, 05, 06, and 07 phone checks pending.
+- Phase 3 — Core loop on real data. Spec 10 implemented; specs 02, 05, 06, 07, and 10 phone checks pending.
 
 ## Current Goal
 
-- 09 Exercise Actions complete. Next planned: 10 Wire Exercise Screen.
+- 10 Wire Exercise Screen implemented and browser-verified; phone-to-desktop check pending.
 
 ## Roadmap
 
@@ -61,6 +61,7 @@ All specs 01–15 are written. 09–15 were written after 08, against the code a
 
 ## In Progress
 
+- 10 wire-exercise-screen — saved-state props, asynchronous action-backed sheets, stable round IDs/reps on retry, stale-tab recovery, history/Undo, browser-local dates, and catalog levels/weights/power implemented. All 23 tests, lint, TypeScript, production build, and 360 × 640 browser checks pass. Verified persistence across reloads and separate browser contexts, account isolation, normal and level-up Undo, adjustment rules, offline recovery for all four actions, and a committed log with a lost response replaying without duplicate writes. Remaining: user verifies a phone-logged round appears on desktop after reload.
 - 07 auth — implementation merged in PR #7 and rechecked against the spec. Provider/theme, protected app layout, public auth pages, proxy, user menu, and env example are implemented. Lint, build, 17 tests, and public asset checks pass. Linked to GYM-AI through Clerk CLI; development keys configured locally. Doctor, signed-out redirects, public assets, and themed 360 px auth pages verified. User confirmed sign-in/sign-out. Email-code sign-in and sign-up verification are enabled. Remaining: verify email-code sign-in in the installed app and Google sign-in in the installed iOS app; keep email code as the main method if Google fails there.
 - 06 round-flow — timestamp timer, reps logging, wake lock, and level-up feedback implemented with local state. All 17 tests, lint, build, and 360 px browser checks pass. Real-phone checks pending: countdown recovery after 30 seconds locked and screen staying awake during a round.
 - 05 exercise-level-screen — game rules, local level card, and calibrate/adjust sheets implemented. All 12 tests, lint, build, and 360 px browser flows pass. Real-phone check pending: submit stays visible with the keyboard open.

@@ -12,23 +12,30 @@ import {
 } from "@/components/ui/sheet";
 import { DEFAULT_STEP_KG } from "@/lib/catalog";
 import type { Exercise } from "@/lib/catalog";
-import { adjust, calibrate, STEP_LIMITS_KG, WEIGHT_LIMITS_KG } from "@/lib/game";
+import { STEP_LIMITS_KG, WEIGHT_LIMITS_KG } from "@/lib/game";
 import type { LevelState } from "@/lib/game";
 
 type WeightSheetProps = {
   exercise: Exercise;
-  onSave: (state: LevelState) => void;
+  onSave: (weightKg: number, stepKg: number) => Promise<string | null>;
   children: ReactNode;
 } & ({ mode: "calibrate"; state?: never } | { mode: "adjust"; state: LevelState });
 
 export function WeightSheet(props: WeightSheetProps) {
   const { exercise, mode, onSave, children } = props;
   const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const submitted = useRef(false);
   const id = useId();
   const weightRef = useRef<HTMLInputElement>(null);
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={(next) => {
+      if (submitted.current) return;
+      setError(null);
+      setOpen(next);
+    }}>
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent
         side="bottom"
@@ -56,13 +63,25 @@ export function WeightSheet(props: WeightSheetProps) {
         </SheetClose>
         <form
           className="space-y-4"
-          onSubmit={(event) => {
+          onSubmit={async (event) => {
             event.preventDefault();
+            if (submitted.current) return;
+            submitted.current = true;
+            setSaving(true);
+            setError(null);
             const data = new FormData(event.currentTarget);
             const weight = Number(data.get("weight"));
             const step = Number(data.get("step"));
-            onSave(mode === "adjust" ? adjust(props.state, weight, step) : calibrate(weight, step));
-            setOpen(false);
+            try {
+              const message = await onSave(weight, step);
+              if (message) setError(message);
+              else setOpen(false);
+            } catch {
+              setError("Couldn't reach the server. Try again.");
+            } finally {
+              submitted.current = false;
+              setSaving(false);
+            }
           }}
         >
           <div className="grid grid-cols-2 gap-3">
@@ -83,8 +102,9 @@ export function WeightSheet(props: WeightSheetProps) {
               </div>
             </div>
           </div>
-          <Button type="submit" className="h-11 w-full rounded-xl">
-            {mode === "calibrate" ? "Unlock level 1" : "Save"}
+          {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+          <Button disabled={saving} type="submit" className="h-11 w-full rounded-xl">
+            {saving ? "Saving…" : mode === "calibrate" ? "Unlock level 1" : "Save"}
           </Button>
         </form>
       </SheetContent>

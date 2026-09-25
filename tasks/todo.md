@@ -212,3 +212,24 @@ Saved findings and dispositions in `context/feature-specs/09-15-review.md`. Reco
 ## Review
 
 Implemented the auth helper, shared action result, pure session/power rules, scoped reads, and five validated Server Actions. Reused the existing schema and game rules. Real PostgreSQL checks exposed commit-time serialization conflicts arriving as Prisma 7 pg adapter errors; the bounded retry helper now handles these alongside P2034. Calibration also recovers a duplicate-key race only when this user's progress exists. All 23 unit tests, 11 integration checks, lint, TypeScript, production build, and diff checks pass. Integration checks use unique artificial users and clean their rows in finally. Independent review found no remaining issues. No UI or schema changes; UI end-to-end checks belong to spec 10. The pre-existing local deletion of the review document is excluded from this feature commit.
+
+# 10 Wire Exercise Screen
+
+## Specification
+
+- Goal: implement spec 10 using the existing server actions and saved page props.
+- Scope: async sheets, retry-safe round UI, set history/Undo, local time, and catalog progress.
+- Decisions: retain existing timer and visuals; no optimistic database state or offline queue.
+- Acceptance: persistent calibration/logging/adjustment/Undo, stale-tab and offline recovery, browser-timezone dates, mobile layout, tests/lint/build, and user phone-to-desktop check.
+
+## Tasks
+
+- [x] Read spec and mark tracker in progress.
+- [x] Wire pages, catalog, history, and asynchronous sheets.
+- [x] Verify browser flows and failure recovery; run tests/lint/build.
+- [x] Update review, push branch, open PR, merge, and update local main.
+- [ ] User confirms a round logged on the phone appears on desktop after reload.
+
+## Review
+
+Implemented spec 10 with saved props, existing actions, async sheets, stable round IDs and immutable submitted reps, stale-tab recovery, history/Undo, local timestamps, and catalog progress. All 23 unit tests, lint, TypeScript, build, and diff checks pass. Playwright at 360 × 640 verified calibration and best reps across reloads, level-up/overlay/new round weight, double-submit safety, response-loss replay with an identical payload and one history entry, stale-tab close/refresh, both Undo cases, adjustment best-rep rules, offline errors and retries for all four actions, timer continuity, separate-browser persistence, account isolation, timezone formatting, 44 px Undo, and no horizontal overflow. Catalog level/weight/power matched a direct Prisma read of the test account. Independent review found no blocking issues. Screenshot: .playwright-mcp/spec10-exercise.png. Temporary Clerk accounts and all their database rows were removed. User phone-to-desktop check remains pending; the existing review-file deletion is excluded from the commit.
