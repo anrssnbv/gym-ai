@@ -8,7 +8,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
-- Specs 01–15 implemented. Remaining acceptance work: physical-phone checks listed below; Vercel deferred by user.
+- Specs 01–15 implemented. QA fixes complete: five confirmed defects and both plan-validation gaps addressed. Physical-phone checks remain; Vercel deferred by user.
 
 ## Roadmap
 
@@ -102,7 +102,8 @@ The user answers these. Defaults are already written into the context files and 
 - Sessions end lazily 3 h after their last set (one helper in `lib/game.ts`); no cron.
 - Derived numbers (best reps, power level, totals) are computed, not stored.
 - Power level = levels cleared (sum of level − 1), so calibrating alone doesn't raise rank.
-- Double-submit safety: log set updates progress only `where level = expectedLevel`.
+- Set safety: per-round IDs make retries idempotent; writes validate the captured level, weight, and step. Undo targets the displayed set ID, rejects stale history, and safely acknowledges an already-absent target.
+- Weight ceilings are per-exercise catalog metadata, shared by forms/actions/progression. At the ceiling, sets are saved without automatic level-ups; historical weights are preserved.
 - Rolling "last 7 days" windows instead of calendar weeks → no user timezone needed on the server; dates are formatted in client components.
 - shadcn/ui on Radix (`-b radix`): shadcn 4.21 defaults to Base UI, and agents write Radix-style `asChild` code more reliably.
 - `<html class="dark">` is permanent, so shadcn's `dark:` variants don't follow the phone's system theme.
@@ -118,6 +119,8 @@ The user answers these. Defaults are already written into the context files and 
 - An AI plan started during a running workout attaches to that session instead of starting a second one.
 
 ## Session Notes
+
+- QA fixes (2026-09-25): captured round settings prevent wrong-weight logs; Undo targets an exact set and safely retries; all 50 exercises have shared weight ceilings; Undo feedback and the header tap target are corrected; AI duration, uniqueness, and focus are validated. All 45 unit tests, 45 PostgreSQL integration checks, lint, TypeScript, and production build pass. Playwright verified concurrency/retry, capped progression, a nine-set generated workout, signup/signout, offline recovery, and genuine session expiry/re-login. Test accounts/data were cleaned. See `current-issues.md` for evidence and remaining manual checks.
 
 - Next.js 16.3.6, React 19.2.8, Tailwind CSS v4, TypeScript strict, Node 24.12.
 - Git repo on GitHub; each spec lands as one PR from `development` into `main`.

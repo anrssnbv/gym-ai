@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  candidateExercises, dedupeExercises, isValidPlanSelection, maxExercises, resolveAutoFocus,
+  candidateExercises, dedupeExercises, estimatePlanMinutes, isValidPlanSelection, maxExercises, resolveAutoFocus,
   type WorkoutPlan,
 } from "./plan.ts";
 import { planOutputSchema, workoutPlanSchema } from "./plan-schema.ts";
@@ -37,6 +37,22 @@ test("duration caps match 30, 45, 60 and 90 minutes", () => {
   assert.deepEqual([maxExercises(30), maxExercises(45), maxExercises(60), maxExercises(90)], [4, 5, 6, 8]);
 });
 
+test("duration uses compound and isolation rounds plus one minute between exercises", () => {
+  assert.equal(estimatePlanMinutes(plan), 17); // Two compound exercises and one isolation, three sets each.
+  assert.equal(estimatePlanMinutes({ ...plan, exercises: [] }), 0);
+  assert.equal(estimatePlanMinutes({ ...plan, exercises: [plan.exercises[2]] }), 3);
+  const mixed: WorkoutPlan = {
+    ...plan, focus: "full_body", exercises: [
+      { exerciseId: "barbell-bench-press", sets: 5, note: "Control." },
+      { exerciseId: "leg-press", sets: 5, note: "Control." },
+      { exerciseId: "cable-crunch", sets: 4, note: "Control." },
+      { exerciseId: "barbell-curl", sets: 3, note: "Control." },
+    ],
+  };
+  assert.equal(estimatePlanMinutes(mixed), 30);
+  assert.equal(estimatePlanMinutes({ ...mixed, exercises: mixed.exercises.map(e => ({ ...e, sets: 5 })) }), 33);
+});
+
 test("workout schema accepts a valid plan and rejects invalid IDs, sets and exercise counts", () => {
   assert.deepEqual(workoutPlanSchema.parse(plan), plan);
   for (const exercise of [
@@ -47,6 +63,20 @@ test("workout schema accepts a valid plan and rejects invalid IDs, sets and exer
     assert.equal(workoutPlanSchema.safeParse({ ...plan, exercises: [exercise, ...plan.exercises.slice(1)] }).success, false);
   }
   assert.equal(workoutPlanSchema.safeParse({ ...plan, exercises: plan.exercises.slice(0, 2) }).success, false);
+});
+
+test("stored and submitted plans reject duplicate IDs and exercises outside their focus", () => {
+  assert.equal(workoutPlanSchema.safeParse({
+    ...plan, exercises: [plan.exercises[0], plan.exercises[0], plan.exercises[2]],
+  }).success, false);
+  for (const focus of ["push", "pull", "legs", "upper", "full_body"] as const) {
+    for (const exercise of candidateExercises("full_body")) {
+      const others = candidateExercises(focus).filter(({ id }) => id !== exercise.id).slice(0, 2);
+      const exercises = [exercise, ...others].map(({ id }) => ({ exerciseId: id, sets: 3, note: "Control." }));
+      assert.equal(workoutPlanSchema.safeParse({ ...plan, focus, exercises }).success,
+        candidateExercises(focus).some(({ id }) => id === exercise.id), `${focus}: ${exercise.id}`);
+    }
+  }
 });
 
 test("output schema enforces candidate IDs, duration cap and local text limits", () => {

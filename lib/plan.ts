@@ -1,4 +1,5 @@
-import { EXERCISES, type Exercise, type ExerciseId, type Pattern } from "./catalog.ts";
+import { EXERCISES, getExercise, type Exercise, type ExerciseId, type Pattern } from "./catalog.ts";
+import { roundSeconds } from "./game.ts";
 
 export const FOCUSES = ["push", "pull", "legs", "upper", "full_body"] as const;
 export type Focus = (typeof FOCUSES)[number];
@@ -58,6 +59,12 @@ export function resolveAutoFocus(
 
 export function maxExercises(durationMin: (typeof DURATIONS_MIN)[number]): number {
   return { 30: 4, 45: 5, 60: 6, 90: 8 }[durationMin];
+}
+
+export function estimatePlanMinutes(plan: WorkoutPlan): number {
+  return plan.exercises.reduce((minutes, { exerciseId, sets }) =>
+    minutes + sets * roundSeconds(getExercise(exerciseId)!.compound) / 60,
+  0) + Math.max(0, plan.exercises.length - 1);
 }
 
 export function dedupeExercises(plan: WorkoutPlan): WorkoutPlan {

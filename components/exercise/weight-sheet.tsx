@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import { DEFAULT_STEP_KG } from "@/lib/catalog";
 import type { Exercise } from "@/lib/catalog";
-import { STEP_LIMITS_KG, WEIGHT_LIMITS_KG } from "@/lib/game";
+import { formatKg, roundKg, STEP_LIMITS_KG, WEIGHT_MIN_KG } from "@/lib/game";
 import type { LevelState } from "@/lib/game";
 
 type WeightSheetProps = {
@@ -29,6 +29,12 @@ export function WeightSheet(props: WeightSheetProps) {
   const submitted = useRef(false);
   const id = useId();
   const weightRef = useRef<HTMLInputElement>(null);
+  const existingWeight = mode === "adjust" ? props.state.weightKg : null;
+  const weightUnit = exercise.equipment === "dumbbell" ? "per dumbbell"
+    : exercise.equipment === "barbell" ? "including the bar"
+    : exercise.id === "cable-crossover" ? "per stack, with both sides equal"
+    : exercise.equipment === "cable" ? "as shown on the stack"
+    : "shown on the stack, or total added plates";
 
   return (
     <Sheet open={open} onOpenChange={(next) => {
@@ -52,7 +58,7 @@ export function WeightSheet(props: WeightSheetProps) {
           </SheetTitle>
           <SheetDescription>
             {mode === "calibrate"
-              ? "A weight you can lift for 12 clean reps. Every time you hit 12, the weight goes up by the step."
+              ? "A weight you can lift for 12 clean reps. Hit 12 to increase by the step, up to this exercise’s limit."
               : "Changes the weight for this level. Your level stays the same."}
           </SheetDescription>
         </SheetHeader>
@@ -66,12 +72,16 @@ export function WeightSheet(props: WeightSheetProps) {
           onSubmit={async (event) => {
             event.preventDefault();
             if (submitted.current) return;
-            submitted.current = true;
-            setSaving(true);
-            setError(null);
             const data = new FormData(event.currentTarget);
             const weight = Number(data.get("weight"));
             const step = Number(data.get("step"));
+            if (roundKg(weight) > exercise.maxWeightKg && roundKg(weight) !== existingWeight) {
+              setError(`Weight must be at most ${formatKg(exercise.maxWeightKg)} for this exercise.`);
+              return;
+            }
+            submitted.current = true;
+            setSaving(true);
+            setError(null);
             try {
               const message = await onSave(weight, step);
               if (message) setError(message);
@@ -90,7 +100,7 @@ export function WeightSheet(props: WeightSheetProps) {
                 {exercise.equipment === "dumbbell" ? "Weight per dumbbell" : "Weight"}
               </Label>
               <div className="relative">
-                <Input ref={weightRef} id={`${id}-weight`} name="weight" type="number" inputMode="decimal" step="any" min={WEIGHT_LIMITS_KG.min} max={WEIGHT_LIMITS_KG.max} required defaultValue={mode === "adjust" ? props.state.weightKg : ""} className="h-11 rounded-xl pr-9 text-base md:text-base" />
+                <Input ref={weightRef} id={`${id}-weight`} name="weight" type="number" inputMode="decimal" step="any" min={WEIGHT_MIN_KG} max={Math.max(exercise.maxWeightKg, existingWeight ?? 0)} aria-describedby={`${id}-limit`} required defaultValue={existingWeight ?? ""} className="h-11 rounded-xl pr-9 text-base md:text-base" />
                 <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-copy-muted" aria-hidden="true">kg</span>
               </div>
             </div>
@@ -102,6 +112,10 @@ export function WeightSheet(props: WeightSheetProps) {
               </div>
             </div>
           </div>
+          <p id={`${id}-limit`} className="text-sm text-copy-muted">
+            Exercise limit: {formatKg(exercise.maxWeightKg)} {weightUnit}.
+            {existingWeight !== null && existingWeight > exercise.maxWeightKg && " Your existing weight is above this limit. You can keep it unchanged or choose a weight within the limit."}
+          </p>
           {error && <p role="alert" className="text-sm text-danger">{error}</p>}
           <Button disabled={saving} type="submit" className="h-11 w-full rounded-xl">
             {saving ? "Saving…" : mode === "calibrate" ? "Unlock level 1" : "Save"}

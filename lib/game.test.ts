@@ -49,28 +49,66 @@ test("formatKg omits trailing zeros and floating point noise", () => {
 });
 
 test("12 reps levels up and adds the step, while 11 does not", () => {
-  assert.deepEqual(applySet(state, 12), {
+  assert.deepEqual(applySet(state, 12, 200), {
     state: { ...state, level: 5, weightKg: 45, bestRepsAtLevel: 0 },
     leveledUp: true,
+    limitReached: false,
   });
-  assert.deepEqual(applySet(state, 11), {
+  assert.deepEqual(applySet(state, 11, 200), {
     state: { ...state, bestRepsAtLevel: 11 },
     leveledUp: false,
+    limitReached: false,
   });
   assert.equal(state.bestRepsAtLevel, 9);
 });
 
 test("30 reps levels up exactly one level", () => {
-  assert.deepEqual(applySet(state, 30), {
+  assert.deepEqual(applySet(state, 30, 200), {
     state: { ...state, level: 5, weightKg: 45, bestRepsAtLevel: 0 },
     leveledUp: true,
+    limitReached: false,
   });
+});
+
+test("a successful set above the next weight limit keeps the level and records best reps", () => {
+  const nearLimit = { ...state, weightKg: 197.5, stepKg: 5 };
+  assert.deepEqual(applySet(nearLimit, 12, 200), {
+    state: { ...nearLimit, bestRepsAtLevel: 12 },
+    leveledUp: false,
+    limitReached: true,
+  });
+  assert.deepEqual(nearLimit, { ...state, weightKg: 197.5, stepKg: 5 });
+});
+
+test("a rounded next weight exactly at the limit levels up", () => {
+  const nearLimit = { ...state, weightKg: 199.7, stepKg: 0.3 };
+  assert.deepEqual(applySet(nearLimit, 12, 200), {
+    state: { ...nearLimit, level: 5, weightKg: 200, bestRepsAtLevel: 0 },
+    leveledUp: true,
+    limitReached: false,
+  });
+});
+
+test("sets at or above the limit remain loggable without losing a previous best", () => {
+  for (const weightKg of [200, 250]) {
+    const atLimit = { ...state, weightKg, bestRepsAtLevel: 20 };
+    assert.deepEqual(applySet(atLimit, 12, 200), {
+      state: atLimit,
+      leveledUp: false,
+      limitReached: true,
+    });
+    assert.deepEqual(applySet(atLimit, 11, 200), {
+      state: atLimit,
+      leveledUp: false,
+      limitReached: false,
+    });
+  }
 });
 
 test("best reps track the maximum below 12 and reset after a level-up", () => {
   let current = calibrate(20, 2.5);
   for (const [reps, best] of [[8, 8], [6, 8], [11, 11], [10, 11], [12, 0], [5, 5]]) {
-    current = applySet(current, reps).state;
+    current = applySet(current, reps, 200).state;
     assert.equal(current.bestRepsAtLevel, best);
   }
 });
@@ -78,7 +116,7 @@ test("best reps track the maximum below 12 and reset after a level-up", () => {
 test("three level-ups round a 1.1 kg step to exactly 23.3 kg", () => {
   let current = calibrate(20, 1.1);
   for (let round = 0; round < 3; round++) {
-    current = applySet(current, 12).state;
+    current = applySet(current, 12, 200).state;
   }
   assert.equal(current.weightKg, 23.3);
   assert.equal(current.level, 4);

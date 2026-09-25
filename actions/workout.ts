@@ -7,7 +7,7 @@ import type { ActionResult } from "@/lib/action-result";
 import { requireUserId } from "@/lib/auth";
 import { sessionEnd } from "@/lib/game";
 import { findOpenSession, getPlanningContext } from "@/lib/queries";
-import { DAILY_PLAN_LIMIT, DURATIONS_MIN, FOCUS_CHOICES, dedupeExercises, isValidPlanSelection, resolveAutoFocus, type WorkoutPlan } from "@/lib/plan";
+import { DAILY_PLAN_LIMIT, DURATIONS_MIN, FOCUS_CHOICES, dedupeExercises, estimatePlanMinutes, isValidPlanSelection, resolveAutoFocus, type WorkoutPlan } from "@/lib/plan";
 import { prisma } from "@/lib/prisma";
 import { workoutPlanSchema } from "@/lib/plan-schema";
 import { serializableTransaction } from "@/lib/transactions";
@@ -66,7 +66,7 @@ export async function generateWorkout(input: unknown): Promise<ActionResult<Work
     if (!reservation.ok) return reservation;
     const output = await generatePlan({ focus, durationMin, context });
     const plan = dedupeExercises({ focus, ...output });
-    if (!isValidPlanSelection(plan, context.levels)) return generationError;
+    if (!isValidPlanSelection(plan, context.levels) || estimatePlanMinutes(plan) > durationMin) return generationError;
     return { ok: true, data: plan };
   } catch (error) {
     console.error("Workout generation failed", error);

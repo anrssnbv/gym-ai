@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ExerciseLevel } from "@/components/exercise/exercise-level";
-import { SetHistory } from "@/components/exercise/set-history";
 import { MuscleMap, exerciseIntensity } from "@/components/muscle-map/muscle-map";
 import { getExercise, getGroup, MUSCLE_HEADS } from "@/lib/catalog";
 import { roundSeconds } from "@/lib/game";
@@ -87,8 +86,7 @@ export default async function ExercisePage({
           <Link href="/workout" className="inline-flex h-11 items-center text-sm text-brand hover:underline">Back to workout</Link>
         </div>
       )}
-      <ExerciseLevel key={exercise.id} exercise={exercise} state={state} />
-      <SetHistory exerciseId={exercise.id} sets={sets.map((set) => ({ ...set, createdAt: set.createdAt.toISOString() }))} />
+      <ExerciseLevel key={exercise.id} exercise={exercise} state={state} sets={sets.map((set) => ({ ...set, createdAt: set.createdAt.toISOString() }))} />
     </section>
   );
 }

@@ -40,7 +40,7 @@ const success = (result) => {
   return result.data;
 };
 const calibration = (id = exerciseId) => ({ exerciseId: id, weightKg: 20, stepKg: 2.5 });
-const attempt = (overrides = {}) => ({ setId: randomUUID(), exerciseId, reps: 8, expectedLevel: 1, ...overrides });
+const attempt = (overrides = {}) => ({ setId: randomUUID(), exerciseId, reps: 8, expectedLevel: 1, expectedWeightKg: 20, expectedStepKg: 2.5, ...overrides });
 
 function asNewUser(run) {
   const context = { userId: `spec09-test-${randomUUID()}`, invalidations: [] };
@@ -95,16 +95,18 @@ test("exercise actions and queries against PostgreSQL", async (t) => {
       }
     });
     await t.test("validation, missing calibration, and per-user isolation", () => asNewUser(async ({ userId }) => {
-      for (const input of [null, { ...calibration(), weightKg: NaN }, { ...calibration(), stepKg: 0 }, { ...calibration(), weightKg: 1001 }, { ...calibration(), stepKg: 51 }]) {
+      for (const input of [null, { ...calibration(), weightKg: NaN }, { ...calibration(), stepKg: 0 }, { ...calibration(), stepKg: 51 }]) {
         assert.deepEqual(await calibrateExercise(input), { ok: false, error: "Invalid input" });
       }
       assert.deepEqual(await calibrateExercise(calibration("unknown-exercise")), { ok: false, error: "Unknown exercise" });
-      for (const input of [{ reps: 1.5 }, { reps: 101 }, { reps: 0 }, { expectedLevel: -1 }, { setId: "short" }, { setId: "x".repeat(65) }]) {
+      for (const input of [{ reps: 1.5 }, { reps: 101 }, { reps: 0 }, { expectedLevel: -1 }, { expectedWeightKg: undefined }, { expectedStepKg: undefined }, { expectedWeightKg: Infinity }, { expectedStepKg: 0 }, { setId: "short" }, { setId: "x".repeat(65) }]) {
         assert.deepEqual(await logSet(attempt(input)), { ok: false, error: "Invalid input" });
       }
       assert.deepEqual(await logSet(attempt()), { ok: false, error: "Calibrate this exercise first" });
       assert.deepEqual(await adjustExercise(calibration()), { ok: false, error: "Calibrate this exercise first" });
-      assert.deepEqual(await undoLastSet({ exerciseId }), { ok: false, error: "Nothing to undo" });
+      assert.deepEqual(await undoLastSet({ exerciseId }), { ok: false, error: "Invalid input" });
+      const absentId = randomUUID();
+      assert.deepEqual(success(await undoLastSet({ exerciseId, setId: absentId })), { setId: absentId, state: null });
       assert.deepEqual(success(await finishWorkout()), { sessionId: null });
       const first = success(await calibrateExercise(calibration()));
       assert.deepEqual(success(await calibrateExercise({ ...calibration(), weightKg: 90 })), first);
@@ -117,6 +119,7 @@ test("exercise actions and queries against PostgreSQL", async (t) => {
         assert.equal(await getActiveSession(other), null);
         success(await calibrateExercise(calibration()));
         assert.deepEqual(await logSet(saved), { ok: false, error: "Invalid input" });
+        success(await undoLastSet({ exerciseId, setId: saved.setId }));
         assert.equal(await prisma.workoutSession.count({ where: { userId: other } }), 0);
       });
       assert.equal((await getRecentSets(userId, exerciseId)).length, 1);
@@ -152,12 +155,13 @@ test("exercise actions and queries against PostgreSQL", async (t) => {
       assert.deepEqual(adjusted, { level: 1, weightKg: 22.35, stepKg: 1.26, startWeightKg: 20, bestRepsAtLevel: 0 });
       const restored = success(await adjustExercise(calibration()));
       assert.equal(restored.bestRepsAtLevel, 10);
-      const advanced = success(await logSet(attempt({ reps: 12 })));
+      const lastSet = attempt({ reps: 12 });
+      const advanced = success(await logSet(lastSet));
       assert.equal(advanced.state.level, 2);
       assert.equal(advanced.state.bestRepsAtLevel, 0);
       assert.deepEqual(await getProgressMap(userId), { [exerciseId]: { level: 2, weightKg: 22.5 } });
       assert.equal((await getRecentSets(userId, exerciseId, 2)).length, 2);
-      const undone = success(await undoLastSet({ exerciseId }));
+      const undone = success(await undoLastSet({ exerciseId, setId: lastSet.setId })).state;
       assert.equal(undone.level, 1);
       assert.equal(undone.weightKg, 20);
       assert.equal(undone.bestRepsAtLevel, 10);
@@ -174,7 +178,7 @@ test("exercise actions and queries against PostgreSQL", async (t) => {
       assert.equal(await prisma.setLog.count({ where: { userId } }), 1);
       assert.equal(await prisma.workoutSession.count({ where: { userId, endedAt: null } }), 1);
       assert.deepEqual(success(await logSet(input)), first);
-      for (const changed of [{ reps: 11 }, { exerciseId: secondExercise }, { expectedLevel: 2 }]) {
+      for (const changed of [{ reps: 11 }, { exerciseId: secondExercise }, { expectedLevel: 2 }, { expectedWeightKg: 30 }]) {
         assert.deepEqual(await logSet({ ...input, ...changed }), { ok: false, error: "Invalid input" });
       }
       const stale = await logSet(attempt());
@@ -228,9 +232,104 @@ test("exercise actions and queries against PostgreSQL", async (t) => {
       assert.equal(await getActiveSession(userId), null);
       assert.equal(success(await finishWorkout()).sessionId, saved.sessionId);
       assert.equal((await prisma.workoutSession.findFirst({ where: { id: saved.sessionId, userId } })).endedAt.getTime(), old.getTime());
-      success(await undoLastSet({ exerciseId }));
+      success(await undoLastSet({ exerciseId, setId: input.setId }));
       assert.equal(await prisma.setLog.count({ where: { userId } }), 0);
     }));
+    await t.test("a changed weight or step makes a captured round stale without writes", () => asNewUser(async ({ userId }) => {
+      success(await calibrateExercise(calibration()));
+      const captured = attempt({ reps: 12 });
+      for (const changed of [{ weightKg: 40, stepKg: 2.5 }, { weightKg: 20, stepKg: 5 }]) {
+        success(await adjustExercise({ exerciseId, ...changed }));
+        const result = await logSet(captured);
+        assert.equal(result.ok, false);
+        assert.equal(result.stale, true);
+        assert.equal(await prisma.setLog.count({ where: { userId } }), 0);
+        assert.equal(await prisma.workoutSession.count({ where: { userId } }), 0);
+        assert.equal((await getLevelState(userId, exerciseId)).level, 1);
+      }
+      success(await adjustExercise(calibration()));
+      success(await logSet(captured));
+      success(await adjustExercise({ ...calibration(), weightKg: 50, stepKg: 5 }));
+      const replayed = success(await logSet(captured));
+      assert.equal(replayed.state.weightKg, 50);
+      assert.equal(replayed.state.level, 2);
+      assert.equal(await prisma.setLog.count({ where: { userId } }), 1);
+      assert.equal((await getRecentSets(userId, exerciseId))[0].weightKg, 20);
+    }));
+
+    await t.test("Undo targets the displayed newest set and an identical retry never removes another", () => asNewUser(async ({ userId }) => {
+      success(await calibrateExercise(calibration()));
+      const first = attempt();
+      success(await logSet(first));
+      const latest = attempt({ reps: 12 });
+      success(await logSet(latest));
+      const stale = await undoLastSet({ exerciseId, setId: first.setId });
+      assert.equal(stale.ok, false);
+      assert.equal(stale.stale, true);
+      assert.equal(await prisma.setLog.count({ where: { userId } }), 2);
+      const undone = success(await undoLastSet({ exerciseId, setId: latest.setId }));
+      assert.equal(undone.state.level, 1);
+      const next = attempt({ reps: 9 });
+      success(await logSet(next));
+      const retried = success(await undoLastSet({ exerciseId, setId: latest.setId }));
+      assert.equal(retried.state.level, 1);
+      assert.equal(await prisma.setLog.count({ where: { userId } }), 2);
+      assert.equal((await getRecentSets(userId, exerciseId))[0].id, next.setId);
+      success(await undoLastSet({ exerciseId: secondExercise, setId: next.setId }));
+      assert.equal(await prisma.setLog.count({ where: { userId } }), 2);
+    }));
+
+    await t.test("concurrent Undo retries roll back a level only once", () => asNewUser(async ({ userId }) => {
+      success(await calibrateExercise(calibration()));
+      const first = attempt();
+      success(await logSet(first));
+      const latest = attempt({ reps: 12 });
+      success(await logSet(latest));
+      const target = { exerciseId, setId: latest.setId };
+      const results = await Promise.all([undoLastSet(target), undoLastSet(target)]);
+      for (const result of results) assert.equal(success(result).state.level, 1);
+      assert.equal(await prisma.setLog.count({ where: { userId } }), 1);
+      assert.equal((await getRecentSets(userId, exerciseId))[0].id, first.setId);
+    }));
+
+    await t.test("each exercise bounds calibration, Adjust and progression; capped sets replay and undo", () => asNewUser(async ({ userId }) => {
+      for (const [id, max] of [[exerciseId, 200], ["barbell-curl", 80], ["leg-press", 600]]) {
+        const input = { exerciseId: id, weightKg: max - 2.5, stepKg: 2.5 };
+        assert.equal((await calibrateExercise({ ...input, weightKg: max + 0.5 })).ok, false);
+        success(await calibrateExercise(input));
+        assert.equal((await adjustExercise({ ...input, weightKg: max + 0.5 })).ok, false);
+        const exact = attempt({ exerciseId: id, expectedWeightKg: max - 2.5, reps: 12 });
+        assert.equal(success(await logSet(exact)).state.weightKg, max);
+        const blocked = attempt({ exerciseId: id, expectedLevel: 2, expectedWeightKg: max, reps: 15 });
+        const result = success(await logSet(blocked));
+        assert.equal(result.leveledUp, false);
+        assert.equal(result.limitReached, true);
+        assert.equal(result.state.weightKg, max);
+        assert.equal(result.state.level, 2);
+        assert.equal(result.state.bestRepsAtLevel, 15);
+        assert.deepEqual(success(await logSet(blocked)), result);
+        assert.equal((await getRecentSets(userId, id)).length, 2);
+        success(await undoLastSet({ exerciseId: id, setId: blocked.setId }));
+        assert.equal((await getLevelState(userId, id)).level, 2);
+        success(await undoLastSet({ exerciseId: id, setId: exact.setId }));
+        assert.equal((await getLevelState(userId, id)).weightKg, max - 2.5);
+      }
+    }));
+
+    await t.test("legacy above-limit loads stay loggable and allow only unchanged-weight edits", () => asNewUser(async ({ userId }) => {
+      await prisma.exerciseProgress.create({ data: { userId, exerciseId, weightKg: 220, stepKg: 5, startWeightKg: 220 } });
+      const stepOnly = success(await adjustExercise({ exerciseId, weightKg: 220, stepKg: 2.5 }));
+      assert.equal(stepOnly.weightKg, 220);
+      for (const weightKg of [221, 210]) assert.equal((await adjustExercise({ exerciseId, weightKg, stepKg: 2.5 })).ok, false);
+      const capped = attempt({ expectedWeightKg: 220, reps: 12 });
+      assert.equal(success(await logSet(capped)).limitReached, true);
+      assert.equal((await getRecentSets(userId, exerciseId))[0].weightKg, 220);
+      success(await adjustExercise({ ...calibration(), weightKg: 200 }));
+      assert.equal((await adjustExercise({ ...calibration(), weightKg: 220 })).ok, false);
+      assert.equal(success(await logSet(capped)).limitReached, true);
+      assert.equal(await prisma.setLog.count({ where: { userId } }), 1);
+    }));
+
     for (const context of contexts) {
       for (const invalidation of context.invalidations) assert.deepEqual(invalidation, ["/", "layout"]);
     }

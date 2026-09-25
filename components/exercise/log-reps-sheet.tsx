@@ -9,13 +9,14 @@ import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTi
 import { formatKg, REPS_LIMITS } from "@/lib/game";
 
 interface LogRepsSheetProps {
+  disabled: boolean;
   weightKg: number;
   level: number;
   submittedReps: number | null;
   onSave: (reps: number) => Promise<string | null>;
 }
 
-export function LogRepsSheet({ weightKg, level, submittedReps, onSave }: LogRepsSheetProps) {
+export function LogRepsSheet({ disabled, weightKg, level, submittedReps, onSave }: LogRepsSheetProps) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +27,7 @@ export function LogRepsSheet({ weightKg, level, submittedReps, onSave }: LogReps
 
   return (
     <Sheet open={open} onOpenChange={(next) => { if (!submitted.current) setOpen(next); }}>
-      <SheetTrigger asChild><Button className="h-11 flex-1 rounded-xl">Log reps</Button></SheetTrigger>
+      <SheetTrigger asChild><Button disabled={disabled} className="h-11 flex-1 rounded-xl">Log reps</Button></SheetTrigger>
       <SheetContent
         side="bottom"
         showCloseButton={false}

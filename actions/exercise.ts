@@ -5,7 +5,7 @@ import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { requireUserId } from "@/lib/auth";
 import { getExercise } from "@/lib/catalog";
-import { applySet, calibrate, roundKg, REPS_LIMITS, STEP_LIMITS_KG, WEIGHT_LIMITS_KG, type LevelState } from "@/lib/game";
+import { applySet, calibrate, formatKg, roundKg, REPS_LIMITS, STEP_LIMITS_KG, TARGET_REPS, WEIGHT_MIN_KG, type LevelState } from "@/lib/game";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { findOpenSession, getLevelState } from "@/lib/queries";
@@ -13,21 +13,25 @@ import { serializableTransaction } from "@/lib/transactions";
 
 const exerciseSchema = z.object({ exerciseId: z.string() });
 const weightSchema = exerciseSchema.extend({
-  weightKg: z.number().min(WEIGHT_LIMITS_KG.min).max(WEIGHT_LIMITS_KG.max),
+  weightKg: z.number().min(WEIGHT_MIN_KG).transform(roundKg),
   stepKg: z.number().min(STEP_LIMITS_KG.min).max(STEP_LIMITS_KG.max),
 });
 const setSchema = exerciseSchema.extend({
   setId: z.string().min(16).max(64),
   reps: z.number().int().min(REPS_LIMITS.min).max(REPS_LIMITS.max),
   expectedLevel: z.number().int().min(1),
+  expectedWeightKg: z.number().min(WEIGHT_MIN_KG).transform(roundKg),
+  expectedStepKg: z.number().min(STEP_LIMITS_KG.min).max(STEP_LIMITS_KG.max).transform(roundKg),
 });
-const staleResult = { ok: false, error: "Your level changed on another screen. Start a new round.", stale: true } as const;
+const undoSchema = exerciseSchema.extend({ setId: z.string().min(16).max(64) });
+const staleResult = { ok: false, error: "Your exercise settings changed on another screen. Start a new round.", stale: true } as const;
 class StaleLevel extends Error {}
 class SetIdConflict extends Error {}
 
 interface LoggedSet {
   state: LevelState;
   leveledUp: boolean;
+  limitReached: boolean;
   sessionId: string;
 }
 
@@ -40,10 +44,10 @@ async function savedState(userId: string, exerciseId: string): Promise<LevelStat
 async function replay(db: Prisma.TransactionClient, userId: string, input: z.infer<typeof setSchema>) {
   const set = await db.setLog.findFirst({ where: { id: input.setId, userId } });
   if (!set) return null;
-  if (set.exerciseId !== input.exerciseId || set.reps !== input.reps || set.level !== input.expectedLevel) {
+  if (set.exerciseId !== input.exerciseId || set.reps !== input.reps || set.level !== input.expectedLevel || set.weightKg !== input.expectedWeightKg) {
     return { ok: false, error: "Invalid input" } as const;
   }
-  return { ok: true, data: { leveledUp: set.leveledUp, sessionId: set.sessionId } } as const;
+  return { ok: true, data: { leveledUp: set.leveledUp, limitReached: set.reps >= TARGET_REPS && !set.leveledUp, sessionId: set.sessionId } } as const;
 }
 
 export async function calibrateExercise(input: unknown): Promise<ActionResult<LevelState>> {
@@ -51,7 +55,9 @@ export async function calibrateExercise(input: unknown): Promise<ActionResult<Le
   const parsed = weightSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
   const { exerciseId, weightKg, stepKg } = parsed.data;
-  if (!getExercise(exerciseId)) return { ok: false, error: "Unknown exercise" };
+  const exercise = getExercise(exerciseId);
+  if (!exercise) return { ok: false, error: "Unknown exercise" };
+  if (weightKg > exercise.maxWeightKg) return { ok: false, error: `Weight must be at most ${formatKg(exercise.maxWeightKg)} for this exercise.` };
   const { level, weightKg: weight, stepKg: step, startWeightKg } = calibrate(weightKg, stepKg);
   try {
     await prisma.exerciseProgress.upsert({
@@ -73,12 +79,22 @@ export async function adjustExercise(input: unknown): Promise<ActionResult<Level
   const parsed = weightSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
   const { exerciseId, weightKg, stepKg } = parsed.data;
-  if (!getExercise(exerciseId)) return { ok: false, error: "Unknown exercise" };
-  const { count } = await prisma.exerciseProgress.updateMany({
-    where: { userId, exerciseId },
-    data: { weightKg: roundKg(weightKg), stepKg: roundKg(stepKg) },
+  const exercise = getExercise(exerciseId);
+  if (!exercise) return { ok: false, error: "Unknown exercise" };
+  const result = await serializableTransaction(async (tx) => {
+    const row = await tx.exerciseProgress.findFirst({ where: { userId, exerciseId } });
+    if (!row) return { ok: false, error: "Calibrate this exercise first" };
+    // Preserve an existing above-limit load for step-only edits, but never increase it.
+    if (weightKg > exercise.maxWeightKg && weightKg !== row.weightKg) {
+      return { ok: false, error: `Weight must be at most ${formatKg(exercise.maxWeightKg)} for this exercise.` };
+    }
+    await tx.exerciseProgress.update({
+      where: { id: row.id, userId },
+      data: { weightKg, stepKg: roundKg(stepKg) },
+    });
+    return { ok: true, data: null };
   });
-  if (!count) return { ok: false, error: "Calibrate this exercise first" };
+  if (!result.ok) return result;
   revalidatePath("/", "layout");
   return { ok: true, data: await savedState(userId, exerciseId) };
 }
@@ -87,16 +103,17 @@ export async function logSet(input: unknown): Promise<ActionResult<LoggedSet>> {
   const userId = await requireUserId();
   const parsed = setSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
-  const { setId, exerciseId, reps, expectedLevel } = parsed.data;
-  if (!getExercise(exerciseId)) return { ok: false, error: "Unknown exercise" };
-  let result: ActionResult<{ leveledUp: boolean; sessionId: string }>;
+  const { setId, exerciseId, reps, expectedLevel, expectedWeightKg, expectedStepKg } = parsed.data;
+  const exercise = getExercise(exerciseId);
+  if (!exercise) return { ok: false, error: "Unknown exercise" };
+  let result: ActionResult<{ leveledUp: boolean; limitReached: boolean; sessionId: string }>;
   try {
     result = await serializableTransaction(async (tx) => {
       const previous = await replay(tx, userId, parsed.data);
       if (previous) return previous;
       const row = await tx.exerciseProgress.findFirst({ where: { userId, exerciseId } });
       if (!row) return { ok: false, error: "Calibrate this exercise first" };
-      if (row.level !== expectedLevel) return staleResult;
+      if (row.level !== expectedLevel || row.weightKg !== expectedWeightKg || row.stepKg !== expectedStepKg) return staleResult;
       const now = new Date();
       let session = await findOpenSession(tx, userId, now);
       if (session?.stale) {
@@ -107,7 +124,7 @@ export async function logSet(input: unknown): Promise<ActionResult<LoggedSet>> {
         session = null;
       }
       const sessionId = session?.id ?? (await tx.workoutSession.create({ data: { userId } })).id;
-      const { state, leveledUp } = applySet({ ...row, bestRepsAtLevel: 0 }, reps);
+      const { state, leveledUp, limitReached } = applySet({ ...row, bestRepsAtLevel: 0 }, reps, exercise.maxWeightKg);
       try {
         await tx.setLog.create({
           data: { id: setId, userId, sessionId, exerciseId, reps, level: row.level, weightKg: row.weightKg, leveledUp },
@@ -119,12 +136,12 @@ export async function logSet(input: unknown): Promise<ActionResult<LoggedSet>> {
       }
       if (leveledUp) {
         const { count } = await tx.exerciseProgress.updateMany({
-          where: { id: row.id, userId, level: expectedLevel },
+          where: { id: row.id, userId, level: expectedLevel, weightKg: expectedWeightKg, stepKg: expectedStepKg },
           data: { level: state.level, weightKg: state.weightKg },
         });
         if (!count) throw new StaleLevel();
       }
-      return { ok: true, data: { leveledUp, sessionId } };
+      return { ok: true, data: { leveledUp, limitReached, sessionId } };
     });
   } catch (error) {
     if (!(error instanceof StaleLevel) && !(error instanceof SetIdConflict)) throw error;
@@ -136,18 +153,21 @@ export async function logSet(input: unknown): Promise<ActionResult<LoggedSet>> {
   return { ok: true, data: { ...result.data, state: await savedState(userId, exerciseId) } };
 }
 
-export async function undoLastSet(input: unknown): Promise<ActionResult<LevelState>> {
+export async function undoLastSet(input: unknown): Promise<ActionResult<{ setId: string; state: LevelState | null }>> {
   const userId = await requireUserId();
-  const parsed = exerciseSchema.safeParse(input);
+  const parsed = undoSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
-  const { exerciseId } = parsed.data;
+  const { exerciseId, setId } = parsed.data;
   if (!getExercise(exerciseId)) return { ok: false, error: "Unknown exercise" };
   const result = await serializableTransaction(async (tx) => {
-    const set = await tx.setLog.findFirst({
+    const set = await tx.setLog.findFirst({ where: { id: setId, userId, exerciseId } });
+    if (!set) return { ok: true, data: null };
+    const latest = await tx.setLog.findFirst({
       where: { userId, exerciseId },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: { id: true },
     });
-    if (!set) return { ok: false, error: "Nothing to undo" };
+    if (latest?.id !== setId) return { ok: false, error: "Your history changed on another screen. Review the latest set before undoing.", stale: true };
     await tx.setLog.delete({ where: { id: set.id, userId } });
     if (set.leveledUp) {
       await tx.exerciseProgress.updateMany({
@@ -159,5 +179,5 @@ export async function undoLastSet(input: unknown): Promise<ActionResult<LevelSta
   });
   if (!result.ok) return result;
   revalidatePath("/", "layout");
-  return { ok: true, data: await savedState(userId, exerciseId) };
+  return { ok: true, data: { setId, state: await getLevelState(userId, exerciseId) } };
 }
