@@ -4,7 +4,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Phase 1 — UI foundation. Spec 01 complete; spec 02 next.
+- Phase 1 — UI foundation. Spec 02 in progress.
 
 ## Current Goal
 
@@ -54,7 +54,7 @@ Specs 01–08 are written. Specs 09+ are written one at a time after the previou
 
 ## In Progress
 
-- None.
+- 02 app-shell — routes, navigation, viewport metadata, and PWA icons implemented. Lint, build, browser layout, and manifest checks passed; real-phone install check pending.
 
 ## Open Questions
 

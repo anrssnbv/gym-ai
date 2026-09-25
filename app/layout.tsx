@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Oxanium } from "next/font/google";
 import "./globals.css";
 
@@ -21,6 +21,17 @@ const oxanium = Oxanium({
 export const metadata: Metadata = {
   title: "Gym AI",
   description: "Level up every lift.",
+  appleWebApp: {
+    capable: true,
+    title: "Gym AI",
+    statusBarStyle: "black-translucent",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0a0a0f",
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
