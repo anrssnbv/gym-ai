@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Phase 4 — AI coach. Spec 14 complete; specs 02, 05, 06, 07, and 10 phone checks pending.
+- Phase 4 — AI coach implemented through spec 15; specs 02, 05, 06, 07, 10, and 15 physical-phone checks pending.
 
 ## Current Goal
 
-- 15 Wire AI Workout — next: connect generation, preview, start, and workout plan execution.
+- Specs 01–15 implemented. Remaining acceptance work: physical-phone checks listed below; Vercel deferred by user.
 
 ## Roadmap
 
@@ -68,6 +68,8 @@ All specs 01–15 are written. 09–15 were written after 08, against the code a
 - 14 ai-workout-generator — additive ai-plans migration applied, planning helpers/schema/context, OpenAI Structured Outputs, and authenticated preview action with atomic 10-per-24-hour attempt limit. All 38 unit tests, 28 PostgreSQL integration checks, lint, TypeScript, and production build with an empty OPENAI_API_KEY pass. Live gpt-5.4-mini pull-plan smoke test passed in 5.3 seconds with all schema limits retained. Default OpenAI project monthly spend limit set to $10 with hard enforcement enabled; Vercel deferred by user. UI wiring follows in spec 15.
 
 ## In Progress
+
+- 15 wire-ai-workout — real generation/regeneration, calibrated preview, validated start/attach, persisted checklist, Extra sets, exercise steps, and plan summaries implemented. All 39 unit tests, 38 PostgreSQL integration checks, lint, TypeScript, production build, and 360 × 640 touch-browser checks pass. Verified all six focus choices, Auto selecting the oldest pattern, inline offline retries for Generate/Regenerate/Start, 10-attempt quota, unknown-ID rejection through the browser, zero-set banner/stat exclusion, full nine-set plan plus Extra, manual attachment without another session, reload/separate desktop-context persistence, and empty-Workout Start. Prompt clarifies the existing calibrated-candidate cap with exact eligible IDs/counts; server rules remain unchanged. Temporary accounts/data cleaned. Remaining: user plays a complete generated workout on a physical phone.
 
 
 - 10 wire-exercise-screen — saved-state props, asynchronous action-backed sheets, stable round IDs/reps on retry, stale-tab recovery, history/Undo, browser-local dates, and catalog levels/weights/power implemented. All 23 tests, lint, TypeScript, production build, and 360 × 640 browser checks pass. Verified persistence across reloads and separate browser contexts, account isolation, normal and level-up Undo, adjustment rules, offline recovery for all four actions, and a committed log with a lost response replaying without duplicate writes. Remaining: user verifies a phone-logged round appears on desktop after reload.

@@ -314,3 +314,23 @@ Implemented spec 13 with existing Sheet/Button/Badge patterns, generated Radix t
 ## Review
 
 Implemented spec 14 with an additive JSON plan column and PlanGeneration table, pure planning rules and Zod schemas, scoped 30-day history, OpenAI 7.23 Structured Outputs, and authenticated preview generation. Reused the existing serializable transaction helper to atomically reserve daily attempts before the paid call. No UI changes or session writes. All 38 unit tests, 28 PostgreSQL integration checks, lint, TypeScript, diff checks, and production build with OPENAI_API_KEY overridden empty pass. Tests cover 0/1/2 calibrated candidates, focus filtering, text/array constraints, Auto ties, history/ownership boundaries, rolling quota, concurrent last-slot attempts, missing key, failures, and duplicate collapse. Real gpt-5.4-mini smoke test returned three valid pull exercises in 5.3 seconds; no model/reasoning/schema fallback needed. Independent review found no issues. Temporary database fixtures cleaned. Set Default project monthly OpenAI limit to $10 with hard enforcement and verified it persisted. Vercel deferred by user. Existing review-file deletion remains outside the commit.
+
+# 15 Wire AI Workout
+
+## Specification
+
+- Goal: implement spec 15 end to end.
+- Scope: authenticated start action, parsed plan queries, real generation sheet, planned workout checklist, exercise steps, and summary title.
+- Decisions: reuse actions, shared session lookup, transaction retries, callAction, and existing UI components.
+- Acceptance: stored plans/ownership, concurrent start and manual attachment, stale rollover, all focus choices, offline retries, quota error, complete mobile browser flow, tests/lint/build. Physical-phone verification tracked separately.
+
+## Tasks
+
+- [x] Read spec and mark in progress.
+- [x] Implement backend, sheet, and page wiring.
+- [x] Verify integration and browser flows; run tests/lint/build.
+- [ ] Update tracker/review, push, open/merge PR, and sync local main.
+
+## Review
+
+Implemented spec 15 with existing action/session/UI patterns. Start validates the plan and attaches or rolls over in a serializable transaction. Queries parse stored JSON and compute exercise progress; pages show the planned checklist, extras, and summary. All 39 unit tests, 38 PostgreSQL integration checks, lint, TypeScript, build, and diff checks pass. Playwright touch testing at 360 × 640 covered real generation for all six focuses (Auto 6.6 seconds), 0-set banner and ignored stats, calibration and all nine planned sets, next-step highlights/checks, one extra set, Finish summary, manual attachment preserving the same session, persisted state in a separate desktop context, unknown exercise rejection through a modified Start request, 10-attempt quota without another attempt, and offline recovery for Generate/Regenerate/Start. A stale dev-server Prisma singleton required restarting after the earlier migration. Live history testing exposed model miscounting of core among eligible calibrated candidates; prompt now spells out the same mandatory cap and exact eligible IDs, retaining all server validations. Added a mocked SDK test for focus payload, 0/1/2 calibration caps, null output, and local validation; no extra paid calls in tests. Visuals inspected: .playwright-mcp/spec15-preview.png, spec15-completed-plan.png, spec15-summary.png. Independent review found no defects. All temporary accounts and data cleaned. Physical-phone acceptance remains pending; browser emulation is not claimed as a physical device test. Vercel remains deferred. Existing unrelated review-file deletion remains outside the commit.

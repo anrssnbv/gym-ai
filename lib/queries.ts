@@ -2,6 +2,7 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { isSessionStale, powerLevel, roundKg, sessionEndAt, type LevelState } from "@/lib/game";
 import { prisma } from "@/lib/prisma";
 import { getExercise, type MuscleGroupId, type MuscleHeadId } from "@/lib/catalog";
+import { workoutPlanSchema } from "@/lib/plan-schema";
 
 export async function findOpenSession(db: Prisma.TransactionClient, userId: string, now: Date) {
   const session = await db.workoutSession.findFirst({
@@ -121,12 +122,13 @@ export async function getRecentSets(userId: string, exerciseId: string, take = 1
 }
 
 export async function getSessionDetail(userId: string, sessionId: string) {
-  return prisma.workoutSession.findFirst({
+  const session = await prisma.workoutSession.findFirst({
     where: { id: sessionId, userId },
     select: {
       id: true,
       startedAt: true,
       endedAt: true,
+      plan: true,
       sets: {
         where: { userId },
         orderBy: [{ createdAt: "asc" }, { id: "asc" }],
@@ -137,6 +139,19 @@ export async function getSessionDetail(userId: string, sessionId: string) {
       },
     },
   });
+  if (!session) return null;
+  const parsed = workoutPlanSchema.safeParse(session.plan);
+  return { ...session, plan: parsed.success ? parsed.data : null };
+}
+
+export async function getActivePlanStep(userId: string, exerciseId: string) {
+  const active = await getActiveSession(userId);
+  if (!active) return null;
+  const session = await getSessionDetail(userId, active.id);
+  if (!session || session.endedAt) return null;
+  const step = session.plan?.exercises.find((exercise) => exercise.exerciseId === exerciseId);
+  if (!step) return null;
+  return { done: session.sets.filter((set) => set.exerciseId === exerciseId).length, sets: step.sets };
 }
 
 export async function getDashboard(userId: string, now = new Date()) {

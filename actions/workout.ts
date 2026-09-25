@@ -9,6 +9,7 @@ import { sessionEnd } from "@/lib/game";
 import { findOpenSession, getPlanningContext } from "@/lib/queries";
 import { DAILY_PLAN_LIMIT, DURATIONS_MIN, FOCUS_CHOICES, dedupeExercises, isValidPlanSelection, resolveAutoFocus, type WorkoutPlan } from "@/lib/plan";
 import { prisma } from "@/lib/prisma";
+import { workoutPlanSchema } from "@/lib/plan-schema";
 import { serializableTransaction } from "@/lib/transactions";
 
 const generationSchema = z.object({
@@ -17,6 +18,32 @@ const generationSchema = z.object({
 });
 const dailyLimit = { ok: false, error: "Daily limit reached (10 plans). Try again tomorrow." } as const;
 const generationError = { ok: false, error: "Couldn't generate a workout. Try again." } as const;
+const startSchema = z.object({ plan: workoutPlanSchema });
+
+export async function startWorkout(input: unknown): Promise<ActionResult<{ sessionId: string }>> {
+  const userId = await requireUserId();
+  const parsed = startSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Invalid input" };
+  const { plan } = parsed.data;
+  const result = await serializableTransaction<{ sessionId: string }>(async (tx) => {
+    const now = new Date();
+    const session = await findOpenSession(tx, userId, now);
+    if (session && !session.stale) {
+      await tx.workoutSession.update({ where: { id: session.id, userId }, data: { plan } });
+      return { ok: true, data: { sessionId: session.id } };
+    }
+    if (session) {
+      await tx.workoutSession.update({
+        where: { id: session.id, userId },
+        data: { endedAt: sessionEnd(session.lastActivityAt, now) },
+      });
+    }
+    const created = await tx.workoutSession.create({ data: { userId, plan, startedAt: now }, select: { id: true } });
+    return { ok: true, data: { sessionId: created.id } };
+  });
+  if (result.ok) revalidatePath("/", "layout");
+  return result;
+}
 
 export async function generateWorkout(input: unknown): Promise<ActionResult<WorkoutPlan>> {
   const userId = await requireUserId();
