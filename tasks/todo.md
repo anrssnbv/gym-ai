@@ -1,3 +1,59 @@
+# Production incident repair plan — 2026-09-25
+
+## Specification
+
+- Goal: resolve the three open production findings in `context/current-issues.md` (PROD-01 through PROD-03) without exposing another credential or altering workout history.
+- Scope: the OpenAI key and generation error path, quota behavior for malformed configuration, Vercel environment/deployment verification, and the second Vercel project's Clerk configuration.
+- Decision: keep `gym-ai` and `gym-ai-seven-alpha.vercel.app` as the primary deployment. Treat `gym-ai-z3nm` as a separate deployment until its purpose is confirmed; recommend disconnecting its Git integration if it is an accidental duplicate.
+- Stop condition: the primary site's authenticated generation succeeds and logs remain safe; the second project's 500/check noise is removed or its auth is verified. Previously fixed QA findings stay closed.
+
+## Ordered work
+
+1. [ ] **Contain the leaked key (PROD-02, urgent).** In the existing OpenAI project, revoke the key printed in Vercel logs. Review usage since the first logged exposure and confirm the existing $10 monthly hard limit. Keep key material out of terminal output, PRs, test fixtures, and this file. Determine every place the old key was copied, including `.env.local` and both Vercel projects. A temporarily unavailable AI feature is acceptable while the compromised key is invalidated.
+2. [ ] **Patch the narrow code path before installing a replacement.** In `generateWorkout`, reject a missing or whitespace/control-character-containing `OPENAI_API_KEY` before the `PlanGeneration` reservation, with a configuration error that reveals no key. Replace raw `console.error(..., error)` with fixed-stage/allowlisted error metadata; never log exception messages, stacks, request headers, or environment values. Keep the existing quota reservation for valid provider attempts, including normal upstream failures, to preserve the anti-abuse rule.
+3. [ ] **Add focused regression proof.** With a deliberately malformed *fake* key, the action returns a configuration error, makes no OpenAI call, creates no attempt row, and prints no fake secret. With a valid fake key, existing quota concurrency and failed-provider tests still pass. Run the unit/database suites, lint, TypeScript, and production build. Review the diff for secret values and unrelated changes.
+4. [ ] **Install a new key safely.** Create a replacement key in the same budgeted OpenAI project. Put its single-line value into local development (if needed) and the primary Vercel project's Preview and Production `OPENAI_API_KEY` secret; validate only its presence and absence of whitespace, never its value. Redeploy because Vercel environment changes do not alter existing deployments. Do not reuse the disclosed key or copy an entire `.env` block into one variable.
+5. [ ] **Verify the primary deployment end to end (PROD-01).** Test Preview first with a disposable signed-in account and a completed training profile: choose a duration and focus, generate one preview, and check valid exercises/limits. Confirm exactly one attempt is recorded, no credential appears in sanitized logs, and no workout history changes before Start. Deploy the same code/config to Production and repeat one authenticated generation there. Confirm the public alias, OpenAI usage/budget, and safe runtime logs. Clean only disposable test accounts and their own rows.
+6. [ ] **Handle attempts lost to the outage.** Inspect affected users' rolling `PlanGeneration` counts by scoped user ID and failure window. Prefer natural 24-hour expiry. If immediate access is needed, reconcile only demonstrably failed attempts for the affected account, with an audit trail; never clear all users' attempts or workout history. Verify the user-facing limit after recovery.
+7. [ ] **Resolve the second deployment (PROD-03).** Confirm whether `gym-ai-z3nm` is intentional. If duplicate, disconnect its Git integration or archive the project after confirming no required domain/traffic depends on it; check GitHub no longer reports its failing Vercel status. If retained, validate that its Clerk publishable and secret keys are nonempty, belong to the same Clerk instance, and are assigned to Production; configure Preview separately, redeploy, and verify signed-out `/` reaches a working sign-in page. Check its OpenAI key only if AI generation is meant to run there.
+8. [ ] **Close with evidence.** Record deployment IDs, sanitized log outcomes, authenticated smoke results, quota outcome, and final status for PROD-01/02/03 in `context/current-issues.md` and `context/progress-tracker.md`. Follow the established branch → PR → merge → local `main`/`development` sync workflow for the code change.
+
+## Release and rollback checks
+
+- Do not put a replacement key into a deployment that can still print raw exceptions. An old immutable Vercel deployment may retain the old value; revocation makes that value unusable.
+- If generation fails after the new deployment, leave the old key revoked. Disable the AI secret in a fresh deployment if needed to fail closed while fixing the cause. Do not roll back to the raw-logging version.
+- User-visible acceptance: the primary site can generate a plan from a selected duration/focus without the generic retry error; a malformed key cannot consume quota or appear in logs; the second site's 500 is resolved or its duplicate integration is removed.
+
+## References
+
+- [OpenAI API key safety and rotation](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety)
+- [Vercel secret rotation and redeployment](https://vercel.com/docs/environment-variables/rotating-secrets)
+- [Clerk's Vercel key setup](https://clerk.com/docs/guides/development/deployment/vercel)
+
+## Review
+
+Plan only. PROD-01 and PROD-02 share a confirmed primary cause: the deployed key includes a newline/another assignment, and raw error logging disclosed that value. PROD-03 has a confirmed runtime symptom but an unverified secret-value cause. No code, credentials, deployment settings, or user data were changed in this planning step.
+
+# Production generation issue report — 2026-09-25
+
+## Specification
+
+- Goal: diagnose the reported Generate workout failure and record actionable findings in `context/current-issues.md`.
+- Scope: inspect production runtime logs, the Server Action and AI call path, and the second connected project's runtime failure. Preserve prior QA evidence.
+- Decision: document and redact credentials; implementation and secret rotation are separate follow-up work.
+- Acceptance: distinguish observed errors from inferred causes, identify the user impact and relevant code path, and give reproducible acceptance checks.
+
+## Tasks
+
+- [x] Inspect user-facing error path and production runtime logs.
+- [x] Trace generation reservation, OpenAI header construction, and error handling.
+- [x] Record primary generation, credential exposure, and second-project auth findings.
+- [x] Verify the issue file contains no key material and passes whitespace checks.
+
+## Review
+
+Vercel logged an invalid Authorization header containing a second environment-variable assignment; the Server Action catches it and shows the reported error. Its reservation precedes the failed OpenAI call, so retries consume app quota. The raw exception disclosed the key in Vercel logs; the report redacts it and calls for rotation. The second connected Vercel project independently returns HTTP 500 because Clerk reports missing keys. No production configuration or application code was changed during this documentation task.
+
 # Vercel deployment — 2026-09-25
 
 ## Specification

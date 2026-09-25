@@ -34,12 +34,19 @@ test('generation action guards and quota against PostgreSQL', async(t)=>{
  process.env.OPENAI_API_KEY = 'test-no-network';
  try {
   await t.test('auth precedes input validation',()=>assert.rejects(()=>generateWorkout(null),/Integration action needs a test user/));
-  await t.test('invalid duration/focus and missing key do not charge attempts',()=>asUser(async s=>{
+  await t.test('invalid duration/focus and missing or malformed key do not charge attempts',()=>asUser(async s=>{
    assert.equal((await generateWorkout({durationMin:61,focus:'auto'})).ok,false);
    assert.equal((await generateWorkout({durationMin:60,focus:''})).ok,false);
    delete process.env.OPENAI_API_KEY;
    try { assert.deepEqual(await generateWorkout({durationMin:60,focus:'auto'}),{ok:false,error:'AI coach is not configured.'}); }
    finally { process.env.OPENAI_API_KEY='test-no-network'; }
+   const fakeSecret='fake-secret-value';
+   process.env.OPENAI_API_KEY=`${fakeSecret}\nNEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/`;
+   const logs=[];
+   const log=t.mock.method(console,'error',(...args)=>logs.push(args));
+   try { assert.deepEqual(await generateWorkout({durationMin:60,focus:'auto'}),{ok:false,error:'AI coach is not configured.'}); }
+   finally { log.mock.restore(); process.env.OPENAI_API_KEY='test-no-network'; }
+   assert.deepEqual(logs,[]);
    assert.equal(await prisma.planGeneration.count({where:{userId:s.userId}}),0);
    assert.equal(s.calls,0);
   }));
@@ -51,10 +58,14 @@ test('generation action guards and quota against PostgreSQL', async(t)=>{
    assert.deepEqual(s.invalidations,[]);
   }));
   await t.test('failed AI calls remain charged and produce retryable errors',()=>asUser(async s=>{
-   s.generatePlan=async()=>{throw new Error('simulated provider failure');};
-   const error = t.mock.method(console,'error',()=>{});
+   const fakeSecret='fake-provider-secret';
+   s.generatePlan=async()=>{throw new Error(`Bearer ${fakeSecret}`);};
+   const logs=[];
+   const error = t.mock.method(console,'error',(...args)=>logs.push(args));
    try { assert.deepEqual(await generateWorkout({durationMin:60,focus:'push'}),retry); assert.equal(error.mock.callCount(),1); }
    finally {error.mock.restore();}
+   assert.deepEqual(logs,[["Workout generation failed",{stage:"provider"}]]);
+   assert.equal(JSON.stringify(logs).includes(fakeSecret),false);
    assert.equal(await prisma.planGeneration.count({where:{userId:s.userId}}),1);
   }));
   await t.test('duplicates below three, off-focus plans, and too many new exercises fail',()=>asUser(async s=>{

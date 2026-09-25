@@ -4,6 +4,33 @@ Audit date: 2026-09-25. Revision: `b0ff75a3dfe82605ed0fc0d715fd988468d63214` (`m
 
 Scope: specs 01–15, Playwright MCP against `http://localhost:3100`, source review, terminal logs, unit tests, database integration tests, and production build. Later specs supersede the earlier mock/local-state requirements.
 
+## Production issues found after deployment — 2026-09-25
+
+These are new findings from Vercel runtime logs and the deployed app. The original local QA audit below remains historical; its passing generation checks do not cover the current Vercel environment. **All three production findings are open.** Secret values are redacted here.
+
+### PROD-01 — P1: Generate workout always returns a retry error on the primary production site
+
+- **User report:** Open Generate workout, choose a duration and focus, then submit. The sheet displays `Couldn't generate a workout. Try again.` and no preview appears.
+- **Observed evidence:** In project `gym-ai`, Vercel logged a `POST /workout` at `2026-09-25 14:33:45 UTC` with HTTP 200 and `Workout generation failed TypeError: Headers.append: "Bearer [REDACTED]\nNEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/" is an invalid header value.` An earlier production request logged the same error. HTTP 200 is the Server Action transport status, not generation success.
+- **Cause:** The production `OPENAI_API_KEY` value contains a newline followed by another environment-variable assignment. The OpenAI SDK tries to use that entire value as the Bearer authorization header; header construction fails before an OpenAI request is sent. This is a Vercel secret-value configuration error. `actions/workout.ts` catches it and returns the generic message shown in the sheet.
+- **Additional impact:** `generateWorkout` creates a `PlanGeneration` row before calling `generatePlan`, so each failed request that reaches this point consumes one of the app's 10 attempts per rolling 24 hours. The log does not show a paid OpenAI request. Once the secret is corrected, a user who exhausted the local quota may still see `Daily limit reached (10 plans)` until attempts age out.
+- **Fix and acceptance:** Rotate the exposed OpenAI key, set the new key as one clean value in the active Vercel project's Preview and Production environments, and redeploy. Confirm a signed-in production user can generate a preview for a selected duration/focus. Check the remaining daily quota without deleting real user history. Keep the API key out of logs and issue reports.
+
+### PROD-02 — P0: A production error log exposed the OpenAI API key
+
+- **Observed evidence:** The `Headers.append` exception above included the complete Bearer value in Vercel runtime logs. The value is intentionally omitted from this file.
+- **Cause:** `actions/workout.ts` logs the raw caught exception with `console.error("Workout generation failed", error)`. The invalid-header exception embeds the authorization value in its message.
+- **Impact:** Anyone with access to those logs could copy the key. Correcting the Vercel variable alone does not invalidate the disclosed key.
+- **Fix and acceptance:** Revoke the exposed key in OpenAI, create a replacement, and update the Vercel secret. Change generation logging to emit safe error metadata without authorization values; verify a malformed-key regression cannot write credentials to logs. Review the OpenAI project usage around the disclosure.
+
+### PROD-03 — P1: The second connected Vercel project returns HTTP 500 before authentication
+
+- **Observed evidence:** Project `gym-ai-z3nm` logged `@clerk/nextjs: Clerk keys are missing from your environment` for a production `GET /` at `2026-09-25 14:33:14 UTC`. A separate direct request to `https://gym-ai-z3nm.vercel.app/` returned HTTP 500. This is distinct from the primary `gym-ai-seven-alpha.vercel.app` site.
+- **Cause/status:** Clerk reports missing keys at runtime. Vercel lists Clerk variable names for this project, but their hidden values have not been verified; an empty or unusable value is plausible, not yet proven. Its build reported Ready, which did not verify the request path.
+- **Fix and acceptance:** If this second project should remain connected, set valid Clerk keys for its Production environment and redeploy; verify a signed-out `/` redirects to a rendered sign-in page. Otherwise disconnect the duplicate project from the repository so it stops deploying and reporting misleading green builds.
+
+The primary project's production logs also contain the PostgreSQL `sslmode=require` compatibility warning already listed under Terminal warnings below. It appeared on page requests and does not explain the Generate failure.
+
 **Original audit: 5 confirmed defects (2 high, 1 medium, 2 low), two validation gaps, and three observations.** The original reproductions below are retained as regression cases.
 
 ## Fix verification — 2026-09-25
