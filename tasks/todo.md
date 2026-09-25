@@ -78,8 +78,9 @@ Implemented the static catalog and three browse routes. A direct comparison agai
 - [x] Integrate thumbnails and full maps into exercise routes.
 - [x] Verify types, rendering, accessibility, 360 px layout, tests, lint, and build.
 - [x] Capture all seven screenshot pairs for user approval.
-- [ ] Push development and open PR; merge and update local main after visual approval.
+- [x] Push development and open PR; obtain user visual approval.
+- [x] Merge PR #4 and update local main.
 
 ## Review
 
-Implemented all 27 typed muscle regions, mirrored body geometry, token-based intensity, group crops, accessible labels, and catalog integration without client state or new dependencies. All seven tests, lint, and production build pass. A negative TypeScript check rejected both a missing head and an empty path tuple. Playwright checked all seven specified exercises at 360 px: 64 px thumbnails, uncropped full maps, expected labels and region fills, and no horizontal overflow. The groups grid remains text-only; browser console has no errors. Screenshots and a local review gallery are in `.playwright-mcp/spec04/`. User visual approval required by spec 04 remains pending before merge; spec 02's phone check remains pending.
+Implemented all 27 typed muscle regions, mirrored body geometry, token-based intensity, group crops, accessible labels, and catalog integration without client state or new dependencies. All seven tests, lint, and production build pass. A negative TypeScript check rejected both a missing head and an empty path tuple. Playwright checked all seven specified exercises at 360 px: 64 px thumbnails, uncropped full maps, expected labels and region fills, and no horizontal overflow. The groups grid remains text-only; browser console has no errors. Screenshots and a local review gallery are in `.playwright-mcp/spec04/`. User approved all seven screenshot pairs on 2026-09-25. Spec 02's phone check remains pending.
