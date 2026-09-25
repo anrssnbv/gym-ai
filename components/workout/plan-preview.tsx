@@ -1,8 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import { getExercise } from "@/lib/catalog";
+import { formatKg } from "@/lib/game";
 import { FOCUS_LABELS, type WorkoutPlan } from "@/lib/plan";
 
-export function PlanPreview({ plan }: { plan: WorkoutPlan }) {
+export function PlanPreview({ plan, progress = {} }: { plan: WorkoutPlan; progress?: Record<string, { level: number; weightKg: number }> }) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -22,6 +23,9 @@ export function PlanPreview({ plan }: { plan: WorkoutPlan }) {
                 <span className="font-medium">{exercise.name}</span>
                 <span className="text-sm tabular-nums text-copy-muted">{item.sets} × 12</span>
               </div>
+              <p className="mt-1 text-sm tabular-nums text-copy-muted">
+                {progress[item.exerciseId] ? `LV ${progress[item.exerciseId].level} · ${formatKg(progress[item.exerciseId].weightKg)}` : "New — you'll calibrate it"}
+              </p>
               <p className="mt-1 text-sm text-ai">{item.note}</p>
             </li>
           );

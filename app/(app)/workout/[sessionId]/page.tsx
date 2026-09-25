@@ -2,10 +2,12 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { LocalTime } from "@/components/local-time";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { SessionSets } from "@/components/workout/session-sets";
 import { requireUserId } from "@/lib/auth";
 import { formatDuration, formatVolume, sessionEndAt, summarizeSets } from "@/lib/game";
 import { getActiveSession, getSessionDetail } from "@/lib/queries";
+import { FOCUS_LABELS } from "@/lib/plan";
 
 export default async function WorkoutSummaryPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const userId = await requireUserId();
@@ -32,6 +34,12 @@ export default async function WorkoutSummaryPage({ params }: { params: Promise<{
     <section className="space-y-6">
       <header className="space-y-2">
         <h1 className="font-display text-2xl text-copy">Workout complete</h1>
+        {session.plan && (
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="font-display text-xl">{session.plan.title}</h2>
+            <Badge className="bg-ai-dim text-ai">{FOCUS_LABELS[session.plan.focus]}</Badge>
+          </div>
+        )}
         <p className="text-sm text-copy-muted">
           <LocalTime date={session.startedAt.toISOString()} options={{ year: "numeric", month: "short", day: "numeric" }} />
         </p>

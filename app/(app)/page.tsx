@@ -9,10 +9,13 @@ import { requireUserId } from "@/lib/auth";
 import { EXERCISES, MUSCLE_GROUPS, MUSCLE_HEADS } from "@/lib/catalog";
 import type { MuscleHeadId } from "@/lib/catalog";
 import { formatDuration, formatVolume, heatLevel, rankFor } from "@/lib/game";
-import { getDashboard } from "@/lib/queries";
+import { getActiveSession, getDashboard, getProgressMap } from "@/lib/queries";
 
 export default async function HomePage() {
-  const dashboard = await getDashboard(await requireUserId());
+  const userId = await requireUserId();
+  const [dashboard, progress, active] = await Promise.all([
+    getDashboard(userId), getProgressMap(userId), getActiveSession(userId),
+  ]);
   const rank = rankFor(dashboard.power);
   const intensity: Partial<Record<MuscleHeadId, 1 | 2 | 3>> = {};
   const activity: string[] = [];
@@ -52,7 +55,7 @@ export default async function HomePage() {
         )}
       </section>
 
-      <GenerateSheet>
+      <GenerateSheet progress={progress} hasActiveWorkout={!!active}>
         <Button className="h-11 w-full rounded-xl bg-ai text-on-brand hover:bg-ai/90">
           <Sparkles className="size-5" aria-hidden="true" />Generate workout
         </Button>

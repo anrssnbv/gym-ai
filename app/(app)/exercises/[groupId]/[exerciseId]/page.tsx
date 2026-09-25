@@ -1,4 +1,4 @@
-import { ChevronLeft } from "lucide-react";
+import { Check, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,7 @@ import { MuscleMap, exerciseIntensity } from "@/components/muscle-map/muscle-map
 import { getExercise, getGroup, MUSCLE_HEADS } from "@/lib/catalog";
 import { roundSeconds } from "@/lib/game";
 import { requireUserId } from "@/lib/auth";
-import { getLevelState, getRecentSets } from "@/lib/queries";
+import { getActivePlanStep, getLevelState, getRecentSets } from "@/lib/queries";
 
 export default async function ExercisePage({
   params,
@@ -20,9 +20,10 @@ export default async function ExercisePage({
   const exercise = getExercise(exerciseId);
   if (!group || !exercise || exercise.groupId !== groupId) notFound();
   const userId = await requireUserId();
-  const [state, sets] = await Promise.all([
+  const [state, sets, planStep] = await Promise.all([
     getLevelState(userId, exercise.id),
     getRecentSets(userId, exercise.id, 10),
+    getActivePlanStep(userId, exercise.id),
   ]);
 
   return (
@@ -78,6 +79,14 @@ export default async function ExercisePage({
           </div>
         )}
       </section>
+      {planStep && (
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-x-3">
+          <p className="flex items-center gap-2 text-sm text-copy-secondary">
+            {planStep.done >= planStep.sets ? <><Check className="size-4 text-brand" aria-hidden="true" />Workout · done</> : `Workout · set ${planStep.done + 1} of ${planStep.sets}`}
+          </p>
+          <Link href="/workout" className="inline-flex h-11 items-center text-sm text-brand hover:underline">Back to workout</Link>
+        </div>
+      )}
       <ExerciseLevel key={exercise.id} exercise={exercise} state={state} />
       <SetHistory exerciseId={exercise.id} sets={sets.map((set) => ({ ...set, createdAt: set.createdAt.toISOString() }))} />
     </section>
