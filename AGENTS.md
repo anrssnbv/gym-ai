@@ -11,3 +11,4 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## Git workflow
 
 - Make project changes directly on `development`. Do not create task branches unless the user explicitly asks for one.
+- After changes are fixed and verified, commit and push `development`, open a pull request from `development` to `main`, wait for required checks, merge it, and fast-forward local `main` to the merged commit. Do this without asking again unless the user gives a different instruction.
