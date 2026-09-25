@@ -1,5 +1,7 @@
 Add the Generate workout sheet (the "create new session" dialog): duration and focus inputs, and a plan preview. UI only. The preview shows a hardcoded sample plan until spec 15 connects the AI from spec 14.
 
+This is the original UI checkpoint: sample data and disabled Start below describe that checkpoint only. Spec 15 replaced them with live generation/Start. Spec 16 now requires `defaultDurationMin: TrainingProfile['sessionMinutes']`, supplied by Home and the empty Workout page, and adds a Training preferences link. Initialize duration once per mount; explicit choices survive Regenerate, reopening and background refresh. A new mount uses the current saved default.
+
 ## Plan Types
 
 Create `lib/plan.ts`. Only a type-only import from `./catalog.ts`, so Node can test it later.
@@ -8,7 +10,7 @@ Create `lib/plan.ts`. Only a type-only import from `./catalog.ts`, so Node can t
 - `type FocusChoice = Focus | 'auto'` and `FOCUS_CHOICES: FocusChoice[]` = auto first, then `FOCUSES`
 - `FOCUS_LABELS: Record<FocusChoice, string>` — Auto, Push, Pull, Legs, Upper body, Full body
 - `FOCUS_HINTS: Record<FocusChoice, string>`
-  - auto: `Picks push, pull or legs — whichever you trained longest ago.`
+  - auto: `Uses your weekly schedule and recent training.` (spec 16)
   - push: `Chest, shoulders, triceps.`
   - pull: `Back, biceps, rear delts.`
   - legs: `Quads, hamstrings, glutes, calves, abs.`
@@ -36,7 +38,7 @@ Create `components/workout/generate-sheet.tsx` (client):
 - `children` is the trigger, so each page renders its own button
 - bottom `Sheet`, `max-h-[90dvh]` with scrolling content, safe-area bottom padding like the other sheets
 - title `Generate workout` with a `Sparkles` icon in `text-ai`
-- **Duration**: single-select toggle group of 30 / 45 / 60 / 90 min, default 60
+- **Duration**: single-select toggle group of 30 / 45 / 60 / 90 min; the original checkpoint default was 60, superseded by the required saved-profile default in spec 16.
 - **Focus**: single-select toggle group laid out as a 2-column grid of the six `FOCUS_CHOICES`, default Auto. Under it, `FOCUS_HINTS` for the current choice in `text-copy-muted`.
 - Both toggle groups are controlled. Ignore an empty `onValueChange` value when the selected item is tapped again; only accept members of `DURATIONS_MIN` / `FOCUS_CHOICES`. Keep the current selection and hint.
 - `Generate` full-width button: `bg-ai text-on-brand` (dark text on violet has enough contrast), with a `Sparkles` icon
@@ -55,7 +57,7 @@ Create `components/workout/generate-sheet.tsx` (client):
 
 ## Check When Done
 
-- the sheet opens from Home and from the empty Workout tab, with 60 min and Auto selected by default
+- The sheet opens from Home and the empty Workout tab with the saved profile's session duration and Auto. A 30-minute explicit choice overrides a 90-minute preference and survives Regenerate/reopening.
 - toggle groups work by touch and keyboard; screen readers announce selection; tapping the selected item never clears it or sends an empty value
 - Generate shows the sample preview with catalog names; Change inputs returns with the choices kept
 - no horizontal scroll at 360 px; the sheet scrolls when the preview is taller than the screen

@@ -42,9 +42,12 @@ test("planning context uses bounded, scoped training history", async (t) => {
   try {
     await t.test("an empty account has no inferred history or calibration", async () => {
       assert.deepEqual(await getPlanningContext(emptyUser, now), {
-        lastTrained: {}, daysSinceGroup: {}, recentSessions: [], levels: {},
+        profile: null, lastTrained: {}, daysSinceGroup: {}, recentSessions: [], levels: {},
       });
     });
+    await prisma.trainingProfile.create({data:{userId, ...{ goal: "build_muscle", experience: "experienced", daysPerWeek: 4, sessionMinutes: 60, equipment: ["barbell", "dumbbell", "machine", "cable"] }}});
+    assert.deepEqual((await getPlanningContext(userId, now)).profile, { goal: "build_muscle", experience: "experienced", daysPerWeek: 4, sessionMinutes: 60, equipment: ["barbell", "dumbbell", "machine", "cable"] });
+    assert.equal((await getPlanningContext(otherUser, now)).profile, null);
     await prisma.exerciseProgress.createMany({ data: [
       { userId, exerciseId: "barbell-bench-press", level: 4, weightKg: 10, stepKg: 2.5, startWeightKg: 10 },
       { userId, exerciseId: "seated-calf-raise", level: 2, weightKg: 10, stepKg: 2.5, startWeightKg: 10 },
@@ -112,6 +115,7 @@ test("planning context uses bounded, scoped training history", async (t) => {
       await prisma.workoutSession.deleteMany({ where: { userId: { in: [userId, emptyUser, otherUser] } } });
       await prisma.exerciseProgress.deleteMany({ where: { userId: { in: [userId, emptyUser, otherUser] } } });
     } finally {
+      await prisma.trainingProfile.deleteMany({where:{userId:{in:[userId,emptyUser,otherUser]}}});
       await prisma.$disconnect();
     }
   }

@@ -1,13 +1,15 @@
 import { BottomNav } from "@/components/app-shell/bottom-nav";
 import { TopBar } from "@/components/app-shell/top-bar";
 import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import { requireUserId } from "@/lib/auth";
-import { getActiveSession } from "@/lib/queries";
+import { getActiveSession, getTrainingProfile } from "@/lib/queries";
 import { ActiveWorkoutBanner } from "@/components/workout/active-workout-banner";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   await auth.protect();
   const userId = await requireUserId();
+  if (!await getTrainingProfile(userId)) redirect("/onboarding");
   const session = await getActiveSession(userId);
   return (
     <div className="min-h-dvh bg-page">

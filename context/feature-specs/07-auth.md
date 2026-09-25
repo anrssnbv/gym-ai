@@ -24,6 +24,7 @@ Clerk 7.9 deprecates path matching in middleware (`createRouteMatcher`). Auth ch
 
 - `proxy.ts` at the project root (not `middleware.ts`): `export default clerkMiddleware()` with Clerk's recommended `matcher`. It protects nothing by itself; it makes `auth()` available. The matcher already skips static files, so `/manifest.webmanifest` and the icons stay public.
 - `app/(app)/layout.tsx`: call `await auth.protect()` first. Signed-out visitors are redirected to `/sign-in`.
+- Spec 16 then loads the authenticated user's training profile before rendering the shell. Missing/malformed profiles redirect to `/onboarding`; read failures offer Retry and Sign out. Onboarding is authenticated but outside `(app)`, with no bottom tabs/banner. Keep profile checks out of middleware and `requireUserId()`.
 - The sign-in and sign-up pages live outside `(app)`, so they stay public.
 - From spec 09 on, every query and action also checks with `requireUserId()` (see `architecture.md`).
 
@@ -48,15 +49,15 @@ Create `app/sign-in/[[...sign-in]]/page.tsx` and `app/sign-up/[[...sign-up]]/pag
 
 ## Scope Limits
 
-- no database and no user table
-- no custom profile or settings screen
+- No local identity/User table. Spec 16 adds a separate owned `TrainingProfile` table for training preferences.
+- Clerk account-management screens stay unchanged; spec 16 adds `/onboarding` and `/settings/training` for training preferences.
 - no roles or permissions
 - don't use `createRouteMatcher`
 
 ## Check When Done
 
 - signed out, `/`, `/exercises/chest` and `/workout` redirect to `/sign-in`
-- signing up lands on `/`; signing out returns to `/sign-in`
+- Signing up reaches onboarding before Home; completing the survey always goes to `/`. Saved profiles preserve normal sign-in return URLs without repeating the survey. Signing out returns to `/sign-in`.
 - `/manifest.webmanifest` and the icons load while signed out
 - the auth pages match the app theme, have no hardcoded colors, and fit 360 px without horizontal scroll
 - `.env.example` exists and is not ignored by git

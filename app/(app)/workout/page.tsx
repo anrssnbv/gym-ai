@@ -1,5 +1,6 @@
 import { Check, Flame, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ElapsedTime, LocalTime } from "@/components/local-time";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,7 @@ import { SessionSets } from "@/components/workout/session-sets";
 import { GenerateSheet } from "@/components/workout/generate-sheet";
 import { requireUserId } from "@/lib/auth";
 import { formatVolume, summarizeSets } from "@/lib/game";
-import { getActiveSession, getProgressMap, getSessionDetail } from "@/lib/queries";
+import { getActiveSession, getProgressMap, getSessionDetail, getTrainingProfile } from "@/lib/queries";
 import { getExercise } from "@/lib/catalog";
 import { FOCUS_LABELS } from "@/lib/plan";
 
@@ -64,14 +65,15 @@ export default async function WorkoutPage() {
     );
   }
 
-  const progress = await getProgressMap(userId);
+  const [progress, profile] = await Promise.all([getProgressMap(userId), getTrainingProfile(userId)]);
+  if (!profile) redirect("/onboarding");
   return (
     <section>
       <h1 className="font-display text-2xl text-copy">Workout</h1>
       <div className="flex min-h-[50dvh] flex-col items-center justify-center gap-3 text-center">
         <Flame className="h-8 w-8 text-copy-muted" aria-hidden="true" />
         <p className="text-sm text-copy-muted">No active workout.</p>
-        <GenerateSheet progress={progress} hasActiveWorkout={false}>
+        <GenerateSheet progress={progress} hasActiveWorkout={false} defaultDurationMin={profile.sessionMinutes}>
           <Button className="h-11 w-full rounded-xl bg-ai text-on-brand hover:bg-ai/90">
             <Sparkles className="size-5" aria-hidden="true" />Generate workout
           </Button>
