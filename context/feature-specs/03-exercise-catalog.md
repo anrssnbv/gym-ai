@@ -11,12 +11,20 @@ Export:
 - `MUSCLE_HEADS: Record<MuscleHeadId, { name: string; anatomy: string }>`
 - `Equipment` = `'barbell' | 'dumbbell' | 'machine' | 'cable'`
 - `Pattern` = `'push' | 'pull' | 'legs' | 'core'` (used by the AI generator in spec 14)
-- `EXERCISES` — ordered `as const` list checked with `satisfies`, each `{ id, name, groupId, equipment, pattern, compound, primary, secondary }`
+- `EXERCISES` — ordered `as const` list checked with `satisfies`, each `{ id, name, groupId, equipment, pattern, compound, maxWeightKg, primary, secondary }`
 - `Exercise` = `(typeof EXERCISES)[number]` and `ExerciseId` = `Exercise['id']`
 - `DEFAULT_STEP_KG: Record<Equipment, number>` — barbell 2.5, dumbbell 2, machine 5, cable 2.5
 - `getGroup(id)`, `getExercise(id)`, `getExercisesByGroup(groupId)` — take a plain `string` and return `undefined` for unknown IDs
 
 Exercise IDs are permanent: later specs store them in the database.
+
+### Exercise Weight Limits
+
+Every exercise requires its own finite `maxWeightKg`, at least the shared 0.5 kg minimum. Use all 50 values in [exercise-weight-limits.md](../exercise-weight-limits.md), including 200 kg for Barbell Bench Press, 80 kg for Barbell Curl, 30 kg per dumbbell for Incline Dumbbell Curl, and 600 kg for Leg Press. These are app progression ceilings, not recommended working weights or universal strength limits.
+
+The entered weight and the ceiling use the same convention: barbell = bar plus plates; dumbbell = one dumbbell, even when using a pair; machine/cable stack = the selected load; Cable Crossover = one stack with both sides equal; plate-loaded machine = total added plates across the working sides, excluding bodyweight and unmarked sled/lever mass. Do not convert pulley ratios or double dumbbell weights.
+
+Calibration, Adjust validation, and progression all read this catalog field. Keep existing progress and history unchanged when introducing these ceilings; specs 05, 06, and 09 define how existing above-limit weights remain usable.
 
 ### Muscle Groups and Heads
 
@@ -161,6 +169,7 @@ The biceps has two heads; brachialis is listed with it because curls train it an
 Create `lib/catalog.test.ts` with `node:test` and `node:assert`, importing `./catalog.ts`:
 
 - exercise IDs are unique
+- all 50 exercises have finite individual limits at or above the shared minimum; check the representative values above
 - every exercise has at least one primary head, and no head is both primary and secondary in the same exercise
 - every head in `MUSCLE_GROUPS` is primary in at least one exercise
 - every group has at least 3 exercises
@@ -207,6 +216,7 @@ Create `app/(app)/exercises/[groupId]/[exerciseId]/page.tsx`:
 ## Check When Done
 
 - 10 groups and 50 exercises render with the names and heads from the tables above
+- every exercise has its documented `maxWeightKg`; dumbbell limits represent one dumbbell
 - `/exercises/chest/pec-deck` works; `/exercises/back/pec-deck` and `/exercises/nope` return 404
 - `npm test` passes
 - no horizontal scroll at 360 px; cards are fully tappable

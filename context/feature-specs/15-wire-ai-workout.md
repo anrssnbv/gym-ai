@@ -2,6 +2,8 @@ Connect the AI coach end to end. The Generate sheet calls `generateWorkout`, the
 
 ## Start Action
 
+The shared `workoutPlanSchema` also rejects duplicate exercise IDs and exercises outside the declared focus. Apply these local refinements on Start and stored-plan reads; keep the provider output schema unchanged. Invalid stored plans fall back to the manual view without deleting sets. Do not recheck historical plans against today's calibration count.
+
 Add `startWorkout({ plan })` to `actions/workout.ts` (same action rules as spec 09):
 
 - parse `plan` with `workoutPlanSchema`; anything outside the catalog → `Invalid input`

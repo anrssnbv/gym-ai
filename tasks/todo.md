@@ -334,3 +334,48 @@ Implemented spec 14 with an additive JSON plan column and PlanGeneration table, 
 ## Review
 
 Implemented spec 15 with existing action/session/UI patterns. Start validates the plan and attaches or rolls over in a serializable transaction. Queries parse stored JSON and compute exercise progress; pages show the planned checklist, extras, and summary. All 39 unit tests, 38 PostgreSQL integration checks, lint, TypeScript, build, and diff checks pass. Playwright touch testing at 360 × 640 covered real generation for all six focuses (Auto 6.6 seconds), 0-set banner and ignored stats, calibration and all nine planned sets, next-step highlights/checks, one extra set, Finish summary, manual attachment preserving the same session, persisted state in a separate desktop context, unknown exercise rejection through a modified Start request, 10-attempt quota without another attempt, and offline recovery for Generate/Regenerate/Start. A stale dev-server Prisma singleton required restarting after the earlier migration. Live history testing exposed model miscounting of core among eligible calibrated candidates; prompt now spells out the same mandatory cap and exact eligible IDs, retaining all server validations. Added a mocked SDK test for focus payload, 0/1/2 calibration caps, null output, and local validation; no extra paid calls in tests. Visuals inspected: .playwright-mcp/spec15-preview.png, spec15-completed-plan.png, spec15-summary.png. Independent review found no defects. All temporary accounts and data cleaned. Physical-phone acceptance remains pending; browser emulation is not claimed as a physical device test. Vercel remains deferred. Existing unrelated review-file deletion remains outside the commit.
+
+# Full application QA audit
+
+## Specification
+
+- Goal: audit the complete application against specs 01–15 and record issues in context/current-issues.md.
+- Scope: Playwright MCP UI/UX and training flows, auth, persistence, concurrency/retry, AI, logs, and targeted code review.
+- Decisions: report only; no product fixes. Use disposable test accounts/data and preserve the user's sessions.
+- Acceptance: a per-spec coverage matrix, reproducible findings with evidence/severity/locations, explicit physical-device limits, and cleaned test fixtures.
+
+## Tasks
+
+- [x] Read requirements and plan audit coverage.
+- [x] Run app checks and Playwright route, UI, auth, and workout scenarios.
+- [x] Review terminal/code evidence and reproduce candidate issues.
+- [x] Write current-issues.md with findings, passing checks, and limitations; clean fixtures.
+
+## Review
+
+Recorded five confirmed defects in context/current-issues.md: wrong-weight logging after concurrent Adjust, unsafe Undo targeting/retry, progression beyond Adjust's maximum, stale feedback after Undo, and a small header tap target. Separately documented two validation gaps, transport/auth observations, signup blocked by Turnstile, terminal warnings, per-spec coverage, and physical-device limits. Playwright covered all 10 group and 50 exercise routes, email-code login/logout, manual and generated workout completion, offline recovery, concurrency, quota, persistence, ownership, and responsive layouts. All 39 unit tests, 38 database integration checks, lint, production build/TypeScript, and migration status passed. Both disposable accounts and their scoped database rows were removed; test browser contexts closed; original tabs preserved. No product code changed. Existing unrelated review-file deletion remains untouched.
+
+# QA fixes — analysis and plan
+
+## Specification
+
+- Goal: analyze the QA findings and define a concrete repair plan.
+- Scope: QA-01 through QA-05, GAP-01/02, OBS-01/02/03, and terminal warnings.
+- Decisions: reuse existing transactions, schemas, and test suites; no new dependency or schema change expected. User requested individual exercise weight limits; the 50-entry proposal is in context/exercise-weight-limits.md. Investigate uncertain observations before choosing fixes.
+- Acceptance: each finding has a cause, planned change or investigation, affected code, and verification criteria in context/qa-fix-plan.md. Implementation authorized by the user's “start fixing” instruction and completed on fix/qa-training-integrity.
+
+## Tasks
+
+- [x] Read the QA report and trace current action/UI/query callers.
+- [x] Review plan-validation and observation findings independently.
+- [x] Write prioritized changes, product decisions, and regression checks.
+- [x] Implement data-integrity fixes and reconcile Undo feedback.
+- [x] Implement the per-exercise weight limits and header target fix.
+- [x] Enforce generated duration, plan uniqueness, and focus consistency.
+- [x] Resolve/reclassify the transport, offline-auth, and signup observations.
+- [x] Run focused/full checks, update issue evidence, and prepare the verified changes for the existing branch/PR workflow.
+- [x] Push the verified branch and open [PR #17](https://github.com/anrssnbv/gym-ai/pull/17) for delivery to main.
+
+## Review
+
+Implemented the five defects and both validation gaps without new dependencies or schema changes. All 45 unit tests, 45 PostgreSQL integration checks, lint, production build/TypeScript, and diff checks pass. New limit/plan regressions failed before implementation and passed afterward. Playwright verified stale snapshots, targeted Undo, lost-response log/Undo retries, cap feedback, Undo reconciliation, timer preservation, 44 px header target, manual completion, and a live nine-set planned workout (1.8 t). Fresh independently authenticated contexts recovered after 86 seconds offline and a controlled 503 with no page errors. Revoking the temporary mobile session preserved its exercise return URL, and email-code re-login returned there without an unsaved set. Clerk's supported development testing-token flow completed signup, email verification, Home redirect, and signout; live human CAPTCHA/device checks remain manual. Existing warnings remain documented. Independent correctness review found no actionable issues. Both temporary accounts and their database rows were deleted, test contexts closed, and original user tabs preserved. Delivery is recorded in PR #17.

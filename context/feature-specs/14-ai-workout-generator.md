@@ -37,6 +37,7 @@ Extend `lib/plan.ts`. It stays free of Zod because the Generate sheet imports it
 - `resolveAutoFocus(lastTrained: Partial<Record<'push' | 'pull' | 'legs', Date>>)` → the pattern trained longest ago; never trained counts as oldest; ties go push → pull → legs
 - `maxExercises(durationMin)` → 30: 4, 45: 5, 60: 6, 90: 8 (the minimum is always 3)
 - `dedupeExercises(plan)` — keeps the first occurrence of each `exerciseId`
+- `estimatePlanMinutes(plan)` — sum `sets × roundSeconds(compound) / 60` across catalog exercises, plus one minute per exercise change. Enforce this estimate after deduplication against the requested duration.
 
 ## Plan Schemas
 
@@ -101,7 +102,7 @@ Add `generateWorkout({ durationMin, focus })` to `actions/workout.ts` (same acti
 4. `getPlanningContext`; focus = `resolveAutoFocus(context.lastTrained)` for Auto, otherwise the chosen one
 5. insert a `PlanGeneration` row (it counts every attempt that reaches OpenAI, which is what costs money)
 6. `generatePlan`; on any error, `console.error` it and return `{ ok: false, error: "Couldn't generate a workout. Try again." }`
-7. `dedupeExercises({ focus, ...output })`; fewer than 3 exercises left → the same error. Validate focus membership and the calibrated/new-exercise limit against the actual candidate list before returning; invalid output returns the same retryable error
+7. `dedupeExercises({ focus, ...output })`; fewer than 3 exercises left → the same error. Validate focus membership and the calibrated/new-exercise limit against the actual candidate list before returning. Reject `estimatePlanMinutes(plan) > durationMin`; an exact fit is allowed. Invalid output returns the same retryable error, keeps its reserved attempt, and creates no workout. Do not silently trim sets or add automatic paid retries.
 8. return `{ ok: true, data: plan }`. The plan is only a preview: nothing is written to `WorkoutSession` and there's nothing to revalidate.
 
 ## Scope Limits

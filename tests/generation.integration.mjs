@@ -64,6 +64,20 @@ test('generation action guards and quota against PostgreSQL', async(t)=>{
    s.generatePlan=async()=>({...output,exercises:[...output.exercises,{exerciseId:'incline-dumbbell-press',sets:3,note:'Control.'}]});
    assert.deepEqual(await generateWorkout({durationMin:60,focus:'push'}),retry);
   }));
+  await t.test('a 32-minute plan fails a 30-minute request; exact-fit, shorter and deduplicated plans pass',()=>asUser(async s=>{
+   const long = {...output,exercises:output.exercises.map(e=>({...e,sets:5}))};
+   s.generatePlan=async()=>long;
+   assert.deepEqual(await generateWorkout({durationMin:30,focus:'push'}),retry);
+   const exact = {...long,exercises:long.exercises.map((e,i)=>({...e,sets:i===0?4:5}))};
+   s.generatePlan=async()=>exact;
+   assert.deepEqual(await generateWorkout({durationMin:30,focus:'push'}),{ok:true,data:{focus:'push',...exact}});
+   s.generatePlan=async()=>({...exact,exercises:[...exact.exercises,exact.exercises[0]]});
+   assert.deepEqual(await generateWorkout({durationMin:30,focus:'push'}),{ok:true,data:{focus:'push',...exact}});
+   s.generatePlan=async()=>output;
+   assert.deepEqual(await generateWorkout({durationMin:30,focus:'push'}),{ok:true,data:{focus:'push',...output}});
+   assert.equal(await prisma.planGeneration.count({where:{userId:s.userId}}),4);
+   assert.equal(await prisma.workoutSession.count({where:{userId:s.userId}}),0);
+  }));
   await t.test('rolling limit ignores old attempts and isolates other users; concurrent last slot admits one',()=>asUser(async s=>{
    await prisma.planGeneration.createMany({data:[...Array.from({length:9},()=>({userId:s.userId})),{userId:s.userId,createdAt:new Date(Date.now()-24*60*60*1000-1000)},...Array.from({length:10},()=>({userId:users[0]}))]});
    const results=await Promise.all([generateWorkout({durationMin:60,focus:'push'}),generateWorkout({durationMin:60,focus:'push'})]);

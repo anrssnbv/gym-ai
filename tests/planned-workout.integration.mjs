@@ -23,6 +23,11 @@ const { getActiveSession, getActivePlanStep, getSessionDetail, getDashboard } = 
 const { prisma } = await import("../lib/prisma.ts");
 const ids = ["barbell-bench-press", "incline-bench-press", "machine-chest-press"];
 const plan = { focus: "push", title: "Push workout", summary: "A balanced push session.", exercises: ids.map(exerciseId => ({ exerciseId, sets: 2, note: "Move with control." })) };
+const invalidPlans = [
+  { ...plan, exercises: [{ ...plan.exercises[0], exerciseId: "unknown" }, ...plan.exercises.slice(1)] },
+  { ...plan, exercises: [plan.exercises[0], plan.exercises[0], plan.exercises[2]] },
+  { ...plan, focus: "pull" },
+];
 const users = [];
 function asUser(run) {
   const state = { userId: `spec15-test-${randomUUID()}`, invalidations: [] };
@@ -36,10 +41,28 @@ test("planned workout actions and queries against PostgreSQL", async (t) => {
   try {
     await t.test("authentication precedes malformed input validation", () => assert.rejects(() => startWorkout(null), /Integration action needs a test user/));
     await t.test("invalid shape, set count, and unknown catalog ID create no session", () => asUser(async ({ userId, invalidations }) => {
-      for (const input of [null, {}, { plan: {} }, { plan: { ...plan, exercises: [{ ...plan.exercises[0], exerciseId: "unknown" }, ...plan.exercises.slice(1)] } }, { plan: { ...plan, exercises: plan.exercises.map(e => ({ ...e, sets: 0 })) } }]) {
+      for (const input of [null, {}, { plan: {} }, ...invalidPlans.map(plan => ({ plan })), { plan: { ...plan, exercises: plan.exercises.map(e => ({ ...e, sets: 0 })) } }]) {
         assert.deepEqual(await startWorkout(input), { ok: false, error: "Invalid input" });
       }
       assert.equal(await prisma.workoutSession.count({ where: { userId } }), 0);
+      assert.deepEqual(invalidations, []);
+    }));
+    await t.test("duplicate and off-focus plans cannot change active or stale sessions", () => asUser(async ({ userId, invalidations }) => {
+      const session = await prisma.workoutSession.create({ data: { userId, plan } });
+      await prisma.setLog.create({ data: setData(userId, session.id) });
+      for (const stale of [false, true]) {
+        if (stale) {
+          const past = new Date(Date.now() - 4 * 60 * 60 * 1000);
+          await prisma.workoutSession.update({ where: { id: session.id, userId }, data: { startedAt: past } });
+          await prisma.setLog.updateMany({ where: { sessionId: session.id, userId }, data: { createdAt: past } });
+        }
+        const before = await getSessionDetail(userId, session.id);
+        for (const invalid of invalidPlans) {
+          assert.deepEqual(await startWorkout({ plan: invalid }), { ok: false, error: "Invalid input" });
+          assert.deepEqual(await getSessionDetail(userId, session.id), before);
+        }
+        assert.equal(await prisma.workoutSession.count({ where: { userId } }), 1);
+      }
       assert.deepEqual(invalidations, []);
     }));
     await t.test("starting creates a persisted zero-set active session without adding dashboard stats", () => asUser(async ({ userId, invalidations }) => {
@@ -92,11 +115,11 @@ test("planned workout actions and queries against PostgreSQL", async (t) => {
       const { sessionId } = success(await startWorkout({ plan }));
       success(await calibrateExercise({ exerciseId: ids[0], weightKg: 20, stepKg: 2.5 }));
       const firstId = randomUUID();
-      success(await logSet({ setId: firstId, exerciseId: ids[0], reps: 8, expectedLevel: 1 }));
+      success(await logSet({ setId: firstId, exerciseId: ids[0], reps: 8, expectedLevel: 1, expectedWeightKg: 20, expectedStepKg: 2.5 }));
       assert.deepEqual(await getActivePlanStep(userId, ids[0]), { done: 1, sets: 2 });
-      success(await undoLastSet({ exerciseId: ids[0] }));
+      success(await undoLastSet({ exerciseId: ids[0], setId: firstId }));
       assert.deepEqual(await getActivePlanStep(userId, ids[0]), { done: 0, sets: 2 });
-      for (let i = 0; i < 3; i++) success(await logSet({ setId: randomUUID(), exerciseId: ids[0], reps: 8, expectedLevel: 1 }));
+      for (let i = 0; i < 3; i++) success(await logSet({ setId: randomUUID(), exerciseId: ids[0], reps: 8, expectedLevel: 1, expectedWeightKg: 20, expectedStepKg: 2.5 }));
       await prisma.setLog.create({ data: setData(userId, sessionId, "hammer-curl") });
       assert.deepEqual(await getActivePlanStep(userId, ids[0]), { done: 3, sets: 2 });
       assert.equal(await getActivePlanStep(userId, "hammer-curl"), null);
@@ -107,9 +130,14 @@ test("planned workout actions and queries against PostgreSQL", async (t) => {
     await t.test("null and invalid stored plans fall back to manual workouts", () => asUser(async ({ userId }) => {
       const session = await prisma.workoutSession.create({ data: { userId } });
       assert.equal((await getSessionDetail(userId, session.id)).plan, null);
-      await prisma.workoutSession.update({ where: { id: session.id, userId }, data: { plan: { ...plan, exercises: [{ exerciseId: "unknown", sets: 3, note: "Invalid" }] } } });
-      assert.equal((await getSessionDetail(userId, session.id)).plan, null);
-      assert.equal(await getActivePlanStep(userId, ids[0]), null);
+      await prisma.setLog.create({ data: setData(userId, session.id) });
+      for (const invalid of invalidPlans) {
+        await prisma.workoutSession.update({ where: { id: session.id, userId }, data: { plan: invalid } });
+        const detail = await getSessionDetail(userId, session.id);
+        assert.equal(detail.plan, null);
+        assert.equal(detail.sets.length, 1);
+        assert.equal(await getActivePlanStep(userId, ids[0]), null);
+      }
     }));
   } finally {
     await prisma.setLog.deleteMany({ where: { userId: { in: users } } });

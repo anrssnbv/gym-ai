@@ -9,6 +9,7 @@ import { WeightSheet } from "@/components/exercise/weight-sheet";
 import { RoundTimer } from "@/components/exercise/round-timer";
 import { LogRepsSheet } from "@/components/exercise/log-reps-sheet";
 import { LevelUpOverlay } from "@/components/exercise/level-up-overlay";
+import { SetHistory, type HistorySet } from "@/components/exercise/set-history";
 import type { Exercise } from "@/lib/catalog";
 import { formatKg, roundSeconds, TARGET_REPS } from "@/lib/game";
 import type { LevelState } from "@/lib/game";
@@ -19,17 +20,19 @@ interface Round {
   setId: string;
   submittedReps: number | null;
   endsAt: number;
-  number: number;
   state: LevelState;
   result: string | null;
+  limitReached: boolean;
 }
 
-export function ExerciseLevel({ exercise, state }: { exercise: Exercise; state: LevelState | null }) {
+export function ExerciseLevel({ exercise, state, sets }: { exercise: Exercise; state: LevelState | null; sets: HistorySet[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [round, setRound] = useState<Round | null>(null);
-  const [roundsLogged, setRoundsLogged] = useState(0);
+  const [loggedIds, setLoggedIds] = useState<string[]>([]);
+  const [undoPending, setUndoPending] = useState(false);
+  const busy = pending || undoPending;
   const [reward, setReward] = useState<LevelState | null>(null);
   const nextButton = useRef<HTMLButtonElement>(null);
   const closeReward = useCallback(() => {
@@ -39,9 +42,9 @@ export function ExerciseLevel({ exercise, state }: { exercise: Exercise; state: 
   const seconds = roundSeconds(exercise.compound);
 
   function startRound() {
-    if (!state || pending) return;
+    if (!state || busy) return;
     setError(null);
-    setRound({ setId: crypto.randomUUID(), submittedReps: null, endsAt: Date.now() + seconds * 1000, number: roundsLogged + 1, state, result: null });
+    setRound({ setId: crypto.randomUUID(), submittedReps: null, endsAt: Date.now() + seconds * 1000, state, result: null, limitReached: false });
   }
 
   function saveWeight(weightKg: number, stepKg: number): Promise<string | null> {
@@ -49,6 +52,7 @@ export function ExerciseLevel({ exercise, state }: { exercise: Exercise; state: 
       startTransition(async () => {
         const action = state ? adjustExercise : calibrateExercise;
         const result = await callAction(() => action({ exerciseId: exercise.id, weightKg, stepKg }));
+        if (result.ok && round?.result !== null) setRound(null);
         resolve(result.ok ? null : result.error);
       });
     });
@@ -62,6 +66,7 @@ export function ExerciseLevel({ exercise, state }: { exercise: Exercise; state: 
       startTransition(async () => {
         const result = await callAction(() => logSet({
           setId: round.setId, exerciseId: exercise.id, reps: submittedReps, expectedLevel: round.state.level,
+          expectedWeightKg: round.state.weightKg, expectedStepKg: round.state.stepKg,
         }));
         if (!result.ok) {
           if (result.stale) {
@@ -72,16 +77,28 @@ export function ExerciseLevel({ exercise, state }: { exercise: Exercise; state: 
           } else resolve(result.error);
           return;
         }
-        setRoundsLogged((count) => count + 1);
+        setLoggedIds((ids) => ids.includes(round.setId) ? ids : [...ids, round.setId]);
         const message = submittedReps === 11 ? "So close" : submittedReps >= 9 ? "Almost there" : "Keep going";
-        setRound({ ...round, submittedReps, result: result.data.leveledUp ? "Level cleared!" : `${message} — ${submittedReps} / ${TARGET_REPS}` });
+        const limitMessage = round.state.weightKg >= exercise.maxWeightKg
+          ? `Exercise limit reached (${formatKg(exercise.maxWeightKg)}). Set saved — you can keep logging at this weight.`
+          : `Set saved. The next step exceeds ${formatKg(exercise.maxWeightKg)}. Choose a smaller step to continue leveling up.`;
+        setRound({ ...round, submittedReps, limitReached: result.data.limitReached, result: result.data.limitReached ? limitMessage : result.data.leveledUp ? "Level cleared!" : `${message} — ${submittedReps} / ${TARGET_REPS}` });
         if (result.data.leveledUp) setReward(result.data.state);
         resolve(null);
       });
     });
   }
 
+  function reconcileUndo(setId: string) {
+    setLoggedIds((ids) => ids.filter((id) => id !== setId));
+    if (round?.setId === setId) {
+      setRound(null);
+      setReward(null);
+    }
+  }
+
   return (
+    <>
     <section className="mt-8 space-y-5 rounded-2xl border border-line bg-surface p-5" aria-label="Exercise level">
       {state === null ? (
         <>
@@ -91,7 +108,7 @@ export function ExerciseLevel({ exercise, state }: { exercise: Exercise; state: 
             <p className="text-sm text-copy-muted">Pick a weight you can lift for 12 clean reps.</p>
           </div>
           <WeightSheet mode="calibrate" exercise={exercise} onSave={saveWeight}>
-            <Button disabled={pending} className="h-11 w-full rounded-xl">Calibrate</Button>
+            <Button disabled={busy} className="h-11 w-full rounded-xl">Calibrate</Button>
           </WeightSheet>
         </>
       ) : (
@@ -107,7 +124,7 @@ export function ExerciseLevel({ exercise, state }: { exercise: Exercise; state: 
               <span>Best at this level</span>
               <span className="tabular-nums text-copy-muted">{state.bestRepsAtLevel} / {TARGET_REPS}</span>
             </div>
-            <Progress value={state.bestRepsAtLevel / TARGET_REPS * 100} aria-label="Best at this level" aria-valuenow={state.bestRepsAtLevel} aria-valuemin={0} aria-valuemax={TARGET_REPS} aria-valuetext={`${state.bestRepsAtLevel} / ${TARGET_REPS}`} className="h-2" />
+            <Progress value={Math.min(state.bestRepsAtLevel, TARGET_REPS) / TARGET_REPS * 100} aria-label="Best at this level" aria-valuenow={Math.min(state.bestRepsAtLevel, TARGET_REPS)} aria-valuemin={0} aria-valuemax={TARGET_REPS} aria-valuetext={`${state.bestRepsAtLevel} / ${TARGET_REPS}`} className="h-2" />
           </div>
           {state.weightKg !== state.startWeightKg && (
             <p className="text-sm text-copy-muted">
@@ -115,19 +132,26 @@ export function ExerciseLevel({ exercise, state }: { exercise: Exercise; state: 
             </p>
           )}
           {round ? (
-            <RoundTimer key={round.setId} endsAt={round.endsAt} seconds={seconds} roundNumber={round.number} result={round.result} onCancel={() => setRound(null)} onNext={startRound} nextButtonRef={nextButton} pending={pending}>
-              <LogRepsSheet weightKg={round.state.weightKg} level={round.state.level} submittedReps={round.submittedReps} onSave={logReps} />
+            <RoundTimer key={round.setId} endsAt={round.endsAt} seconds={seconds} roundNumber={loggedIds.length + (round.result === null ? 1 : 0)} result={round.result} onCancel={() => setRound(null)} onNext={startRound} nextButtonRef={nextButton} pending={busy}>
+              <LogRepsSheet disabled={busy} weightKg={round.state.weightKg} level={round.state.level} submittedReps={round.submittedReps} onSave={logReps} />
             </RoundTimer>
           ) : <div className="flex gap-3">
-            <Button disabled={pending} onClick={startRound} className="h-11 flex-1 rounded-xl"><Play className="size-5" aria-hidden="true" />Start round</Button>
+            <Button disabled={busy} onClick={startRound} className="h-11 flex-1 rounded-xl"><Play className="size-5" aria-hidden="true" />Start round</Button>
             <WeightSheet mode="adjust" exercise={exercise} state={state} onSave={saveWeight}>
-              <Button disabled={pending} variant="outline" size="icon" className="size-11 rounded-xl" aria-label="Adjust weight"><SlidersHorizontal className="size-5" aria-hidden="true" /></Button>
+              <Button disabled={busy} variant="outline" size="icon" className="size-11 rounded-xl" aria-label="Adjust weight"><SlidersHorizontal className="size-5" aria-hidden="true" /></Button>
             </WeightSheet>
           </div>}
+          {round?.limitReached && (
+            <WeightSheet mode="adjust" exercise={exercise} state={state} onSave={saveWeight}>
+              <Button disabled={busy} variant="outline" className="h-11 w-full rounded-xl">Adjust weight or step</Button>
+            </WeightSheet>
+          )}
         </>
       )}
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       {reward && <LevelUpOverlay level={reward.level} weightKg={reward.weightKg} onClose={closeReward} />}
     </section>
+    <SetHistory exerciseId={exercise.id} sets={sets} disabled={pending} onUndo={reconcileUndo} onPendingChange={setUndoPending} />
+    </>
   );
 }
