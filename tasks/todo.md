@@ -147,7 +147,7 @@ Implemented spec 06 with pure set rules, timestamp countdown, Screen Wake Lock c
 - [x] Push branch and open draft PR.
 - [x] Merge and sync main after live auth verification.
 - [x] User confirms sign-in/sign-out; CLI confirms email-code authentication enabled.
-- [ ] User confirms installed-phone email-code authentication.
+- [ ] User confirms installed-phone email-code authentication and Google authentication in the installed iOS app.
 
 ## Review
 
