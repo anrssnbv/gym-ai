@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Phase 1 — UI foundation. Not started.
+- Phase 1 — UI foundation. Spec 01 complete; spec 02 next.
 
 ## Current Goal
 
-- 01 Design System.
+- 02 App Shell.
 
 ## Roadmap
 
@@ -16,7 +16,7 @@ Specs 01–08 are written. Specs 09+ are written one at a time after the previou
 
 ### Phase 1 — UI foundation (no backend)
 
-- [ ] 01 design-system — shadcn/ui (Radix), dark game tokens, fonts, icons
+- [x] 01 design-system — shadcn/ui (Radix), dark game tokens, fonts, icons
 - [ ] 02 app-shell — mobile shell: top bar, bottom tabs, placeholder pages, PWA manifest and icons
 - [ ] 03 exercise-catalog — `lib/catalog.ts` + groups grid + group list + exercise page header, first `npm test`
 - [ ] 04 muscle-map — SVG body map with one region per head, on the exercise list and exercise page
@@ -50,11 +50,11 @@ Specs 01–08 are written. Specs 09+ are written one at a time after the previou
 
 ## Completed
 
-- None yet.
+- 01 design-system — theme tokens, fonts, and temporary component preview. Lint, build, and 360 px browser checks passed.
 
 ## In Progress
 
-- None yet.
+- None.
 
 ## Open Questions
 
