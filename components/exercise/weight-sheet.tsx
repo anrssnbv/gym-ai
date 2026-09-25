@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader,
+  Sheet, SheetClose, SheetDescription, SheetHeader,
   SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
+import { KeyboardAwareSheetContent } from "@/components/exercise/keyboard-aware-sheet";
 import { DEFAULT_STEP_KG } from "@/lib/catalog";
 import type { Exercise } from "@/lib/catalog";
 import { formatKg, roundKg, STEP_LIMITS_KG, WEIGHT_MIN_KG } from "@/lib/game";
@@ -43,8 +44,7 @@ export function WeightSheet(props: WeightSheetProps) {
       setOpen(next);
     }}>
       <SheetTrigger asChild>{children}</SheetTrigger>
-      <SheetContent
-        side="bottom"
+      <KeyboardAwareSheetContent
         showCloseButton={false}
         className="mx-auto max-h-dvh max-w-md gap-4 overflow-y-auto rounded-t-3xl bg-elevated p-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
         onOpenAutoFocus={(event) => {
@@ -121,7 +121,7 @@ export function WeightSheet(props: WeightSheetProps) {
             {saving ? "Saving…" : mode === "calibrate" ? "Unlock level 1" : "Save"}
           </Button>
         </form>
-      </SheetContent>
+      </KeyboardAwareSheetContent>
     </Sheet>
   );
 }

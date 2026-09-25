@@ -5,7 +5,8 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetClose, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { KeyboardAwareSheetContent } from "@/components/exercise/keyboard-aware-sheet";
 import { formatKg, REPS_LIMITS } from "@/lib/game";
 
 interface LogRepsSheetProps {
@@ -28,8 +29,7 @@ export function LogRepsSheet({ disabled, weightKg, level, submittedReps, onSave 
   return (
     <Sheet open={open} onOpenChange={(next) => { if (!submitted.current) setOpen(next); }}>
       <SheetTrigger asChild><Button disabled={disabled} className="h-11 flex-1 rounded-xl">Log reps</Button></SheetTrigger>
-      <SheetContent
-        side="bottom"
+      <KeyboardAwareSheetContent
         showCloseButton={false}
         className="mx-auto max-h-dvh max-w-md overflow-y-auto rounded-t-3xl bg-elevated p-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
         onOpenAutoFocus={(event) => { event.preventDefault(); input.current?.focus(); }}
@@ -64,7 +64,7 @@ export function LogRepsSheet({ disabled, weightKg, level, submittedReps, onSave 
           {error && submittedReps !== null && <p className="text-sm text-copy-muted">Retry will save the same {submittedReps} reps.</p>}
           <Button disabled={saving} type="submit" className="h-11 w-full rounded-xl">{saving ? "Saving…" : "Save"}</Button>
         </form>
-      </SheetContent>
+      </KeyboardAwareSheetContent>
     </Sheet>
   );
 }
