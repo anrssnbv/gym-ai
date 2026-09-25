@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Phase 1 — UI foundation. Spec 03 complete; spec 02 phone check pending.
+- Phase 1 — UI foundation. Spec 04 in progress; spec 02 phone check pending.
 
 ## Current Goal
 
-- Confirm the 02 App Shell phone install check before spec 04.
+- 04 Muscle Map.
 
 ## Roadmap
 
@@ -55,6 +55,7 @@ Specs 01–08 are written. Specs 09+ are written one at a time after the previou
 
 ## In Progress
 
+- 04 muscle-map — implemented all 27 head regions, server-rendered maps, group thumbnails, and full exercise maps. Seven tests, lint, build, type coverage, and 360 px browser checks pass. Awaiting user approval of the seven required screenshot pairs before completion and merge.
 - 02 app-shell — routes, navigation, viewport metadata, and PWA icons implemented. Lint, build, browser layout, and manifest checks passed; real-phone install check pending.
 
 ## Open Questions

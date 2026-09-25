@@ -2,6 +2,7 @@ import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { MuscleMap, exerciseIntensity } from "@/components/muscle-map/muscle-map";
 import { getExercise, getGroup, MUSCLE_HEADS } from "@/lib/catalog";
 
 export default async function ExercisePage({
@@ -34,6 +35,8 @@ export default async function ExercisePage({
           {exercise.compound ? "Compound" : "Isolation"}
         </span>
       </div>
+
+      <MuscleMap intensity={exerciseIntensity(exercise)} className="mt-8" />
 
       <section className="mt-8">
         <h2 className="font-display text-xl text-copy">Targets</h2>

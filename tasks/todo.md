@@ -61,3 +61,25 @@ Built the shared shell, three placeholder routes, active bottom tabs, viewport a
 ## Review
 
 Implemented the static catalog and three browse routes. A direct comparison against the spec tables matched all 10 groups, 27 heads, and 50 exercises. `npm test` passes all five catalog checks; lint and build pass. At 360 × 640, the group grid, Chest list, Pec Deck detail, and long Bulgarian Split Squat title have no horizontal overflow. Group and exercise cards are full links with tap areas above 44 px. `/exercises/chest/pec-deck` works; wrong-group and unknown IDs return 404. Spec 02's real-phone install check remains pending.
+
+# 04 Muscle Map
+
+## Specification
+
+- Goal: implement `context/feature-specs/04-muscle-map.md`.
+- Scope: hand-authored symmetric SVG regions for all 27 heads, server-rendered intensity/focus component, list thumbnails and exercise maps.
+- Decisions: draw left-half polygons once and mirror them; reuse catalog names and theme tokens.
+- Acceptance: complete typed region coverage, correct focus and accessible labels, no overflow at 360 px, passing tests/lint/build, and user approval of the seven specified thumbnail/full-map screenshot pairs.
+
+## Tasks
+
+- [x] Read spec and context; mark in progress and sync development with main.
+- [x] Draw body paths and implement map rendering and exercise intensity.
+- [x] Integrate thumbnails and full maps into exercise routes.
+- [x] Verify types, rendering, accessibility, 360 px layout, tests, lint, and build.
+- [x] Capture all seven screenshot pairs for user approval.
+- [ ] Push development and open PR; merge and update local main after visual approval.
+
+## Review
+
+Implemented all 27 typed muscle regions, mirrored body geometry, token-based intensity, group crops, accessible labels, and catalog integration without client state or new dependencies. All seven tests, lint, and production build pass. A negative TypeScript check rejected both a missing head and an empty path tuple. Playwright checked all seven specified exercises at 360 px: 64 px thumbnails, uncropped full maps, expected labels and region fills, and no horizontal overflow. The groups grid remains text-only; browser console has no errors. Screenshots and a local review gallery are in `.playwright-mcp/spec04/`. User visual approval required by spec 04 remains pending before merge; spec 02's phone check remains pending.
