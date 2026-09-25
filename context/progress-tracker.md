@@ -9,6 +9,7 @@ Update this file after every meaningful implementation change.
 ## Current Goal
 
 - Specs 01–15 implemented. QA fixes complete: five confirmed defects and both plan-validation gaps addressed. Physical-phone checks remain; Vercel deferred by user.
+- QA delivery: [PR #17 — Fix training integrity and application QA findings](https://github.com/anrssnbv/gym-ai/pull/17).
 
 ## Roadmap
 
