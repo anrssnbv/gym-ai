@@ -254,3 +254,23 @@ Implemented spec 10 with saved props, existing actions, async sheets, stable rou
 ## Review
 
 Implemented spec 11 with the existing actions/session helpers and no schema changes. All 26 tests, lint, TypeScript, production build, and diff checks pass. Playwright at 360 × 640 verified the banner immediately after logging, Home/Exercises visibility and Workout hiding, grouped exercise order, 3 sets/840 kg/1 level totals, Finish and summary, offline Finish recovery, new sessions after finish, cross-account HTTP 404, browser-local timestamps, no overflow, and no page errors. Fake clock checks proved exactly 3 hours stays active, visibility-triggered expiry hides and refreshes once, the 30-second timer updates elapsed time and expires the banner. Scoped test fixtures proved stale sessions close at last activity and zero-set summaries show 0 minutes when stale and 5 minutes when explicitly finished after 5 minutes. Independent review found no issues. Screenshots are .playwright-mcp/spec11-banner.png, spec11-workout.png, and spec11-summary.png. Temporary Clerk accounts and their database rows were removed. Existing unrelated review-file deletion remains outside this commit.
+
+# 12 Dashboard
+
+## Specification
+
+- Goal: implement spec 12 exactly, read-only.
+- Scope: rank/heat rules, user-scoped dashboard query, power card, stats, activity map, and recent workouts.
+- Decisions: reuse session-end rules, LocalTime, MuscleMap, and existing design tokens; parameterized volume SQL; no actions/schema changes.
+- Acceptance: correct empty/seeded data, active/empty session exclusions, seven-day boundaries, heat types/accessibility, recent links, mobile layout, tests/lint/build.
+
+## Tasks
+
+- [x] Read spec; mark tracker in progress.
+- [x] Implement rules, query, and dashboard UI.
+- [x] Verify database aggregates and browser behavior; run tests/lint/build.
+- [x] Update tracker/review, commit, push, open PR, merge, and update local main.
+
+## Review
+
+Implemented spec 12 as read-only queries and Server Component UI; no actions or schema changes. All 28 unit tests, 16 PostgreSQL integration checks, lint, TypeScript, production build, and diff checks pass. Tests cover exact seven-day/three-hour boundaries, empty-session exclusions, stale end times, power, duration, volume, primary-only heat, five recent sessions, level-up counts, and scoped SQL with a quote-containing user ID. Playwright at 360 × 640 verified zero/Rookie/idle/empty states, seeded totals (power 60, 9 workouts, 4 h 20 min, 4,920 kg, 3 unlocked), all heat bands and activity labels, unchanged exercise-target labels, five matching summary links, no page errors or overflow, and Diamond Max rank. Review found the existing generated Progress component omitted accessible values; dashboard props now supply min/max/current/text without changing that protected component. Verified 75/100 at Silver with 37.5% visual fill. Screenshots: .playwright-mcp/spec12-full.png and spec12-empty.png. Temporary accounts and test rows cleaned up. Existing review-file deletion remains outside this commit.

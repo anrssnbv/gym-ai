@@ -9,6 +9,7 @@ interface MuscleMapProps {
   view?: BodyView | "both";
   focusGroup?: MuscleGroupId;
   className?: string;
+  ariaLabel?: string;
 }
 
 const GROUP_FOCUS: Record<
@@ -49,6 +50,7 @@ export function MuscleMap({
   view = "both",
   focusGroup,
   className,
+  ariaLabel,
 }: MuscleMapProps) {
   const focus = focusGroup ? GROUP_FOCUS[focusGroup] : undefined;
   const selectedView = focus?.view ?? view;
@@ -72,7 +74,7 @@ export function MuscleMap({
       xmlns="http://www.w3.org/2000/svg"
       viewBox={`0 0 ${views.length * width + (views.length - 1) * 20} ${height}`}
       role="img"
-      aria-label={label}
+      aria-label={ariaLabel ?? label}
       className={cn("block w-full", className)}
     >
       {views.map((bodyView, index) => (
