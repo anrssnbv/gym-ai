@@ -3,6 +3,28 @@ export const REPS_LIMITS = { min: 1, max: 100 };
 export const WEIGHT_LIMITS_KG = { min: 0.5, max: 1000 };
 export const STEP_LIMITS_KG = { min: 0.25, max: 50 };
 export const SESSION_IDLE_MS = 3 * 60 * 60 * 1000;
+export const RANKS = [
+  { name: "Rookie", min: 0 },
+  { name: "Iron", min: 10 },
+  { name: "Bronze", min: 30 },
+  { name: "Silver", min: 60 },
+  { name: "Gold", min: 100 },
+  { name: "Platinum", min: 150 },
+  { name: "Diamond", min: 250 },
+] as const;
+
+export function rankFor(power: number): { name: string; min: number; nextMin: number | null } {
+  let index = 0;
+  while (index + 1 < RANKS.length && power >= RANKS[index + 1].min) index++;
+  return { ...RANKS[index], nextMin: RANKS[index + 1]?.min ?? null };
+}
+
+export function heatLevel(setCount: number): 0 | 1 | 2 | 3 {
+  if (setCount <= 0) return 0;
+  if (setCount <= 3) return 1;
+  if (setCount <= 8) return 2;
+  return 3;
+}
 
 export function isSessionStale(lastActivityAt: Date, now: Date): boolean {
   return now.getTime() - lastActivityAt.getTime() > SESSION_IDLE_MS;

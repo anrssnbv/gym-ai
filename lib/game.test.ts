@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  adjust, applySet, calibrate, formatDuration, formatKg, formatVolume, isSessionStale, powerLevel,
-  roundSeconds, SESSION_IDLE_MS, sessionEnd, sessionEndAt, summarizeSets, type LevelState,
+  adjust, applySet, calibrate, formatDuration, formatKg, formatVolume, heatLevel, isSessionStale, powerLevel,
+  rankFor, roundSeconds, SESSION_IDLE_MS, sessionEnd, sessionEndAt, summarizeSets, type LevelState,
 } from "./game.ts";
 
 test("calibrate starts level 1 with rounded weight and step", () => {
@@ -120,6 +120,23 @@ test("powerLevel sums earned levels above level one", () => {
   assert.equal(powerLevel([]), 0);
   assert.equal(powerLevel([1, 1]), 0);
   assert.equal(powerLevel([3, 1, 5]), 6);
+});
+
+test("rankFor uses the current rank threshold and the next rank minimum", () => {
+  assert.deepEqual(rankFor(0), { name: "Rookie", min: 0, nextMin: 10 });
+  assert.deepEqual(rankFor(9), { name: "Rookie", min: 0, nextMin: 10 });
+  assert.deepEqual(rankFor(10), { name: "Iron", min: 10, nextMin: 30 });
+  assert.deepEqual(rankFor(30), { name: "Bronze", min: 30, nextMin: 60 });
+  assert.deepEqual(rankFor(60), { name: "Silver", min: 60, nextMin: 100 });
+  assert.deepEqual(rankFor(100), { name: "Gold", min: 100, nextMin: 150 });
+  assert.deepEqual(rankFor(249), { name: "Platinum", min: 150, nextMin: 250 });
+  assert.deepEqual(rankFor(250), { name: "Diamond", min: 250, nextMin: null });
+});
+
+test("heatLevel separates idle, low, medium, and high set counts", () => {
+  for (const [sets, expected] of [[0, 0], [1, 1], [3, 1], [4, 2], [8, 2], [9, 3]]) {
+    assert.equal(heatLevel(sets), expected);
+  }
 });
 
 test("summarizeSets counts sets, lifted volume, and cleared levels", () => {
