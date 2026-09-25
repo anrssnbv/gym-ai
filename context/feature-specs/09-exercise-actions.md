@@ -63,7 +63,7 @@ Rules for every action (see Server Actions in `code-standards.md`):
 - `userId` is in every `where`, including updates by `id`
 - after every successful write, call `revalidatePath('/', 'layout')`. It re-renders the current page at once and clears the client cache; every page here is per-user and cheap to render.
 - return an `ActionResult`; never throw for expected errors
-- session-mutating actions (`logSet`, `finishWorkout`, and spec 15’s `startWorkout`) use serializable transactions with at most 3 attempts on Prisma `P2034` conflicts. Re-run the whole transaction; never retry validation errors. Exhausted conflicts return a retryable `ActionResult` error. This prevents concurrent first sets/Start/Finish from creating contradictory open sessions; no schema change is needed. Keep retry helpers in `lib/`, not exported from action files.
+- session-mutating actions (`logSet`, `finishWorkout`, and spec 15’s `startWorkout`) use serializable transactions with at most 3 attempts on Prisma `P2034` conflicts. Prisma 7's pg adapter may expose commit-time conflicts as `DriverAdapterError` with `TransactionWriteConflict` and PostgreSQL code `40001` or `40P01`; retry those equivalent conflicts too. Re-run the whole transaction; never retry validation errors. Exhausted conflicts return a retryable `ActionResult` error. This prevents concurrent first sets/Start/Finish from creating contradictory open sessions; no schema change is needed. Keep retry helpers in `lib/`, not exported from action files.
 
 ### `actions/exercise.ts`
 

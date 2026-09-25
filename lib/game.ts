@@ -2,6 +2,23 @@ export const TARGET_REPS = 12;
 export const REPS_LIMITS = { min: 1, max: 100 };
 export const WEIGHT_LIMITS_KG = { min: 0.5, max: 1000 };
 export const STEP_LIMITS_KG = { min: 0.25, max: 50 };
+export const SESSION_IDLE_MS = 3 * 60 * 60 * 1000;
+
+export function isSessionStale(lastActivityAt: Date, now: Date): boolean {
+  return now.getTime() - lastActivityAt.getTime() > SESSION_IDLE_MS;
+}
+
+export function sessionEnd(lastActivityAt: Date, now: Date): Date {
+  return isSessionStale(lastActivityAt, now) ? lastActivityAt : now;
+}
+
+export function sessionEndAt(endedAt: Date | null, lastActivityAt: Date, now: Date): Date {
+  return endedAt ?? sessionEnd(lastActivityAt, now);
+}
+
+export function powerLevel(levels: number[]): number {
+  return levels.reduce((total, level) => total + level - 1, 0);
+}
 
 export interface LevelState {
   level: number;

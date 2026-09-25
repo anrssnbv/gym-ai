@@ -192,3 +192,23 @@ Implemented the exact schema and Prisma 7 configuration, adapter singleton, gene
 ## Review
 
 Saved findings and dispositions in `context/feature-specs/09-15-review.md`. Reconciled action error/retry contracts, scoped idempotency, session expiry and concurrency, heat-map accessibility/types, toggles, plan props/storage, and new-user planning. The OpenAI length-limit concern is qualified against current official documentation rather than assumed true. Existing draft files were preserved and revised in place; no application code or database changes. `git diff --check` passes.
+
+# 09 Exercise Actions
+
+## Specification
+
+- Goal: implement spec 09 exactly, backend only.
+- Scope: auth helper, action results, game/session helpers, user-scoped queries, and five Server Actions.
+- Decisions: reuse Prisma and game rules; Zod 4 validation; serializable session transactions with bounded retries; existing SetLog IDs provide replay safety.
+- Acceptance: pure tests, database replay/concurrency/isolation checks, lint and build pass; no UI or schema changes.
+
+## Tasks
+
+- [x] Read spec and project rules; mark tracker in progress.
+- [x] Implement helpers, queries, and validated actions.
+- [x] Verify pure rules, database behavior, retries and concurrent writes; run tests/lint/build.
+- [x] Update tracker and review, commit, push, open PR, merge, and update local main.
+
+## Review
+
+Implemented the auth helper, shared action result, pure session/power rules, scoped reads, and five validated Server Actions. Reused the existing schema and game rules. Real PostgreSQL checks exposed commit-time serialization conflicts arriving as Prisma 7 pg adapter errors; the bounded retry helper now handles these alongside P2034. Calibration also recovers a duplicate-key race only when this user's progress exists. All 23 unit tests, 11 integration checks, lint, TypeScript, production build, and diff checks pass. Integration checks use unique artificial users and clean their rows in finally. Independent review found no remaining issues. No UI or schema changes; UI end-to-end checks belong to spec 10. The pre-existing local deletion of the review document is excluded from this feature commit.

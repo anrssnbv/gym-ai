@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Phase 2 — Auth and data. Spec 08 complete; specs 02, 05, 06, and 07 phone checks pending.
+- Phase 3 — Core loop on real data. Spec 09 complete; specs 02, 05, 06, and 07 phone checks pending.
 
 ## Current Goal
 
-- 08 Prisma complete. Next planned: 09 Exercise Actions.
+- 09 Exercise Actions complete. Next planned: 10 Wire Exercise Screen.
 
 ## Roadmap
 
@@ -30,7 +30,7 @@ All specs 01–15 are written. 09–15 were written after 08, against the code a
 
 ### Phase 3 — Core loop on real data
 
-- [ ] 09 exercise-actions — `requireUserId()`, queries, session helpers, Server Actions: calibrate, adjust, log set (active session + `expectedLevel` + level-up in one transaction), undo, finish workout. Backend only.
+- [x] 09 exercise-actions — `requireUserId()`, queries, session helpers, Server Actions: calibrate, adjust, log set (active session + `expectedLevel` + level-up in one transaction), undo, finish workout. Backend only.
 - [ ] 10 wire-exercise-screen — exercise screen, set history, undo and group power on the catalog use real data
 - [ ] 11 wire-workout-session — active-workout banner, `/workout` for manual sessions, finish + summary
 - [ ] 12 dashboard — read-only: power level + rank, stats, 7-day muscle heat map, recent workouts
@@ -56,6 +56,8 @@ All specs 01–15 are written. 09–15 were written after 08, against the code a
 - 04 muscle-map — all 27 head regions, group thumbnails, and full exercise maps. Tests, lint, build, type coverage, and 360 px browser checks passed. User approved all seven screenshot pairs on 2026-09-25.
 
 - 08 prisma — Prisma 7, exact three-model schema, cached adapter client, init migration, and deployment/install scripts. Migration applied and up to date on the direct endpoint. Client regeneration without DATABASE_URL, generated-file lint exclusion, lint, and build verified.
+
+- 09 exercise-actions — authenticated user helper, scoped queries, shared action results, session rules, and five validated actions. Round-ID replay, rollback recovery, serializable retries, and concurrent calibration verified. All 23 unit tests, 11 integration checks against PostgreSQL, lint, and production build pass. Backend only; UI wiring follows in spec 10.
 
 ## In Progress
 

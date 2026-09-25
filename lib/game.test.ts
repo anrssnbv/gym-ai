@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { adjust, applySet, calibrate, formatKg, roundSeconds, type LevelState } from "./game.ts";
+import {
+  adjust, applySet, calibrate, formatKg, isSessionStale, powerLevel,
+  roundSeconds, SESSION_IDLE_MS, sessionEnd, sessionEndAt, type LevelState,
+} from "./game.ts";
 
 test("calibrate starts level 1 with rounded weight and step", () => {
   assert.deepEqual(calibrate(42.506, 2.504), {
@@ -84,4 +87,37 @@ test("three level-ups round a 1.1 kg step to exactly 23.3 kg", () => {
 test("roundSeconds returns two minutes for compound and one for isolation", () => {
   assert.equal(roundSeconds(true), 120);
   assert.equal(roundSeconds(false), 60);
+});
+
+test("sessions become stale only after three hours without activity", () => {
+  const lastActivityAt = new Date("2026-09-25T08:00:00Z");
+  assert.equal(SESSION_IDLE_MS, 10_800_000);
+  assert.equal(isSessionStale(lastActivityAt, new Date("2026-09-25T10:59:59.999Z")), false);
+  assert.equal(isSessionStale(lastActivityAt, new Date("2026-09-25T11:00:00Z")), false);
+  assert.equal(isSessionStale(lastActivityAt, new Date("2026-09-25T11:00:00.001Z")), true);
+});
+
+test("sessionEnd uses last activity when stale and now otherwise", () => {
+  const lastActivityAt = new Date("2026-09-25T08:00:00Z");
+  const activeNow = new Date("2026-09-25T11:00:00Z");
+  const staleNow = new Date("2026-09-25T11:00:00.001Z");
+  assert.equal(sessionEnd(lastActivityAt, activeNow), activeNow);
+  assert.equal(sessionEnd(lastActivityAt, staleNow), lastActivityAt);
+});
+
+test("sessionEndAt prefers the stored end and otherwise follows session activity", () => {
+  const lastActivityAt = new Date("2026-09-25T08:00:00Z");
+  const endedAt = new Date("2026-09-25T09:00:00Z");
+  const activeNow = new Date("2026-09-25T10:00:00Z");
+  const staleNow = new Date("2026-09-25T12:00:00Z");
+  assert.equal(sessionEndAt(endedAt, lastActivityAt, activeNow), endedAt);
+  assert.equal(sessionEndAt(endedAt, lastActivityAt, staleNow), endedAt);
+  assert.equal(sessionEndAt(null, lastActivityAt, activeNow), activeNow);
+  assert.equal(sessionEndAt(null, lastActivityAt, staleNow), lastActivityAt);
+});
+
+test("powerLevel sums earned levels above level one", () => {
+  assert.equal(powerLevel([]), 0);
+  assert.equal(powerLevel([1, 1]), 0);
+  assert.equal(powerLevel([3, 1, 5]), 6);
 });
