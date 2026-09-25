@@ -289,7 +289,7 @@ Implemented spec 12 as read-only queries and Server Component UI; no actions or 
 - [x] Read spec; mark tracker in progress.
 - [x] Implement types, preview, sheet, and placements.
 - [x] Verify both triggers, inputs, preview, mobile layout, lint/build/tests.
-- [ ] Update tracker/review; commit, push, open PR, merge, and update local main.
+- [x] Update tracker/review; commit, push, open PR, merge, and update local main.
 
 ## Review
 
