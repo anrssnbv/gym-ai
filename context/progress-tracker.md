@@ -8,7 +8,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
-- 10 Wire Exercise Screen implemented and browser-verified; phone-to-desktop check pending.
+- 10 Wire Exercise Screen implemented and browser-verified, including touch-enabled mobile emulation to desktop sync. Physical-phone check remains pending.
 
 ## Roadmap
 

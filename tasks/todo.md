@@ -228,7 +228,8 @@ Implemented the auth helper, shared action result, pure session/power rules, sco
 - [x] Wire pages, catalog, history, and asynchronous sheets.
 - [x] Verify browser flows and failure recovery; run tests/lint/build.
 - [x] Update review, push branch, open PR, merge, and update local main.
-- [ ] User confirms a round logged on the phone appears on desktop after reload.
+- [x] Automated touch-enabled mobile browser logs a round; a separate desktop browser shows the saved set and best reps after reload.
+- [ ] Physical-phone verification remains unavailable to the agent.
 
 ## Review
 
