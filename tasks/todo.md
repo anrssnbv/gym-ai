@@ -106,3 +106,25 @@ Implemented all 27 typed muscle regions, mirrored body geometry, token-based int
 ## Review
 
 Implemented pure game rules and the local exercise level screen using existing shadcn components. All 12 tests, lint, and production build pass. Playwright at 360 × 640 verified locked/calibrated states, equipment defaults, focus on open, Enter submission, adjustment prefill and unchanged level, rounded values, gains, canceled draft reset, reload reset, disabled Start round, accessible progress, long exercise names, no horizontal overflow, and no console errors. Empty, zero, negative, and out-of-range weight/step values are blocked; allowed limits succeed. Screenshots are in `.playwright-mcp/spec05/`. A separate code review found no actionable issues. The real-phone keyboard check remains pending under the workflow rules; spec 02’s phone check also remains pending.
+
+# 06 Round Flow
+
+## Specification
+
+- Goal: implement spec 06 exactly with local state only.
+- Scope: applySet/roundSeconds rules, timestamp countdown, wake lock, reps sheet, level-up overlay and header duration.
+- Decisions: capture each round's level/weight at start; one submission per round; reuse existing UI primitives.
+- Acceptance: specified tests, complete round loop, timestamp recovery, reduced motion, 360px layout, lint/build, and user phone wake-lock/sleep checks.
+
+## Tasks
+
+- [x] Read spec and mark tracker in progress.
+- [x] Implement game rules and tests.
+- [x] Implement timer, reps sheet, overlay, and screen integration.
+- [x] Verify full loop, validation, timer recovery, wake-lock lifecycle, reduced motion, layout, tests/lint/build.
+- [x] Commit, push, open PR, merge, and sync local main.
+- [ ] User confirms countdown recovery after 30 seconds locked and screen stays awake during rounds.
+
+## Review
+
+Implemented spec 06 with pure set rules, timestamp countdown, Screen Wake Lock cleanup/reacquisition, native reps validation, one-save guard, result messages, and level-up feedback. All 17 tests, lint, and production build pass. Playwright at 360 × 640 verified the complete 10-rep/12-rep loop, both timer durations, all result bands, invalid inputs, duplicate submission, early next round, cancellation numbering, expiry vibration once, simulated 30-second clock recovery on visibility change, wake-lock release/reacquisition and denial/late-resolution handling, reduced motion, overlay tap/timeout and focus restoration, reload reset, and no horizontal overflow. Current browser console has no errors. Code review found a focus restoration issue that was fixed and verified. Screenshots are in `.playwright-mcp/spec06/`. Real-device sleep recovery and screen-awake behavior remain pending for the user; earlier phone checks remain pending.

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { adjust, calibrate, formatKg, type LevelState } from "./game.ts";
+import { adjust, applySet, calibrate, formatKg, roundSeconds, type LevelState } from "./game.ts";
 
 test("calibrate starts level 1 with rounded weight and step", () => {
   assert.deepEqual(calibrate(42.506, 2.504), {
@@ -43,4 +43,45 @@ test("formatKg omits trailing zeros and floating point noise", () => {
   assert.equal(formatKg(42.5), "42.5 kg");
   assert.equal(formatKg(23.75), "23.75 kg");
   assert.equal(formatKg(0.1 + 0.2), "0.3 kg");
+});
+
+test("12 reps levels up and adds the step, while 11 does not", () => {
+  assert.deepEqual(applySet(state, 12), {
+    state: { ...state, level: 5, weightKg: 45, bestRepsAtLevel: 0 },
+    leveledUp: true,
+  });
+  assert.deepEqual(applySet(state, 11), {
+    state: { ...state, bestRepsAtLevel: 11 },
+    leveledUp: false,
+  });
+  assert.equal(state.bestRepsAtLevel, 9);
+});
+
+test("30 reps levels up exactly one level", () => {
+  assert.deepEqual(applySet(state, 30), {
+    state: { ...state, level: 5, weightKg: 45, bestRepsAtLevel: 0 },
+    leveledUp: true,
+  });
+});
+
+test("best reps track the maximum below 12 and reset after a level-up", () => {
+  let current = calibrate(20, 2.5);
+  for (const [reps, best] of [[8, 8], [6, 8], [11, 11], [10, 11], [12, 0], [5, 5]]) {
+    current = applySet(current, reps).state;
+    assert.equal(current.bestRepsAtLevel, best);
+  }
+});
+
+test("three level-ups round a 1.1 kg step to exactly 23.3 kg", () => {
+  let current = calibrate(20, 1.1);
+  for (let round = 0; round < 3; round++) {
+    current = applySet(current, 12).state;
+  }
+  assert.equal(current.weightKg, 23.3);
+  assert.equal(current.level, 4);
+});
+
+test("roundSeconds returns two minutes for compound and one for isolation", () => {
+  assert.equal(roundSeconds(true), 120);
+  assert.equal(roundSeconds(false), 60);
 });

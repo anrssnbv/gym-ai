@@ -1,4 +1,5 @@
 export const TARGET_REPS = 12;
+export const REPS_LIMITS = { min: 1, max: 100 };
 export const WEIGHT_LIMITS_KG = { min: 0.5, max: 1000 };
 export const STEP_LIMITS_KG = { min: 0.25, max: 50 };
 
@@ -36,5 +37,24 @@ export function adjust(state: LevelState, weightKg: number, stepKg: number): Lev
     weightKg: weight,
     stepKg: roundKg(stepKg),
     bestRepsAtLevel: weight === roundKg(state.weightKg) ? state.bestRepsAtLevel : 0,
+  };
+}
+
+export function roundSeconds(compound: boolean): number {
+  return compound ? 120 : 60;
+}
+
+export function applySet(state: LevelState, reps: number): { state: LevelState; leveledUp: boolean } {
+  const leveledUp = reps >= TARGET_REPS;
+  return {
+    state: leveledUp
+      ? {
+          ...state,
+          level: state.level + 1,
+          weightKg: roundKg(state.weightKg + state.stepKg),
+          bestRepsAtLevel: 0,
+        }
+      : { ...state, bestRepsAtLevel: Math.max(state.bestRepsAtLevel, reps) },
+    leveledUp,
   };
 }
