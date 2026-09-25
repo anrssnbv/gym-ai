@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql" // the URL comes from prisma.config.ts in Prisma 7
+}
+
+model ExerciseProgress {
+  id            String   @id @default(cuid())
+  userId        String   // Clerk user ID
+  exerciseId    String   // ID from lib/catalog.ts
+  level         Int      @default(1)
+  weightKg      Float
+  stepKg        Float
+  startWeightKg Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, exerciseId])
+}
+
+model WorkoutSession {
+  id        String    @id @default(cuid())
+  userId    String
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+  sets      SetLog[]
+
+  @@index([userId, startedAt])
+}
+
+model SetLog {
+  id         String         @id @default(cuid())
+  userId     String
+  sessionId  String
+  session    WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exerciseId String
+  level      Int            // level attempted in this round
+  weightKg   Float
+  reps       Int
+  leveledUp  Boolean        @default(false)
+  createdAt  DateTime       @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, exerciseId, createdAt])
+  @@index([sessionId])
+}
