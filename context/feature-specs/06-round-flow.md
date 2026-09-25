@@ -30,9 +30,9 @@ Create `components/exercise/round-timer.tsx` (client). While a round is active i
 - timestamp based: keep `endsAt = Date.now() + seconds * 1000` and render the remaining time from it on a 250 ms interval and on `visibilitychange`, so it's correct after the phone sleeps or the tab is throttled
 - big `mm:ss` in `font-mono tabular-nums`, a progress bar, and the label `Round {n}` (n = completed rounds on this screen + 1 while the current round is unsaved; once saved, that same round is included in the completed count). Spec 10 tracks completed set IDs and removes an acknowledged Undo once.
 - before reps are logged: primary `Log reps`, secondary `Cancel` (ends the round without logging)
-- after reps are logged: the result line (below) and a primary `Next round` button; starting early (skipping the rest) is allowed
-- at 0:00: `Time's up — log your reps` if nothing is logged yet, otherwise `Next round ready`; call `navigator.vibrate?.(200)` once. The timer stays at 0:00 until the user acts.
-- keep the screen awake during a round with the Screen Wake Lock API when available (`navigator.wakeLock?.request('screen')`), release it when the round ends or the component unmounts, and ignore errors (it needs HTTPS)
+- after reps are successfully logged: stop the countdown at the acknowledgement time, show `Round complete` with the frozen remaining time and result line, and offer `Next round`. Failed saves keep the round active for retry.
+- at 0:00 before reps are logged: show `Time's up — log your reps` and call `navigator.vibrate?.(200)` once. The timer stays at 0:00 until the user acts. Logging successfully at 0:00 shows `Round complete`.
+- keep the screen awake during an active round with the Screen Wake Lock API when available (`navigator.wakeLock?.request('screen')`), release it when reps are saved, the round ends, or the component unmounts, and ignore errors (it needs HTTPS)
 
 In the exercise page header, show the round length next to the type: `Compound · 2 min rounds` / `Isolation · 1 min rounds`.
 

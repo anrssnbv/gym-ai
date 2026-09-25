@@ -20,6 +20,7 @@ interface Round {
   setId: string;
   submittedReps: number | null;
   endsAt: number;
+  completedAt: number | null;
   state: LevelState;
   result: string | null;
   limitReached: boolean;
@@ -44,7 +45,7 @@ export function ExerciseLevel({ exercise, state, sets }: { exercise: Exercise; s
   function startRound() {
     if (!state || busy) return;
     setError(null);
-    setRound({ setId: crypto.randomUUID(), submittedReps: null, endsAt: Date.now() + seconds * 1000, state, result: null, limitReached: false });
+    setRound({ setId: crypto.randomUUID(), submittedReps: null, endsAt: Date.now() + seconds * 1000, completedAt: null, state, result: null, limitReached: false });
   }
 
   function saveWeight(weightKg: number, stepKg: number): Promise<string | null> {
@@ -82,7 +83,7 @@ export function ExerciseLevel({ exercise, state, sets }: { exercise: Exercise; s
         const limitMessage = round.state.weightKg >= exercise.maxWeightKg
           ? `Exercise limit reached (${formatKg(exercise.maxWeightKg)}). Set saved — you can keep logging at this weight.`
           : `Set saved. The next step exceeds ${formatKg(exercise.maxWeightKg)}. Choose a smaller step to continue leveling up.`;
-        setRound({ ...round, submittedReps, limitReached: result.data.limitReached, result: result.data.limitReached ? limitMessage : result.data.leveledUp ? "Level cleared!" : `${message} — ${submittedReps} / ${TARGET_REPS}` });
+        setRound({ ...round, submittedReps, completedAt: Date.now(), limitReached: result.data.limitReached, result: result.data.limitReached ? limitMessage : result.data.leveledUp ? "Level cleared!" : `${message} — ${submittedReps} / ${TARGET_REPS}` });
         if (result.data.leveledUp) setReward(result.data.state);
         resolve(null);
       });
@@ -132,7 +133,7 @@ export function ExerciseLevel({ exercise, state, sets }: { exercise: Exercise; s
             </p>
           )}
           {round ? (
-            <RoundTimer key={round.setId} endsAt={round.endsAt} seconds={seconds} roundNumber={loggedIds.length + (round.result === null ? 1 : 0)} result={round.result} onCancel={() => setRound(null)} onNext={startRound} nextButtonRef={nextButton} pending={busy}>
+            <RoundTimer key={round.setId} endsAt={round.endsAt} completedAt={round.completedAt} seconds={seconds} roundNumber={loggedIds.length + (round.result === null ? 1 : 0)} result={round.result} onCancel={() => setRound(null)} onNext={startRound} nextButtonRef={nextButton} pending={busy}>
               <LogRepsSheet disabled={busy} weightKg={round.state.weightKg} level={round.state.level} submittedReps={round.submittedReps} onSave={logReps} />
             </RoundTimer>
           ) : <div className="flex gap-3">

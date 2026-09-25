@@ -1,5 +1,30 @@
 # Application QA — current issues
 
+## User-reported mobile issues — 2026-09-25
+
+Reported while testing `https://gym-ai-seven-alpha.vercel.app` on an iPhone. These issues have not yet been reproduced or fixed in code.
+
+### MOBILE-01 — Calibration controls are covered by the numeric keyboard
+
+- **Status:** Code fix applied locally; physical iPhone keyboard verification remains open.
+- **Steps:** Open an exercise, choose Calibrate, and focus the weight or stepper-level number field.
+- **Observed:** The calibration sheet remains near the bottom of the screen. The iPhone numeric keyboard covers its lower fields or action controls, so the user cannot see or use the full form while typing. See user screenshots 1 and 2.
+- **Expected:** The focused field and calibration actions stay visible and reachable above the keyboard, or the sheet scrolls to them.
+
+### MOBILE-02 — Log-repetitions controls are covered by the numeric keyboard
+
+- **Status:** Code fix applied locally; physical iPhone keyboard verification remains open.
+- **Steps:** Start an exercise round, open the repetitions entry sheet, and focus its number field.
+- **Observed:** The iPhone numeric keyboard covers the lower portion of the sheet, including the controls needed to log repetitions. See user screenshot 2.
+- **Expected:** The repetitions field and save action stay visible and reachable while the keyboard is open.
+
+### MOBILE-03 — Round timer keeps running after repetitions are logged
+
+- **Status:** Code fix applied locally; successful-save behavior needs a live UI check before closure.
+- **Steps:** Start a round and log a set of repetitions before the countdown reaches zero.
+- **Observed:** The set appears in History, but the current round timer continues to count down. In user screenshot 3, History shows `50 kg × 10` while Round 1 still shows `01:29` and the Next round button.
+- **Expected:** Successfully logging repetitions stops the active round timer. Confirm the intended post-log timer display during the fix.
+
 Audit date: 2026-09-25. Revision: `b0ff75a3dfe82605ed0fc0d715fd988468d63214` (`main`).
 
 Scope: specs 01–15, Playwright MCP against `http://localhost:3100`, source review, terminal logs, unit tests, database integration tests, and production build. Later specs supersede the earlier mock/local-state requirements.

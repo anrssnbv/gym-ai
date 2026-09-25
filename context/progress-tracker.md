@@ -102,7 +102,7 @@ The user answers these. Defaults are already written into the context files and 
 ## Architecture Decisions
 
 - Training preferences use one owned `TrainingProfile` row keyed by Clerk ID; missing/malformed profiles require onboarding, while read failures show Retry. Only five preference fields enter AI context. Equipment filtering and experience limits apply at generation and Start; historical plans and manual logging remain independent.
-- Round timer starts on "Start round" (1–2 min); reps can be logged at any moment of the round; the remaining time is rest. Confirmed by the user 2026-09-25 (rejected: a rest timer that starts after logging).
+- Round timer starts on "Start round" (1–2 min), and reps can be logged at any moment. The user's later 2026-09-25 mobile report supersedes the earlier rest-time decision: a successful rep save stops the countdown at its remaining time; failed saves keep it active.
 - Any set with 12+ reps levels up immediately; the next set uses the new weight. Confirmed by the user 2026-09-25 (rejected: level up only when all planned sets hit 12).
 - Single-user data, no collaboration → no Liveblocks, Trigger.dev or Blob storage (ghost-ai used them; this app doesn't need them).
 - Server Actions instead of REST API routes: one write path, less code.

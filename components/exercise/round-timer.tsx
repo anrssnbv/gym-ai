@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 
 interface RoundTimerProps {
   endsAt: number;
+  completedAt: number | null;
   seconds: number;
   roundNumber: number;
   result: string | null;
@@ -16,10 +17,11 @@ interface RoundTimerProps {
   pending?: boolean;
 }
 
-export function RoundTimer({ endsAt, seconds, roundNumber, result, onCancel, onNext, nextButtonRef, children, pending = false }: RoundTimerProps) {
+export function RoundTimer({ endsAt, completedAt, seconds, roundNumber, result, onCancel, onNext, nextButtonRef, children, pending = false }: RoundTimerProps) {
   const [remaining, setRemaining] = useState(() => Math.max(0, Math.ceil((endsAt - Date.now()) / 1000)));
 
   useEffect(() => {
+    if (completedAt !== null) return;
     let vibrated = false;
     function update() {
       const next = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
@@ -35,9 +37,10 @@ export function RoundTimer({ endsAt, seconds, roundNumber, result, onCancel, onN
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", update);
     };
-  }, [endsAt]);
+  }, [endsAt, completedAt]);
 
   useEffect(() => {
+    if (completedAt !== null) return;
     let disposed = false;
     let pending = false;
     let lock: WakeLockSentinel | undefined;
@@ -66,20 +69,22 @@ export function RoundTimer({ endsAt, seconds, roundNumber, result, onCancel, onN
       document.removeEventListener("visibilitychange", acquire);
       void lock?.release().catch(() => {});
     };
-  }, [endsAt]);
+  }, [endsAt, completedAt]);
 
-  const time = `${Math.floor(remaining / 60).toString().padStart(2, "0")}:${(remaining % 60).toString().padStart(2, "0")}`;
+  const displayedRemaining = completedAt === null ? remaining : Math.max(0, Math.ceil((endsAt - completedAt) / 1000));
+  const time = `${Math.floor(displayedRemaining / 60).toString().padStart(2, "0")}:${(displayedRemaining % 60).toString().padStart(2, "0")}`;
 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
         <p className="text-sm text-copy-muted">Round {roundNumber}</p>
         <p className="font-mono text-5xl tabular-nums" role="timer" aria-label="Round time remaining">{time}</p>
-        <Progress value={remaining / seconds * 100} aria-label="Round time remaining" aria-valuenow={remaining} aria-valuemin={0} aria-valuemax={seconds} aria-valuetext={`${remaining} seconds remaining`} className="h-2" />
+        <Progress value={displayedRemaining / seconds * 100} aria-label="Round time remaining" aria-valuenow={displayedRemaining} aria-valuemin={0} aria-valuemax={seconds} aria-valuetext={`${displayedRemaining} seconds remaining`} className="h-2" />
       </div>
       <div aria-live="polite" className="space-y-2 text-sm">
+        {result !== null && <p className="text-copy-muted">Round complete</p>}
         {result !== null && <p>{result}</p>}
-        {remaining === 0 && <p className="text-copy-muted">{result === null ? "Time's up — log your reps" : "Next round ready"}</p>}
+        {displayedRemaining === 0 && result === null && <p className="text-copy-muted">Time&apos;s up — log your reps</p>}
       </div>
       {result === null ? (
         <div className="flex gap-3">
