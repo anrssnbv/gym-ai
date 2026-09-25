@@ -1,7 +1,7 @@
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { isSessionStale, powerLevel, roundKg, sessionEndAt, type LevelState } from "@/lib/game";
 import { prisma } from "@/lib/prisma";
-import { getExercise, type MuscleHeadId } from "@/lib/catalog";
+import { getExercise, type MuscleGroupId, type MuscleHeadId } from "@/lib/catalog";
 
 export async function findOpenSession(db: Prisma.TransactionClient, userId: string, now: Date) {
   const session = await db.workoutSession.findFirst({
@@ -57,6 +57,58 @@ export async function getProgressMap(userId: string): Promise<Record<string, { l
     select: { exerciseId: true, level: true, weightKg: true },
   });
   return Object.fromEntries(rows.map(({ exerciseId, level, weightKg }) => [exerciseId, { level, weightKg }]));
+}
+
+export interface PlanningContext {
+  lastTrained: Partial<Record<"push" | "pull" | "legs", Date>>;
+  daysSinceGroup: Partial<Record<MuscleGroupId, number>>;
+  recentSessions: { daysAgo: number; exercises: { id: string; sets: number; bestReps: number }[] }[];
+  levels: Record<string, number>;
+}
+
+export async function getPlanningContext(userId: string, now = new Date()): Promise<PlanningContext> {
+  const day = 24 * 60 * 60 * 1000;
+  const since = new Date(now.getTime() - 30 * day);
+  const [sets, progress] = await Promise.all([
+    prisma.setLog.findMany({
+      where: { userId, session: { userId }, createdAt: { gte: since, lte: now } },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: { exerciseId: true, reps: true, createdAt: true, sessionId: true, session: { select: { startedAt: true } } },
+    }),
+    prisma.exerciseProgress.findMany({ where: { userId }, select: { exerciseId: true, level: true } }),
+  ]);
+  const lastTrained: PlanningContext["lastTrained"] = {};
+  const daysSinceGroup: PlanningContext["daysSinceGroup"] = {};
+  const sessions = new Map<string, { startedAt: Date; exercises: Map<string, { id: string; sets: number; bestReps: number }> }>();
+  for (const set of sets) {
+    const exercise = getExercise(set.exerciseId);
+    // Sets arrive newest first, so the first occurrence is the latest training date.
+    if (exercise) {
+      if (exercise.pattern !== "core") lastTrained[exercise.pattern] ??= set.createdAt;
+      daysSinceGroup[exercise.groupId] ??= Math.floor((now.getTime() - set.createdAt.getTime()) / day);
+    }
+    let session = sessions.get(set.sessionId);
+    if (!session) {
+      session = { startedAt: set.session.startedAt, exercises: new Map() };
+      sessions.set(set.sessionId, session);
+    }
+    const entry = session.exercises.get(set.exerciseId) ?? { id: set.exerciseId, sets: 0, bestReps: 0 };
+    entry.sets++;
+    entry.bestReps = Math.max(entry.bestReps, set.reps);
+    session.exercises.set(set.exerciseId, entry);
+  }
+  return {
+    lastTrained,
+    daysSinceGroup,
+    recentSessions: [...sessions.entries()]
+      .sort(([idA, a], [idB, b]) => b.startedAt.getTime() - a.startedAt.getTime() || idB.localeCompare(idA))
+      .slice(0, 3)
+      .map(([, session]) => ({
+        daysAgo: Math.floor((now.getTime() - session.startedAt.getTime()) / day),
+        exercises: [...session.exercises.values()],
+      })),
+    levels: Object.fromEntries(progress.map(({ exerciseId, level }) => [exerciseId, level])),
+  };
 }
 
 export async function getRecentSets(userId: string, exerciseId: string, take = 10) {

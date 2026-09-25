@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Phase 4 — AI coach. Spec 13 complete; specs 02, 05, 06, 07, and 10 phone checks pending.
+- Phase 4 — AI coach. Spec 14 complete; specs 02, 05, 06, 07, and 10 phone checks pending.
 
 ## Current Goal
 
-- 14 AI Workout Generator — next: planning rules, generation limits, and AI backend.
+- 15 Wire AI Workout — next: connect generation, preview, start, and workout plan execution.
 
 ## Roadmap
 
@@ -38,7 +38,7 @@ All specs 01–15 are written. 09–15 were written after 08, against the code a
 ### Phase 4 — AI coach
 
 - [x] 13 generate-sheet-ui — "Generate workout" sheet (duration + focus) with a static plan preview
-- [ ] 14 ai-workout-generator — migration (`plan` on `WorkoutSession`, `PlanGeneration`), planning helpers + tests, Auto resolution, OpenAI Structured Outputs + Zod, 10 plans/day limit. Backend only.
+- [x] 14 ai-workout-generator — migration (`plan` on `WorkoutSession`, `PlanGeneration`), planning helpers + tests, Auto resolution, OpenAI Structured Outputs + Zod, 10 plans/day limit. Backend only.
 - [ ] 15 wire-ai-workout — generate → preview → start (attach to the active session or create one) → play the plan on `/workout`
 
 ### Backlog (not planned)
@@ -65,7 +65,10 @@ All specs 01–15 are written. 09–15 were written after 08, against the code a
 
 - 13 generate-sheet-ui — client-safe plan types, controlled duration/focus toggles, sample pull-day preview, and Home/empty-Workout triggers. All 28 tests, lint, TypeScript, production build, and 360 × 640 browser checks pass. Verified both defaults, keyboard/touch selection, accessible radio states, reselection guards, retained choices, disabled Start, scrolling, no horizontal overflow or page errors, and Escape focus restoration. UI only; AI wiring follows in specs 14–15.
 
+- 14 ai-workout-generator — additive ai-plans migration applied, planning helpers/schema/context, OpenAI Structured Outputs, and authenticated preview action with atomic 10-per-24-hour attempt limit. All 38 unit tests, 28 PostgreSQL integration checks, lint, TypeScript, and production build with an empty OPENAI_API_KEY pass. Live gpt-5.4-mini pull-plan smoke test passed in 5.3 seconds with all schema limits retained. Default OpenAI project monthly spend limit set to $10 with hard enforcement enabled; Vercel deferred by user. UI wiring follows in spec 15.
+
 ## In Progress
+
 
 - 10 wire-exercise-screen — saved-state props, asynchronous action-backed sheets, stable round IDs/reps on retry, stale-tab recovery, history/Undo, browser-local dates, and catalog levels/weights/power implemented. All 23 tests, lint, TypeScript, production build, and 360 × 640 browser checks pass. Verified persistence across reloads and separate browser contexts, account isolation, normal and level-up Undo, adjustment rules, offline recovery for all four actions, and a committed log with a lost response replaying without duplicate writes. Remaining: user verifies a phone-logged round appears on desktop after reload.
 - 07 auth — implementation merged in PR #7 and rechecked against the spec. Provider/theme, protected app layout, public auth pages, proxy, user menu, and env example are implemented. Lint, build, 17 tests, and public asset checks pass. Linked to GYM-AI through Clerk CLI; development keys configured locally. Doctor, signed-out redirects, public assets, and themed 360 px auth pages verified. User confirmed sign-in/sign-out. Email-code sign-in and sign-up verification are enabled. Remaining: verify email-code sign-in in the installed app and Google sign-in in the installed iOS app; keep email code as the main method if Google fails there.
@@ -81,7 +84,7 @@ The user answers these. Defaults are already written into the context files and 
 2. ~~Level-up with several sets~~ — decided 2026-09-25, see Architecture Decisions.
 3. **Focus options (before 13).** Default, used in specs 13–15: Auto, Push, Pull, Legs, Upper, Full body. "Lower" is merged into Legs because they cover the same muscles.
 4. **Duration input (before 13).** Default, used in specs 13–15: presets of 30 / 45 / 60 / 90 min instead of free "hours".
-5. **Personal or public app (before 14).** Clerk sign-ups are open by default and every generation is a paid OpenAI call. Default, used in spec 14: a budget cap on the OpenAI project plus 10 generations per user per day. If the app is only for you, also restrict sign-ups in Clerk.
+5. **Personal or public app (before 14).** User chose a $10 monthly OpenAI project limit (configured with hard enforcement on 2026-09-25); Vercel deployment deferred. Clerk sign-ups are open by default and every generation is a paid OpenAI call. Default, used in spec 14: a budget cap on the OpenAI project plus 10 generations per user per day. If the app is only for you, also restrict sign-ups in Clerk.
 
 ## Architecture Decisions
 
