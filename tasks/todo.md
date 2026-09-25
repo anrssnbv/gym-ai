@@ -142,12 +142,12 @@ Implemented spec 06 with pure set rules, timestamp countdown, Screen Wake Lock c
 
 - [x] Read Clerk skill, auth spec, existing integration, and Next.js proxy guide.
 - [x] Scaffold Clerk and implement theme, routes, access checks, and user controls.
-- [ ] Configure Clerk keys; initializer stalled during automatic setup.
-- [ ] Verify doctor, redirects, public assets, mobile layout, lint/build, and tests.
+- [x] Link GYM-AI and configure development keys through authenticated Clerk CLI.
+- [x] Verify doctor, redirects, public assets, mobile layout, lint/build, and tests.
 - [x] Push branch and open draft PR.
 - [ ] Merge and sync main after live auth verification.
 - [ ] User confirms sign-up/sign-out and installed-phone email-code authentication.
 
 ## Review
 
-Clerk CLI scaffolded proxy, provider, auth pages, and URL environment settings. Added spec 07 theme, access check, auth branding, default user menu, redirect settings, and tracked env example. Lint, production build, and all 17 tests pass. Public manifest and icon endpoints return 200 signed out. Code review found no actionable issues. CLI doctor reports missing Clerk API keys; automatic initialization stalled and was stopped. Auth pages currently fail with Clerk’s missing-key error, so signed-out redirects, rendered form layout, sign-up/sign-out, and installed-phone behavior remain unverified. No environment files were read or printed. Draft PR remains unmerged pending configuration and verification.
+Linked the user-specified GYM-AI app through Clerk CLI and configured local development keys without reading or printing environment files. Provider/theme, protected layout, branded auth pages, user menu, redirect settings, env example, and auto-proxy matcher are implemented. Doctor, lint, production build, and all 17 tests pass. Signed-out /, /exercises/chest, and /workout redirect to /sign-in; manifest/icons remain public. Both auth pages render the app theme at 360px without tabs or horizontal overflow. No Clerk deprecation warnings appeared. User sign-up/sign-out and installed-phone verification remain pending; production instance is not configured.
