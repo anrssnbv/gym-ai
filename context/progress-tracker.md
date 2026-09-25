@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Phase 2 — Auth and data. Spec 07 in progress; specs 02, 05, and 06 phone checks pending.
+- Phase 2 — Auth and data. Spec 08 complete; specs 02, 05, 06, and 07 phone checks pending.
 
 ## Current Goal
 
-- 07 Clerk Auth.
+- 08 Prisma complete. Next planned: 09 Exercise Actions.
 
 ## Roadmap
 
@@ -26,7 +26,7 @@ Specs 01–08 are written. Specs 09+ are written one at a time after the previou
 ### Phase 2 — Auth and data
 
 - [ ] 07 auth — Clerk: `proxy.ts`, `auth.protect()` in the app layout, sign-in/sign-up pages, user button
-- [ ] 08 prisma — Prisma 7 + Postgres: `ExerciseProgress`, `WorkoutSession`, `SetLog`, client singleton
+- [x] 08 prisma — Prisma 7 + Postgres: `ExerciseProgress`, `WorkoutSession`, `SetLog`, client singleton
 
 ### Phase 3 — Core loop on real data
 
@@ -54,6 +54,8 @@ Specs 01–08 are written. Specs 09+ are written one at a time after the previou
 - 03 exercise-catalog — 10 groups, 27 heads, 50 exercises, catalog tests, and browse routes. Tests, lint, build, and 360 px browser checks passed.
 
 - 04 muscle-map — all 27 head regions, group thumbnails, and full exercise maps. Tests, lint, build, type coverage, and 360 px browser checks passed. User approved all seven screenshot pairs on 2026-09-25.
+
+- 08 prisma — Prisma 7, exact three-model schema, cached adapter client, init migration, and deployment/install scripts. Migration applied and up to date on the direct endpoint. Client regeneration without DATABASE_URL, generated-file lint exclusion, lint, and build verified.
 
 ## In Progress
 

@@ -152,3 +152,24 @@ Implemented spec 06 with pure set rules, timestamp countdown, Screen Wake Lock c
 ## Review
 
 Linked the user-specified GYM-AI app through Clerk CLI and configured local development keys without reading or printing environment files. Provider/theme, protected layout, branded auth pages, user menu, redirect settings, env example, and auto-proxy matcher are implemented. Doctor, lint, production build, and all 17 tests pass. Signed-out /, /exercises/chest, and /workout redirect to /sign-in; manifest/icons remain public. Both auth pages render the app theme at 360px without tabs or horizontal overflow. No Clerk deprecation warnings appeared. User confirmed successful sign-in/sign-out. Clerk auth_email configuration confirms email_code as its sign-in and verification strategy. Installed-phone verification remains pending; production instance is not configured.
+
+# 08 Prisma
+
+## Specification
+
+- Goal: implement Prisma 7 PostgreSQL setup exactly as spec 08.
+- Scope: three specified models, config, generated client, singleton, migration, environment example and build scripts.
+- Decisions: reuse installed Prisma 7 dependencies and direct DATABASE_URL; Node env loader; no UI/actions/queries/seed.
+- Acceptance: migration up to date with required constraints/indexes/cascade; client regeneration without DATABASE_URL; lint ignores generated output; lint/build pass.
+
+## Tasks
+
+- [x] Read spec and context; mark tracker in progress.
+- [x] Add exact schema, Prisma config, singleton, ignores, and scripts.
+- [x] Generate client and apply init migration; inspect SQL and status.
+- [x] Prove install regenerates client without DATABASE_URL; verify lint/build.
+- [x] Update tracker, push branch, open PR, merge, and sync local main.
+
+## Review
+
+Implemented the exact schema and Prisma 7 configuration, adapter singleton, generated-file ignores, env example, and install/deploy scripts. The init migration is applied; migrate status reports up to date through db.prisma.io. Verified its unique exercise constraint, all three SetLog indexes, and cascade deletion. The supplied pooled URL was converted to the documented direct hostname only after successfully testing it with the same credentials. An isolated installation with no environment file or DATABASE_URL generated the client, then regenerated it after its output was moved aside. The tool policy rejected deletion, so a reversible move provided the equivalent missing-output test. ESLint confirms the generated client is ignored. Lint and production build pass. Independent review found no code gaps. No UI, queries, actions, seeds, or extra models were added.
