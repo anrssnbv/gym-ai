@@ -142,6 +142,16 @@
   }
 }
 
+@keyframes level-up-scale {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes level-up-glow {
+  0%, 100% { filter: drop-shadow(0 0 0 transparent); }
+  40% { filter: drop-shadow(0 0 1.5rem var(--accent-level)); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
