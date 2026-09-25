@@ -36,6 +36,23 @@ export function formatKg(kg: number): string {
   return `${roundKg(kg)} kg`;
 }
 
+export function summarizeSets(sets: { weightKg: number; reps: number; leveledUp: boolean }[]) {
+  return sets.reduce((totals, set) => ({
+    setCount: totals.setCount + 1,
+    volumeKg: roundKg(totals.volumeKg + set.weightKg * set.reps),
+    levelUps: totals.levelUps + Number(set.leveledUp),
+  }), { setCount: 0, volumeKg: 0, levelUps: 0 });
+}
+
+export function formatDuration(ms: number): string {
+  const minutes = Math.max(0, Math.floor(ms / 60_000));
+  return minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)} h ${minutes % 60} min`;
+}
+
+export function formatVolume(kg: number): string {
+  return kg < 1000 ? formatKg(kg) : `${(kg / 1000).toFixed(1)} t`;
+}
+
 export function calibrate(weightKg: number, stepKg: number): LevelState {
   const weight = roundKg(weightKg);
   return {

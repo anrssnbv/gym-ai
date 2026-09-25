@@ -234,3 +234,23 @@ Implemented the auth helper, shared action result, pure session/power rules, sco
 ## Review
 
 Implemented spec 10 with saved props, existing actions, async sheets, stable round IDs and immutable submitted reps, stale-tab recovery, history/Undo, local timestamps, and catalog progress. All 23 unit tests, lint, TypeScript, build, and diff checks pass. Playwright at 360 × 640 verified calibration and best reps across reloads, level-up/overlay/new round weight, double-submit safety, response-loss replay with an identical payload and one history entry, stale-tab close/refresh, both Undo cases, adjustment best-rep rules, offline errors and retries for all four actions, timer continuity, separate-browser persistence, account isolation, timezone formatting, 44 px Undo, and no horizontal overflow. Catalog level/weight/power matched a direct Prisma read of the test account. Independent review found no blocking issues. Screenshot: .playwright-mcp/spec10-exercise.png. Temporary Clerk accounts and all their database rows were removed. User phone-to-desktop check remains pending; the existing review-file deletion is excluded from the commit.
+
+# 11 Wire Workout Session
+
+## Specification
+
+- Goal: implement spec 11 exactly.
+- Scope: session summary math/query, elapsed time, active banner, workout page, Finish, and summary route.
+- Decisions: reuse scoped queries, session expiry rules, saved actions, and LocalTime; no AI or dashboard.
+- Acceptance: correct grouping/totals, finish/new session, stale/zero-set summaries, mounted banner expiry, offline retry, cross-user 404, mobile layout, tests/lint/build.
+
+## Tasks
+
+- [x] Read spec; mark tracker in progress.
+- [x] Implement rules/query, banner/time, and workout pages.
+- [x] Verify database-backed browser flows, boundaries, isolation, mobile layout, tests/lint/build.
+- [x] Update tracker/review; commit, push, open PR, merge, and update local main.
+
+## Review
+
+Implemented spec 11 with the existing actions/session helpers and no schema changes. All 26 tests, lint, TypeScript, production build, and diff checks pass. Playwright at 360 × 640 verified the banner immediately after logging, Home/Exercises visibility and Workout hiding, grouped exercise order, 3 sets/840 kg/1 level totals, Finish and summary, offline Finish recovery, new sessions after finish, cross-account HTTP 404, browser-local timestamps, no overflow, and no page errors. Fake clock checks proved exactly 3 hours stays active, visibility-triggered expiry hides and refreshes once, the 30-second timer updates elapsed time and expires the banner. Scoped test fixtures proved stale sessions close at last activity and zero-set summaries show 0 minutes when stale and 5 minutes when explicitly finished after 5 minutes. Independent review found no issues. Screenshots are .playwright-mcp/spec11-banner.png, spec11-workout.png, and spec11-summary.png. Temporary Clerk accounts and their database rows were removed. Existing unrelated review-file deletion remains outside this commit.

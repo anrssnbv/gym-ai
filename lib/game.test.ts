@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  adjust, applySet, calibrate, formatKg, isSessionStale, powerLevel,
-  roundSeconds, SESSION_IDLE_MS, sessionEnd, sessionEndAt, type LevelState,
+  adjust, applySet, calibrate, formatDuration, formatKg, formatVolume, isSessionStale, powerLevel,
+  roundSeconds, SESSION_IDLE_MS, sessionEnd, sessionEndAt, summarizeSets, type LevelState,
 } from "./game.ts";
 
 test("calibrate starts level 1 with rounded weight and step", () => {
@@ -120,4 +120,34 @@ test("powerLevel sums earned levels above level one", () => {
   assert.equal(powerLevel([]), 0);
   assert.equal(powerLevel([1, 1]), 0);
   assert.equal(powerLevel([3, 1, 5]), 6);
+});
+
+test("summarizeSets counts sets, lifted volume, and cleared levels", () => {
+  assert.deepEqual(summarizeSets([]), { setCount: 0, volumeKg: 0, levelUps: 0 });
+  assert.deepEqual(summarizeSets([
+    { weightKg: 42.5, reps: 12, leveledUp: true },
+    { weightKg: 45, reps: 8, leveledUp: false },
+    { weightKg: 20.25, reps: 12, leveledUp: true },
+  ]), { setCount: 3, volumeKg: 1113, levelUps: 2 });
+  assert.deepEqual(summarizeSets([
+    { weightKg: 1.1, reps: 3, leveledUp: false },
+  ]), { setCount: 1, volumeKg: 3.3, levelUps: 0 });
+});
+
+test("formatDuration floors minutes and formats hours without negative elapsed time", () => {
+  assert.equal(formatDuration(0), "0 min");
+  assert.equal(formatDuration(-1000), "0 min");
+  assert.equal(formatDuration(59_999), "0 min");
+  assert.equal(formatDuration(45 * 60_000), "45 min");
+  assert.equal(formatDuration(59 * 60_000 + 59_000), "59 min");
+  assert.equal(formatDuration(60 * 60_000), "1 h 0 min");
+  assert.equal(formatDuration(65 * 60_000), "1 h 5 min");
+});
+
+test("formatVolume uses kilograms below 1000 and tonnes with one decimal from 1000", () => {
+  assert.equal(formatVolume(0), "0 kg");
+  assert.equal(formatVolume(850), "850 kg");
+  assert.equal(formatVolume(999.99), "999.99 kg");
+  assert.equal(formatVolume(1000), "1.0 t");
+  assert.equal(formatVolume(12_400), "12.4 t");
 });
