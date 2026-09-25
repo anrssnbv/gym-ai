@@ -40,3 +40,24 @@ Implemented the dark tokens, shadcn mappings, Oxanium font, and temporary previe
 ## Review
 
 Built the shared shell, three placeholder routes, active bottom tabs, viewport and Apple metadata, manifest, and SVG/PNG icons. Removed the token preview and starter assets. `npm run lint` and `npm run build` pass. Playwright at 360 × 640 confirmed the three routes, active tab state, no horizontal overflow, no content overlap, all icon URLs returning 200, and no console errors. Chrome's manifest parser returned no errors. The real-phone install check remains pending as required by `context/ai-workflow-rules.md`.
+
+# 03 Exercise Catalog
+
+## Specification
+
+- Goal: implement `context/feature-specs/03-exercise-catalog.md` exactly.
+- Scope: 10 groups, 27 heads, 50 exercises, pure catalog helpers and tests, and the three catalog browse routes.
+- Key decisions: keep catalog data in `lib/catalog.ts`; use Server Components and existing shadcn Badge and token styles.
+- Acceptance: catalog invariants pass, expected routes render and invalid routes 404, cards are fully tappable at 360 px with no horizontal overflow, and test, lint, and build pass.
+
+## Tasks
+
+- [x] Read the spec and context; mark the tracker in progress.
+- [x] Implement catalog data, helpers, tests, and test script.
+- [x] Implement group grid, group page, and exercise page.
+- [x] Verify catalog counts, routes, invalid IDs, mobile layout, test, lint, and build.
+- [x] Update tracker and record review.
+
+## Review
+
+Implemented the static catalog and three browse routes. A direct comparison against the spec tables matched all 10 groups, 27 heads, and 50 exercises. `npm test` passes all five catalog checks; lint and build pass. At 360 × 640, the group grid, Chest list, Pec Deck detail, and long Bulgarian Split Squat title have no horizontal overflow. Group and exercise cards are full links with tap areas above 44 px. `/exercises/chest/pec-deck` works; wrong-group and unknown IDs return 404. Spec 02's real-phone install check remains pending.
