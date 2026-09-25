@@ -1,3 +1,23 @@
+# Vercel deployment — 2026-09-25
+
+## Specification
+
+- Goal: deploy the merged application to the existing Vercel project.
+- Scope: correct its database secret, verify Preview, redeploy Production, and check the public auth entry.
+- Decision: use the validated direct Prisma Postgres URL already in `.env.local`; send its value to Vercel via stdin without printing it. Deploy the existing merged `main` commit.
+- Acceptance: Preview migration/build succeeds, Production is Ready at its alias, signed-out Home reaches Clerk sign-in, and credentials stay out of repository/logs.
+
+## Tasks
+
+- [x] Inspect the failed Vercel build and local database URL.
+- [x] Update the Preview/Production secret and verify Preview migration/build.
+- [x] Redeploy merged `main` to Production and verify public auth rendering.
+- [x] Record the deployment result in the tracker.
+
+## Review
+
+Preview and Production both report Ready. Production deployment of merge commit `9590880` is aliased at https://gym-ai-seven-alpha.vercel.app. A fresh browser visit to Home reached Clerk sign-in; the page rendered with no JavaScript errors. No application code or dependency changed. Authenticated production flows and physical-phone checks remain to be verified.
+
 # 16 Training profile — implementation
 
 ## Specification
