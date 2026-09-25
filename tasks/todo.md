@@ -274,3 +274,23 @@ Implemented spec 11 with the existing actions/session helpers and no schema chan
 ## Review
 
 Implemented spec 12 as read-only queries and Server Component UI; no actions or schema changes. All 28 unit tests, 16 PostgreSQL integration checks, lint, TypeScript, production build, and diff checks pass. Tests cover exact seven-day/three-hour boundaries, empty-session exclusions, stale end times, power, duration, volume, primary-only heat, five recent sessions, level-up counts, and scoped SQL with a quote-containing user ID. Playwright at 360 × 640 verified zero/Rookie/idle/empty states, seeded totals (power 60, 9 workouts, 4 h 20 min, 4,920 kg, 3 unlocked), all heat bands and activity labels, unchanged exercise-target labels, five matching summary links, no page errors or overflow, and Diamond Max rank. Review found the existing generated Progress component omitted accessible values; dashboard props now supply min/max/current/text without changing that protected component. Verified 75/100 at Silver with 37.5% visual fill. Screenshots: .playwright-mcp/spec12-full.png and spec12-empty.png. Temporary accounts and test rows cleaned up. Existing review-file deletion remains outside this commit.
+
+# 13 Generate Sheet UI
+
+## Specification
+
+- Goal: implement spec 13 exactly, UI only.
+- Scope: client-safe plan types, Radix toggle groups, generation sheet/sample preview, and two triggers.
+- Decisions: sample pull-day plan only; Start disabled; controlled inputs retain valid selections.
+- Acceptance: correct defaults, touch/keyboard and accessible selection, reselection guard, retained choices after preview, scrollable 360px sheet, tests/lint/build.
+
+## Tasks
+
+- [x] Read spec; mark tracker in progress.
+- [x] Implement types, preview, sheet, and placements.
+- [x] Verify both triggers, inputs, preview, mobile layout, lint/build/tests.
+- [ ] Update tracker/review; commit, push, open PR, merge, and update local main.
+
+## Review
+
+Implemented spec 13 with existing Sheet/Button/Badge patterns, generated Radix toggles, client-safe plan types, and a six-exercise sample. No actions, AI calls, database changes, or added package dependencies. All 28 tests, lint, TypeScript, production build, and diff checks pass. Playwright verified Home and empty Workout defaults, 44px targets, touch/keyboard selection, accessible checked states, selected-item guards, retained duration/focus after preview, disabled Start, Escape focus restoration, and a scrollable 90dvh sheet without horizontal overflow at 360 × 640. No page errors. Visuals inspected in .playwright-mcp/spec13-form.png and spec13-preview.png. Review confirmed direct reuse and no extra abstractions. Existing unrelated review-file deletion remains outside this commit.
