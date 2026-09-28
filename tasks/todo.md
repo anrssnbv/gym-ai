@@ -10,11 +10,11 @@
 - [x] Install prompt, shared policy, compatible reads and UI wording.
 - [x] Run focused regression tests, integration checks, lint/build and review the diff.
 - [x] Generate three varied real previews and record their exact sets, coverage and timing.
-- [ ] Commit/push development, merge its PR after checks and update local main.
+- [x] Commit/push development, merge its PR after checks and update local main.
 
 ## Review
 
-Shared policy, actual prompt and duration controls are implemented. Three final real model samples pass: full body 60 → 9 exercises/10 sets/58 minutes, push 90 → 5/15/87, pull 120 → 5/15/81. Testing caught three-shoulder full-body output; explicit delt grouping, a worked example, a two-exercise group cap and stable compound-first sorting address it. No dependency, schema migration or live timer change. The unrelated user deletion of `context/feature-specs/09-15-review.md` is excluded. Verification: 47 unit tests pass; all generation/Start/profile integration checks pass. The full 58-check database run hit two transaction-start timeouts in unchanged exercise tests; rerunning that complete 16-check suite passes. Production build/TypeScript and diff checks pass; lint has one existing warning in an ignored browser helper. Independent review found no further issue. Live tests call the actual generator locally; a new browser UI smoke was not run.
+Shared policy, actual prompt and duration controls are implemented. Three final real model samples pass: full body 60 → 9 exercises/10 sets/58 minutes, push 90 → 5/15/87, pull 120 → 5/15/81. Testing caught three-shoulder full-body output; explicit delt grouping, a worked example, a two-exercise group cap and stable compound-first sorting address it. No dependency, schema migration or live timer change. The unrelated user deletion of `context/feature-specs/09-15-review.md` is excluded. Verification: 47 unit tests pass; all generation/Start/profile integration checks pass. The full 58-check database run hit two transaction-start timeouts in unchanged exercise tests; rerunning that complete 16-check suite passes. Production build/TypeScript and diff checks pass; lint has one existing warning in an ignored browser helper. Independent review found no further issue. Live tests call the actual generator locally; a new browser UI smoke was not run. Delivered in PR #27, merged as `ed74d0d`; local main and development were fast-forwarded to that merge.
 
 # Workout planning calibration review — 2026-09-28
 
