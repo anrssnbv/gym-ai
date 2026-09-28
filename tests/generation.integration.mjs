@@ -67,6 +67,13 @@ test('generation action guards and quota against PostgreSQL', async(t)=>{
    assert.equal(JSON.stringify(logs).includes(fakeSecret),false);
    assert.equal(await prisma.planGeneration.count({where:{userId:s.userId}}),1);
   }));
+  await t.test('invalid AI plan is retried once within one daily attempt',()=>asUser(async s=>{
+   let calls=0;
+   s.generatePlan=async()=>++calls===1?{...output,exercises:output.exercises.slice(0,3)}:output;
+   assert.deepEqual(await generateWorkout({durationMin:60,focus:'push'}),{ok:true,data:{focus:'push',...output}});
+   assert.equal(calls,2);
+   assert.equal(await prisma.planGeneration.count({where:{userId:s.userId}}),1);
+  }));
   await t.test('duplicates, off-focus selections and missing muscle coverage fail',()=>asUser(async s=>{
    s.generatePlan=async()=>({...output,exercises:[...output.exercises.slice(0,4),output.exercises[0]]});
    assert.deepEqual(await generateWorkout({durationMin:60,focus:'push'}),retry);

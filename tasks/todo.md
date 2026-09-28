@@ -671,3 +671,20 @@ Implemented the five defects and both validation gaps without new dependencies o
 ## Review
 
 Saved `context/workout-generator-prompt.md` and marked the prior target proposal superseded. At a six-minute cycle, full-body examples have 10/15/20 sets for 60/90/120 minutes, with warm-up outside that budget. Longer split sessions remain at 12–15 sets and three sets per exercise, so a 120-minute choice can finish earlier. Explicitly identified that 12 seven-minute cycles cannot fit 60 minutes and that existing calibration and beginner caps prevent the requested full-body shape. All clarification answers are incorporated. Product code and the deployed setup are unchanged; no live model calls are needed to verify the prompt specification's arithmetic.
+# Production workout generation failure — investigation and fix
+
+## Specification and plan
+
+- Goal: restore reliable workout generation on the live app.
+- Scope: reproduce with a disposable authenticated profile, correlate sanitized server logs and action stages, fix only the responsible path, verify local and hosted behavior.
+- Decision: preserve the existing model, plan rules, quota, account data, and deployment until evidence identifies the fault.
+- Acceptance: a live generated plan passes the same validation as the action and renders in preview; relevant tests/build pass; test account is removed; changes reach production through `development` and a PR if a fix is needed.
+
+- [x] Reproduce the failure and identify the failing stage and likely cause.
+- [x] Implement the smallest correction and challenge it once for simpler options.
+- [ ] Verify tests, build, and authenticated hosted generation; clean up test data.
+- [ ] Record review; push `development`, merge PR, sync local `main` if changed.
+
+## Review
+
+The production action returned its generic error for a disposable account, then succeeded with the same 60-minute full-body settings. The failed request reserved one generation attempt, so it reached the provider/validation path; no matching provider exception was visible in sanitized Vercel logs. One direct local model call and three follow-up calls returned valid plans. The narrow correction retries a returned plan once only when schema or workout rules reject it, preserving validation and charging one daily attempt per click. The focused PostgreSQL integration test (11 checks), 48 unit tests, lint (one existing Playwright helper warning), and production build passed. Hosted verification, cleanup, and release remain.
