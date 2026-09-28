@@ -682,9 +682,9 @@ Saved `context/workout-generator-prompt.md` and marked the prior target proposal
 
 - [x] Reproduce the failure and identify the failing stage and likely cause.
 - [x] Implement the smallest correction and challenge it once for simpler options.
-- [ ] Verify tests, build, and authenticated hosted generation; clean up test data.
-- [ ] Record review; push `development`, merge PR, sync local `main` if changed.
+- [x] Verify tests, build, and authenticated hosted generation; clean up test data.
+- [x] Record review; push `development`, merge PR, sync local `main` if changed.
 
 ## Review
 
-The production action returned its generic error for a disposable account, then succeeded with the same 60-minute full-body settings. The failed request reserved one generation attempt, so it reached the provider/validation path; no matching provider exception was visible in sanitized Vercel logs. One direct local model call and three follow-up calls returned valid plans. The narrow correction retries a returned plan once only when schema or workout rules reject it, preserving validation and charging one daily attempt per click. The focused PostgreSQL integration test (11 checks), 48 unit tests, lint (one existing Playwright helper warning), and production build passed. Hosted verification, cleanup, and release remain.
+The production action returned its generic error for a disposable account, then succeeded with the same 60-minute full-body settings. The failed request reserved one generation attempt, so it reached the provider/validation path; no matching provider exception was visible in sanitized Vercel logs. One direct local model call and three follow-up calls returned valid plans. The narrow correction retries a returned plan once only when schema or workout rules reject it, preserving validation and charging one daily attempt per click. The focused PostgreSQL integration test (11 checks), 48 unit tests, lint (one existing Playwright helper warning), and production build passed. Both Vercel checks passed and [PR #34](https://github.com/anrssnbv/gym-ai/pull/34) merged; local `main` and `development` synced. The new production build returned a valid 60-minute full-body preview on its first test. The disposable Clerk user, profile, and three generation-attempt rows were removed. The exact cause of the original intermittent failure was not observable from available provider logs; a second rejected response can still produce the retry message.
