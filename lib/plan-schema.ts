@@ -2,19 +2,19 @@ import { z } from "zod";
 import { EXERCISES, type ExerciseId } from "./catalog.ts";
 import { FOCUSES, candidateExercises, type WorkoutPlan } from "./plan.ts";
 
-export function planOutputSchema(ids: readonly ExerciseId[], max: number, maxSets = 5) {
+export function planOutputSchema(ids: readonly ExerciseId[], max: number, maxSets = 5, min = 3, minSets = 1) {
   return z.object({
     title: z.string().min(1).max(60),
     summary: z.string().min(1).max(240),
     exercises: z.array(z.object({
       exerciseId: z.enum(ids),
-      sets: z.number().int().min(1).max(maxSets),
+      sets: z.number().int().min(minSets).max(maxSets),
       note: z.string().min(1).max(120),
-    })).min(3).max(max),
+    })).min(min).max(max),
   });
 }
 
-export const workoutPlanSchema = planOutputSchema(EXERCISES.map(({ id }) => id), 8)
+export const workoutPlanSchema = planOutputSchema(EXERCISES.map(({ id }) => id), 10)
   .extend({ focus: z.enum(FOCUSES) })
   .refine((plan) => new Set(plan.exercises.map(({ exerciseId }) => exerciseId)).size === plan.exercises.length,
     { message: "Exercises must be unique", path: ["exercises"] })

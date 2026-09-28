@@ -13,6 +13,11 @@ export const trainingProfileSchema = z.strictObject({
     .transform((equipment) => EQUIPMENT_CHOICES.filter((item) => equipment.includes(item))),
 }) satisfies z.ZodType<TrainingProfile>;
 
+// Normalize old preferences only when reading; new submissions use the strict schema above.
+export const storedTrainingProfileSchema = trainingProfileSchema.extend({
+  sessionMinutes: z.preprocess(value => value === 30 || value === 45 ? 60 : value, trainingProfileSchema.shape.sessionMinutes),
+});
+
 export const trainingProfileSelect = {
   goal: true,
   experience: true,

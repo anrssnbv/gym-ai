@@ -18,8 +18,8 @@ registerHooks({ resolve(specifier, context, nextResolve) {
 }});
 const { generateWorkout } = await import('../actions/workout.ts');
 const { prisma } = await import('../lib/prisma.ts');
-const ids = ['barbell-bench-press', 'incline-bench-press', 'machine-chest-press'];
-const output = { title: 'Push', summary: 'A balanced session.', exercises: ids.map(exerciseId => ({exerciseId, sets:3, note:'Move with control.'})) };
+const ids = ['machine-chest-press', 'machine-shoulder-press', 'cable-pushdown', 'cable-lateral-raise', 'pec-deck'];
+const output = { title: 'Push', summary: 'A balanced session.', exercises: ids.map(exerciseId => ({exerciseId, sets:2, note:'Move with control.'})) };
 const limit = {ok:false,error:'Daily limit reached (10 plans). Try again tomorrow.'};
 const retry = {ok:false,error:"Couldn't generate a workout. Try again."};
 const profile = { goal: "build_muscle", experience: "experienced", daysPerWeek: 4, sessionMinutes: 60, equipment: ["barbell", "dumbbell", "machine", "cable"] };
@@ -35,7 +35,7 @@ test('generation action guards and quota against PostgreSQL', async(t)=>{
  try {
   await t.test('auth precedes input validation',()=>assert.rejects(()=>generateWorkout(null),/Integration action needs a test user/));
   await t.test('invalid duration/focus and missing or malformed key do not charge attempts',()=>asUser(async s=>{
-   assert.equal((await generateWorkout({durationMin:61,focus:'auto'})).ok,false);
+   for (const durationMin of [30,45,61]) assert.deepEqual(await generateWorkout({durationMin,focus:'auto'}),{ok:false,error:'Invalid input'});
    assert.equal((await generateWorkout({durationMin:60,focus:''})).ok,false);
    delete process.env.OPENAI_API_KEY;
    try { assert.deepEqual(await generateWorkout({durationMin:60,focus:'auto'}),{ok:false,error:'AI coach is not configured.'}); }
@@ -67,26 +67,29 @@ test('generation action guards and quota against PostgreSQL', async(t)=>{
    assert.equal(JSON.stringify(logs).includes(fakeSecret),false);
    assert.equal(await prisma.planGeneration.count({where:{userId:s.userId}}),1);
   }));
-  await t.test('duplicates below three, off-focus plans, and too many new exercises fail',()=>asUser(async s=>{
-   s.generatePlan=async()=>({...output,exercises:[output.exercises[0],output.exercises[0],output.exercises[1]]});
+  await t.test('duplicates, off-focus selections and missing muscle coverage fail',()=>asUser(async s=>{
+   s.generatePlan=async()=>({...output,exercises:[...output.exercises.slice(0,4),output.exercises[0]]});
    assert.deepEqual(await generateWorkout({durationMin:60,focus:'push'}),retry);
    s.generatePlan=async()=>output;
    assert.deepEqual(await generateWorkout({durationMin:60,focus:'pull'}),retry);
-   s.generatePlan=async()=>({...output,exercises:[...output.exercises,{exerciseId:'incline-dumbbell-press',sets:3,note:'Control.'}]});
+   s.generatePlan=async()=>({...output,exercises:['machine-chest-press','pec-deck','incline-bench-press','cable-crossover'].map(exerciseId=>({exerciseId,sets:2,note:'Control.'}))});
    assert.deepEqual(await generateWorkout({durationMin:60,focus:'push'}),retry);
   }));
-  await t.test('a 32-minute plan fails a 30-minute request; exact-fit, shorter and deduplicated plans pass',()=>asUser(async s=>{
-   const long = {...output,exercises:output.exercises.map(e=>({...e,sets:5}))};
+  await t.test('set-and-rest timing rejects overflow, accepts exact fits, and leaves longer splits unpadded',()=>asUser(async s=>{
+   const long = {...output,exercises:output.exercises.map(e=>({...e,sets:3}))}; // 81 minutes.
    s.generatePlan=async()=>long;
-   assert.deepEqual(await generateWorkout({durationMin:30,focus:'push'}),retry);
-   const exact = {...long,exercises:long.exercises.map((e,i)=>({...e,sets:i===0?4:5}))};
+   assert.deepEqual(await generateWorkout({durationMin:60,focus:'push'}),retry);
+   const exact = {...output,exercises:output.exercises.map((e,i)=>({...e,sets:i===0?3:2}))}; // 60 minutes.
    s.generatePlan=async()=>exact;
-   assert.deepEqual(await generateWorkout({durationMin:30,focus:'push'}),{ok:true,data:{focus:'push',...exact}});
-   s.generatePlan=async()=>({...exact,exercises:[...exact.exercises,exact.exercises[0]]});
-   assert.deepEqual(await generateWorkout({durationMin:30,focus:'push'}),{ok:true,data:{focus:'push',...exact}});
+   assert.deepEqual(await generateWorkout({durationMin:60,focus:'push'}),{ok:true,data:{focus:'push',...exact}});
    s.generatePlan=async()=>output;
-   assert.deepEqual(await generateWorkout({durationMin:30,focus:'push'}),{ok:true,data:{focus:'push',...output}});
-   assert.equal(await prisma.planGeneration.count({where:{userId:s.userId}}),4);
+   assert.deepEqual(await generateWorkout({durationMin:60,focus:'push'}),{ok:true,data:{focus:'push',...output}});
+   assert.deepEqual(await generateWorkout({durationMin:90,focus:'push'}),retry); // Longer splits require three sets each.
+   s.generatePlan=async()=>long;
+   for(const durationMin of [90,120]) assert.deepEqual(await generateWorkout({durationMin,focus:'push'}),{ok:true,data:{focus:'push',...long}});
+   s.generatePlan=async()=>({...long,exercises:long.exercises.map(e=>({...e,sets:4}))});
+   assert.deepEqual(await generateWorkout({durationMin:120,focus:'push'}),retry);
+   assert.equal(await prisma.planGeneration.count({where:{userId:s.userId}}),7);
    assert.equal(await prisma.workoutSession.count({where:{userId:s.userId}}),0);
   }));
   await t.test('missing or malformed profiles and insufficient candidates consume no attempts',()=>asUser(async s=>{
@@ -96,26 +99,31 @@ test('generation action guards and quota against PostgreSQL', async(t)=>{
    await prisma.trainingProfile.create({data:{userId:s.userId,...profile,daysPerWeek:0}});
    assert.deepEqual(await generateWorkout({durationMin:60,focus:'auto'}),missing);
    await prisma.trainingProfile.update({where:{userId:s.userId},data:{daysPerWeek:4,equipment:['barbell']}});
-   assert.deepEqual(await generateWorkout({durationMin:60,focus:'pull'}),{ok:false,error:'Not enough exercises for this focus and equipment. Choose another focus or update Training preferences.'});
+   const unavailable={ok:false,error:'Not enough exercises for this focus and equipment. Choose another focus or update Training preferences.'};
+   assert.deepEqual(await generateWorkout({durationMin:60,focus:'pull'}),unavailable);
+   for (const equipment of [['dumbbell'],['cable'],['machine']]) {
+    await prisma.trainingProfile.update({where:{userId:s.userId},data:{equipment}});
+    const focus=equipment[0]==='dumbbell'?'push':'full_body';
+    assert.deepEqual(await generateWorkout({durationMin:60,focus}),unavailable);
+   }
    assert.equal(s.calls,0);
    assert.equal(await prisma.planGeneration.count({where:{userId:s.userId}}),0);
   }));
-  await t.test('beginner output limits and equipment are enforced even for a mocked provider',()=>asUser(async s=>{
-   const {candidateExercises}=await import('../lib/plan.ts');
-   await prisma.trainingProfile.update({where:{userId:s.userId},data:{experience:'beginner',daysPerWeek:3,sessionMinutes:90,equipment:['dumbbell']}});
-   const candidates=candidateExercises('full_body',['dumbbell']);
-   const valid={...output,exercises:candidates.slice(0,3).map(e=>({exerciseId:e.id,sets:3,note:'Control.'}))};
-   await prisma.exerciseProgress.createMany({data:['barbell-bench-press','lat-pulldown'].map(exerciseId=>({userId:s.userId,exerciseId,weightKg:10,startWeightKg:10,stepKg:2.5}))});
+  await t.test('a beginner with no calibration gets full coverage; old counts, excess sets and unavailable equipment fail',()=>asUser(async s=>{
+   await prisma.trainingProfile.update({where:{userId:s.userId},data:{experience:'beginner',daysPerWeek:3,sessionMinutes:45,equipment:['dumbbell']}});
+   const exerciseIds=['incline-dumbbell-press','one-arm-dumbbell-row','dumbbell-shoulder-press','dumbbell-lateral-raise','incline-dumbbell-curl','hammer-curl','bulgarian-split-squat','dumbbell-romanian-deadlift'];
+   const valid={...output,exercises:exerciseIds.map((exerciseId,i)=>({exerciseId,sets:i===4?2:1,note:'Control.'}))};
+   assert.equal(await prisma.exerciseProgress.count({where:{userId:s.userId}}),0);
    s.generatePlan=async input=>{s.input=input;return valid;};
-   assert.deepEqual(await generateWorkout({durationMin:30,focus:'auto'}),{ok:true,data:{...valid,focus:'full_body'}});
-   assert.equal(s.input.durationMin,30);
-   s.generatePlan=async()=>({...valid,exercises:valid.exercises.map(e=>({...e,sets:4}))});
-   assert.deepEqual(await generateWorkout({durationMin:90,focus:'auto'}),retry);
-   await prisma.exerciseProgress.createMany({data:candidates.slice(0,5).map(e=>({userId:s.userId,exerciseId:e.id,weightKg:10,startWeightKg:10,stepKg:2.5}))});
-   s.generatePlan=async()=>({...valid,exercises:candidates.slice(0,5).map(e=>({exerciseId:e.id,sets:1,note:'Control.'}))});
-   assert.deepEqual(await generateWorkout({durationMin:90,focus:'auto'}),retry);
-   s.generatePlan=async()=>output;
-   assert.deepEqual(await generateWorkout({durationMin:60,focus:'push'}),retry);
+   assert.deepEqual(await generateWorkout({durationMin:60,focus:'auto'}),{ok:true,data:{...valid,focus:'full_body'}});
+   assert.equal(s.input.durationMin,60);
+   assert.equal(s.input.context.profile.sessionMinutes,60); // Legacy saved preference is normalized.
+   s.generatePlan=async()=>({...valid,exercises:valid.exercises.slice(0,3)});
+   assert.deepEqual(await generateWorkout({durationMin:60,focus:'auto'}),retry);
+   s.generatePlan=async()=>({...valid,exercises:valid.exercises.map(e=>({...e,sets:3}))});
+   assert.deepEqual(await generateWorkout({durationMin:120,focus:'auto'}),retry);
+   s.generatePlan=async()=>({...valid,exercises:valid.exercises.map((e,i)=>i===0?{...e,exerciseId:'barbell-bench-press'}:e)});
+   assert.deepEqual(await generateWorkout({durationMin:60,focus:'auto'}),retry);
   }));
   await t.test('rolling limit ignores old attempts and isolates other users; concurrent last slot admits one',()=>asUser(async s=>{
    await prisma.planGeneration.createMany({data:[...Array.from({length:9},()=>({userId:s.userId})),{userId:s.userId,createdAt:new Date(Date.now()-24*60*60*1000-1000)},...Array.from({length:10},()=>({userId:users[0]}))]});

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  candidateExercises, dedupeExercises, estimatePlanMinutes, isValidPlanSelection, maxExercises, resolveAutoFocus, resolveProfileAutoFocus, profilePlanLimits,
+  candidateExercises, estimatePlanMinutes, isValidPlanSelection, planTargets, canPlanWorkout, exerciseTiming, resolveAutoFocus, resolveProfileAutoFocus,
   type WorkoutPlan,
 } from "./plan.ts";
 import { planOutputSchema, workoutPlanSchema } from "./plan-schema.ts";
@@ -33,24 +33,15 @@ test("auto focus picks never trained patterns first, then oldest, with stable ti
   assert.equal(resolveAutoFocus({ push: latest, pull: latest, legs: latest }), "push");
 });
 
-test("duration caps match 30, 45, 60 and 90 minutes", () => {
-  assert.deepEqual([maxExercises(30), maxExercises(45), maxExercises(60), maxExercises(90)], [4, 5, 6, 8]);
-});
-
-test("duration uses compound and isolation rounds plus one minute between exercises", () => {
-  assert.equal(estimatePlanMinutes(plan), 17); // Two compound exercises and one isolation, three sets each.
+test("planning counts full work and rest cycles, independent of game rounds", () => {
+  assert.equal(estimatePlanMinutes(plan), 51);
   assert.equal(estimatePlanMinutes({ ...plan, exercises: [] }), 0);
-  assert.equal(estimatePlanMinutes({ ...plan, exercises: [plan.exercises[2]] }), 3);
-  const mixed: WorkoutPlan = {
-    ...plan, focus: "full_body", exercises: [
-      { exerciseId: "barbell-bench-press", sets: 5, note: "Control." },
-      { exerciseId: "leg-press", sets: 5, note: "Control." },
-      { exerciseId: "cable-crunch", sets: 4, note: "Control." },
-      { exerciseId: "barbell-curl", sets: 3, note: "Control." },
-    ],
-  };
-  assert.equal(estimatePlanMinutes(mixed), 30);
-  assert.equal(estimatePlanMinutes({ ...mixed, exercises: mixed.exercises.map(e => ({ ...e, sets: 5 })) }), 33);
+  assert.equal(estimatePlanMinutes({ ...plan, exercises: [plan.exercises[2]] }), 15);
+  for (const exercise of candidateExercises("full_body")) {
+    const timing = exerciseTiming(exercise);
+    assert.ok(timing.setMinutes >= 2 && timing.setMinutes <= 3);
+    assert.ok(timing.restMinutes >= 3 && timing.restMinutes <= 4);
+  }
 });
 
 test("workout schema accepts a valid plan and rejects invalid IDs, sets and exercise counts", () => {
@@ -94,60 +85,61 @@ test("output schema enforces candidate IDs, duration cap and local text limits",
   }
 });
 
-test("deduplication keeps the first occurrence without changing the input", () => {
-  const duplicate = { ...plan.exercises[0], sets: 5, note: "Duplicate." };
-  const original = { ...plan, exercises: [...plan.exercises, duplicate] };
-  assert.deepEqual(dedupeExercises(original), plan);
-  assert.equal(original.exercises.length, 4);
+const fullBody: WorkoutPlan = {
+  ...plan, focus: "full_body", exercises: ([
+    "barbell-back-squat", "barbell-bench-press", "lat-pulldown", "dumbbell-lateral-raise",
+    "barbell-curl", "cable-pushdown", "lying-leg-curl", "standing-calf-raise",
+  ] as const).map((exerciseId, i) => ({ exerciseId, sets: i < 2 ? 2 : 1, note: "Control." })),
+};
+
+test("full body enforces broad coverage, 8–10 exercises, 9–12 sets and the real time ceiling", () => {
+  assert.equal(estimatePlanMinutes(fullBody), 59);
+  assert.equal(isValidPlanSelection(fullBody, 60), true);
+  const overBudget = { ...fullBody, exercises: fullBody.exercises.map(e => e.exerciseId === "lat-pulldown" ? { ...e, sets: 2 } : e) };
+  assert.equal(estimatePlanMinutes(overBudget), 65);
+  assert.equal(isValidPlanSelection(overBudget, 60), false);
+  assert.equal(isValidPlanSelection({ ...fullBody, exercises: fullBody.exercises.slice(0, 3) }, 60), false);
+  assert.equal(isValidPlanSelection({ ...fullBody, exercises: fullBody.exercises.map(e => ({ ...e, sets: 2 })) }, 60), false);
+  assert.equal(isValidPlanSelection({ ...fullBody, exercises: fullBody.exercises.map(e => ({ ...e, sets: 1 })) }, 60), false);
+  assert.equal(isValidPlanSelection({ ...fullBody, exercises: fullBody.exercises.map(e => e.exerciseId === "lying-leg-curl" ? { ...e, exerciseId: "pec-deck" } : e) }, 60), false);
+  assert.equal(isValidPlanSelection({ ...fullBody, exercises: [...fullBody.exercises, fullBody.exercises[0]] }, 60), false);
+  assert.equal(isValidPlanSelection(fullBody, 60, ["dumbbell"]), false);
+  const shoulderHeavy: WorkoutPlan = { ...fullBody, exercises: [
+    ...fullBody.exercises.map(e => ({ ...e, sets: 1 })),
+    { exerciseId: "cable-lateral-raise", sets: 1, note: "Control." },
+    { exerciseId: "reverse-pec-deck", sets: 1, note: "Control." },
+  ] };
+  assert.equal(estimatePlanMinutes(shoulderHeavy), 55);
+  assert.equal(isValidPlanSelection(shoulderHeavy, 60), false);
+  // Historical plans remain readable even when they fail the new generation policy.
+  assert.equal(workoutPlanSchema.safeParse(plan).success, true);
+  assert.equal(isValidPlanSelection(plan, 60), false);
 });
 
-for (const calibratedCount of [0, 1, 2]) {
-  test(`selection allows a three-exercise plan with ${calibratedCount} calibrated candidates`, () => {
-    const levels = Object.fromEntries(plan.exercises.slice(0, calibratedCount).map(({ exerciseId }) => [exerciseId, 1]));
-    assert.equal(isValidPlanSelection(plan, levels), true);
-    assert.equal(isValidPlanSelection({
-      ...plan,
-      exercises: [...plan.exercises, { exerciseId: "face-pull", sets: 2, note: "Keep control." }],
-    }, levels), false);
-  });
-}
-
-test("selection counts only calibrated focus candidates and rejects off-focus exercises", () => {
-  assert.equal(isValidPlanSelection(plan, { "leg-press": 2, "barbell-back-squat": 3 }), true);
-  assert.equal(isValidPlanSelection({
-    ...plan,
-    exercises: [{ exerciseId: "leg-press", sets: 3, note: "Keep control." }, ...plan.exercises.slice(1)],
-  }, {}), false);
-  assert.equal(isValidPlanSelection({ ...plan, exercises: plan.exercises.slice(0, 2) }, {}), false);
+test("long split sessions keep exactly three sets even with 120 minutes available", () => {
+  const split: WorkoutPlan = { ...plan, exercises: [...plan.exercises, { exerciseId: "face-pull", sets: 3, note: "Control." }] };
+  assert.equal(estimatePlanMinutes(split), 66);
+  assert.equal(isValidPlanSelection(split, 60), false);
+  assert.equal(isValidPlanSelection(split, 90), true);
+  assert.equal(isValidPlanSelection(split, 120), true);
+  assert.equal(isValidPlanSelection({ ...split, exercises: split.exercises.map(e => ({ ...e, sets: 4 })) }, 120), false);
+  assert.equal(isValidPlanSelection({ ...split, exercises: split.exercises.map(e => ({ ...e, sets: 2 })) }, 90), false);
+  assert.equal(isValidPlanSelection({ ...split, exercises: split.exercises.map(e => ({ ...e, sets: 2 })) }, 60), true);
 });
 
-
-test("profile schedule and experience limits preserve explicit duration boundaries", () => {
-  for (const days of [1, 3]) assert.equal(resolveProfileAutoFocus({}, days), "full_body");
-  for (const days of [4, 7]) {
-    assert.equal(resolveProfileAutoFocus({}, days), "push");
-    assert.equal(resolveProfileAutoFocus({ push: new Date() }, days), "pull");
-  }
-  for (const experience of ["new", "beginner", "regular", "experienced"] as const) {
-    for (const duration of [30, 45, 60, 90] as const) {
-      const beginner = experience === "new" || experience === "beginner";
-      assert.deepEqual(profilePlanLimits(duration, experience), { maxExercises: beginner ? 4 : maxExercises(duration), maxSets: beginner ? 3 : 5 });
-    }
-  }
-  const schema = planOutputSchema(candidateExercises("pull").map(({ id }) => id), 4, 3);
-  assert.equal(schema.safeParse(plan).success, true);
-  assert.equal(schema.safeParse({ ...plan, exercises: plan.exercises.map(e => ({ ...e, sets: 4 })) }).success, false);
+test("preflight catches insufficient candidates and missing primary coverage", () => {
+  assert.equal(canPlanWorkout("full_body", 60, ["dumbbell"]), true);
+  assert.equal(canPlanWorkout("full_body", 60, ["machine"]), false); // Back extension alone cannot cover upper back.
+  assert.equal(canPlanWorkout("full_body", 60, ["cable"]), false); // No knee/hamstring work.
+  assert.equal(canPlanWorkout("push", 60, ["dumbbell"]), false); // Only three candidates.
+  assert.equal(canPlanWorkout("pull", 90, ["barbell"]), false);
+  assert.equal(canPlanWorkout("pull", 90, ["cable"]), true);
 });
 
-test("equipment filters calibration counts at zero, one and two eligible exercises", () => {
-  const candidates = candidateExercises("full_body", ["dumbbell"]);
-  assert.ok(candidates.every(e => e.equipment === "dumbbell"));
-  assert.deepEqual(candidateExercises("pull", []), []);
-  const selected: WorkoutPlan = { ...plan, focus: "full_body", exercises: candidates.slice(0, 3).map(e => ({ exerciseId: e.id, sets: 3, note: "Control." })) };
-  for (const count of [0, 1, 2]) {
-    const levels: Record<string, number> = { "barbell-bench-press": 2, "lat-pulldown": 3, ...Object.fromEntries(candidates.slice(0, count).map(e => [e.id, 1])) };
-    assert.equal(isValidPlanSelection(selected, levels, ["dumbbell"]), true);
-    assert.equal(isValidPlanSelection({ ...selected, exercises: [...selected.exercises, { exerciseId: candidates[3].id, sets: 2, note: "Control." }] }, levels, ["dumbbell"]), false);
-  }
-  assert.equal(isValidPlanSelection(plan, {}, ["dumbbell"]), false);
+test("shared targets and automatic focus respect schedule without a beginner/calibration cap", () => {
+  assert.equal(resolveProfileAutoFocus({}, 3), "full_body");
+  assert.equal(resolveProfileAutoFocus({}, 4), "push");
+  assert.deepEqual(planTargets("full_body", 60), { minExercises: 8, maxExercises: 10, minSets: 1, maxSets: 2, minTotalSets: 9, maxTotalSets: 12, targetTotalSets: 10 });
+  assert.equal(planTargets("full_body", 120).targetTotalSets, 20);
+  assert.equal(planTargets("push", 90).minSets, 3);
 });

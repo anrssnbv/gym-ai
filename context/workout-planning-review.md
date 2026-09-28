@@ -1,5 +1,7 @@
 # Workout planning calibration review — 2026-09-28
 
+The target proposal below is superseded by `workout-generator-prompt.md`, which records the user's subsequent 60/90/120-minute and 5–7-minute set-and-rest requirements. The historical code findings below remain useful; its earlier target numbers are no longer the current proposal.
+
 ## Goal and scope
 
 Review why a 90-minute full-body request can produce only three exercises, and propose a consistent policy for the user's target: 7–8 exercises, 1–2 sets per exercise, and 10–14 total sets. This is a product and code review; the proposed behavior is not implemented. These numbers express the requested app behavior, not a universal training prescription.

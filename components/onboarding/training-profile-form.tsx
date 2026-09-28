@@ -101,7 +101,7 @@ export function TrainingProfileForm({ initialProfile, mode }: {
           <div className="grid grid-cols-4 gap-2">{[1, 2, 3, 4, 5, 6, 7].map((value) => choice("days", value, String(value), daysPerWeek === value, () => setDays(value)))}</div>
         </fieldset>
         <fieldset className="space-y-2"><legend className="mb-2 text-sm font-medium">How long per visit?</legend>
-          <div className="grid grid-cols-2 gap-2">{DURATIONS_MIN.map((value) => choice("duration", value, `${value} min`, sessionMinutes === value, () => setMinutes(value)))}</div>
+          <div className="grid grid-cols-3 gap-2">{DURATIONS_MIN.map((value) => choice("duration", value, `${value} min`, sessionMinutes === value, () => setMinutes(value)))}</div>
         </fieldset>
         <p aria-live="polite" className="rounded-xl bg-brand-dim p-3 text-sm text-brand">{weeklySummary}</p>
         <p className="text-sm text-copy-secondary">You can change the time for each workout.</p>

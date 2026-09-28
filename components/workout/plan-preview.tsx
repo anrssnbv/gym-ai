@@ -13,8 +13,8 @@ export function PlanPreview({ plan, timeLimitMin, progress = {} }: { plan: Worko
           <Badge className="bg-ai-dim text-ai">{FOCUS_LABELS[plan.focus]}</Badge>
         </div>
         <p className="text-sm text-copy-muted">{plan.summary}</p>
-        <p className="text-sm text-copy-muted">{plan.exercises.reduce((total, item) => total + item.sets, 0)} sets · about {estimatedMinutes} min of timed rounds and exercise changes. Allow extra time for setup and rest.</p>
-        {estimatedMinutes < timeLimitMin && <p className="text-sm text-copy-muted">Shorter than your {timeLimitMin} min limit. Training and calibration limits may restrict the number of exercises and sets.</p>}
+        <p className="text-sm text-copy-muted">{plan.exercises.reduce((total, item) => total + item.sets, 0)} sets · about {estimatedMinutes} min including working sets and rest. Warm-up is extra.</p>
+        {estimatedMinutes < timeLimitMin && <p className="text-sm text-copy-muted">Shorter than your {timeLimitMin} min limit. The plan keeps the chosen exercise and set distribution without adding extra sets to fill time.</p>}
       </div>
       <ol className="list-decimal space-y-3 pl-6 marker:font-display marker:text-copy-muted">
         {plan.exercises.map((item) => {
