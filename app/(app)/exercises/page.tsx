@@ -22,6 +22,7 @@ export default async function ExercisesPage() {
           <Link
             key={group.id}
             href={`/exercises/${group.id}`}
+            prefetch={false}
             className="min-w-0 rounded-2xl border border-line bg-surface p-4"
           >
             <h2 className="font-display text-lg text-copy">{group.name}</h2>
