@@ -1,6 +1,6 @@
 # Workout generator prompt — 60/90/120 minutes
 
-Status: implemented in `lib/ai.ts` with shared targets, timing and coverage in `lib/plan.ts`; verified locally and with real model calls; delivery in progress. This specification supersedes the target proposal in `workout-planning-review.md`.
+Status: implemented in `lib/ai.ts` with shared targets, timing and coverage in `lib/plan.ts`; verified locally and with real model calls; delivered in PR #27. This specification supersedes the target proposal in `workout-planning-review.md`.
 
 ## User requirements
 
