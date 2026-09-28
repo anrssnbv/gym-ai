@@ -1,5 +1,7 @@
 # Lessons
 
+- When the user replaces a local provider key during deployment work, synchronize the authorized hosted environments, redeploy, and test the authenticated production action. Local API success and a Ready build do not verify production credentials. Source: missed Vercel key update, 2026-09-28.
+
 - Define working-set time, rest, and session overhead before changing a workout generator's volume rules. The exercise countdown is not a session-duration estimate; check the full arithmetic against the user's concrete examples before encouraging the model to fill time.
 
 - When a user reports insufficient workout volume or coverage, preview wording and a stronger prompt do not establish a fix. Translate the desired session into explicit count, set, and coverage criteria; check calibration, experience, and timing rules for conflicts, and verify the resulting selection. Source: full-body target clarification, 2026-09-28.

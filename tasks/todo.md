@@ -1,3 +1,17 @@
+# Synchronize replacement workout key — 2026-09-28
+
+- Goal: restore hosted workout generation after the local OpenAI key changed.
+- Scope: synchronize the existing key through stdin to Vercel Secrets, redeploy both existing production projects, verify a real primary-site preview and remove the disposable account. No application code or real-user workout data changes.
+- Acceptance: authenticated production Generate succeeds on the new deployment; no key appears in logs/output.
+
+- [x] Confirm the local credential works and identify the missed hosted update.
+- [x] Update Production and Preview Secrets for both existing projects; start production redeployments.
+- [x] Verify deployment readiness and live generation; clean temporary account and rows.
+
+## Review
+
+The previous task tested the local key but did not synchronize Vercel. Updated Production/Preview Secrets in both existing projects through stdin. Fresh deployments `dpl_4hACo9FJFTknYFK84ughnAdQXRET` (primary) and `dpl_4HudXtv8Zs3TAnX8DF7t1U8uhYiP` (second) are Ready. An authenticated primary-site test at 360×640 generated a full-body preview with 10 exercises, 10 sets and a 60-minute work/rest estimate. Exactly one attempt and zero sessions/sets were created. Nine new-deployment log records contained no current key, Bearer credential or generation failure; one record carried existing Clerk/SSL warnings. Signed out and deleted the disposable account and all scoped rows. No application code changed; the full secret was never printed or committed.
+
 # Install corrected workout generator — 2026-09-28
 
 ## Specification and plan
