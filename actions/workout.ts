@@ -80,15 +80,17 @@ export async function generateWorkout(input: unknown): Promise<ActionResult<Work
       return { ok: true, data: null };
     });
     if (!reservation.ok) return reservation;
-    stage = "provider";
-    const output = await generatePlan({ focus, durationMin, context: { ...context, profile } });
-    stage = "validation";
-    const selection = planOutputSchema(candidates.map(({ id }) => id), limits.maxExercises, limits.maxSets, limits.minExercises, limits.minSets)
-      .safeParse(output);
-    if (!selection.success) return generationError;
-    const plan = { ...selection.data, focus };
-    if (!isValidPlanSelection(plan, durationMin, profile.equipment)) return generationError;
-    return { ok: true, data: plan };
+    for (let attempt = 0; attempt < 2; attempt++) {
+      stage = "provider";
+      const output = await generatePlan({ focus, durationMin, context: { ...context, profile } });
+      stage = "validation";
+      const selection = planOutputSchema(candidates.map(({ id }) => id), limits.maxExercises, limits.maxSets, limits.minExercises, limits.minSets)
+        .safeParse(output);
+      if (!selection.success) continue;
+      const plan = { ...selection.data, focus };
+      if (isValidPlanSelection(plan, durationMin, profile.equipment)) return { ok: true, data: plan };
+    }
+    return generationError;
   } catch {
     console.error("Workout generation failed", { stage });
     return generationError;
