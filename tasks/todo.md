@@ -1,3 +1,20 @@
+# 17 Exercise movement illustrations — specification only
+
+## Specification
+
+- Goal: define an exercise-specific picture that helps users identify equipment and understand how to perform any catalog exercise, including Hack Squat.
+- Scope: artwork/content contract, exercise detail and workout-preview entry points, accessibility, performance, and verifiable release checks. No application implementation or asset creation in this task.
+- Decision: one locally hosted static two-position illustration per exercise, opened on demand. Keep the existing muscle map for targeted anatomy.
+- Acceptance: every current exercise ID has a unique, reviewed demonstration asset and movement text; opening Hack Squat from a generated preview or its exercise page shows the correct machine, start and lowered positions, and brief instructions for returning.
+
+- [x] Trace the catalog, exercise detail, workout preview, visual system and existing spec rules.
+- [x] Write Spec 17 with exact UI, asset, accessibility, loading, and verification contracts.
+- [x] Review against all 50 catalog IDs and existing flows; update the tracker and verify the documentation diff.
+
+## Review
+
+Spec 17 defines one locally hosted, two-position illustration and short instructions for each exercise. A closed-by-default control is shared by the exercise page and generated-plan preview, so a full plan does not download every image. Design review: one still frame would identify equipment but would not show movement; two positions in one asset meet the request without video, new data, or provider calls. A catalog-driven read found 50 exercise IDs, including Hack Squat, and the spec names both entry points, an all-50 artwork audit, and phone checks. No application code or artwork was changed; application tests were not run for this documentation-only task. The unrelated deletion of `context/feature-specs/09-15-review.md` remains outside this task.
+
 # Synchronize replacement workout key — 2026-09-28
 
 - Goal: restore hosted workout generation after the local OpenAI key changed.

@@ -8,6 +8,8 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
+- Spec 17 is drafted for exercise movement illustrations. It plans one reviewed, locally hosted two-position image and short instructions for every current catalog exercise, available on the exercise page and on demand in generated plan previews. Specification only; no application assets or behavior changed yet. See `feature-specs/17-exercise-movement-illustrations.md`.
+
 - Corrected workout generation (2026-09-28): actual prompt and shared 60/90/120-minute targets now count 5–7-minute work/rest cycles, preserve full-body coverage and cap longer split sessions at three sets per exercise. New users can receive full plans without calibration caps; historical plans/preferences remain readable. Three final live API samples pass (58/87/81 estimated minutes); see `workout-generator-live-review.md`. Delivered in [PR #27](https://github.com/anrssnbv/gym-ai/pull/27), merged as `ed74d0d`; local main/development synced.
 
 - Specs 01–16 implemented. QA fixes complete; physical-phone checks remain. Production is deployed at https://gym-ai-seven-alpha.vercel.app.
@@ -19,7 +21,7 @@ Update this file after every meaningful implementation change.
 
 ## Roadmap
 
-All specs 01–16 are written. 09–15 were written after 08; 16 was written after the QA fixes, against the code as built. If a unit changes names or contracts, update the later specs before running them (see `ai-workflow-rules.md` → Writing The Next Spec).
+All specs 01–17 are written. 09–15 were written after 08; 16 was written after the QA fixes; 17 is a planned UI and artwork unit based on the current exercise and workout screens. If a unit changes names or contracts, update the later specs before running them (see `ai-workflow-rules.md` → Writing The Next Spec).
 
 ### Phase 1 — UI foundation (no backend)
 
@@ -51,6 +53,10 @@ All specs 01–16 are written. 09–15 were written after 08; 16 was written aft
 ### Phase 5 — Training preferences
 
 - [ ] 16 training-profile-onboarding — four-step first-sign-in survey (goal, experience, days/session time, equipment), owned Prisma training profile, later editing, and integration with the existing AI generator. See `feature-specs/16-training-profile-onboarding.md` for ordered implementation checkpoints and acceptance checks. Weekly hours are derived; current training history and game rules are preserved.
+
+### Phase 6 — Exercise guidance
+
+- [ ] 17 exercise-movement-illustrations — reviewed two-position movement image and short instructions for each catalog exercise, opened from the exercise detail page or a generated-plan preview. This adds visual form guidance alongside the muscle map. See `feature-specs/17-exercise-movement-illustrations.md`.
 
 ### Backlog (not planned)
 
