@@ -2,7 +2,7 @@
 
 Show users what an exercise is and how its movement looks before they start it. Add one exercise-specific, two-position illustration to every catalog exercise. Keep the existing muscle map: it answers **what the exercise trains**, while the new illustration answers **what to do**. This spec builds on the catalog, exercise detail screen, and workout generator preview; it adds no training rules or data storage.
 
-**Status: planned.** This document defines the next UI and artwork unit. No illustrations or application code are included in this specification task.
+**Status: implemented; physical-phone check pending.** All 50 local illustrations, the two entry points, and automated and desktop-mobile checks are complete. The installed iPhone legibility/scroll check remains a release follow-up.
 
 ## Existing behavior and user problem
 

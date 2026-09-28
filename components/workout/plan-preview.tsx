@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { ExerciseDemo } from "@/components/exercise/exercise-demo";
 import { getExercise } from "@/lib/catalog";
 import { formatKg } from "@/lib/game";
 import { estimatePlanMinutes, FOCUS_LABELS, type WorkoutPlan } from "@/lib/plan";
@@ -30,6 +31,7 @@ export function PlanPreview({ plan, timeLimitMin, progress = {} }: { plan: Worko
                 {progress[item.exerciseId] ? `LV ${progress[item.exerciseId].level} · ${formatKg(progress[item.exerciseId].weightKg)}` : "New — you'll calibrate it"}
               </p>
               <p className="mt-1 text-sm text-ai">{item.note}</p>
+              <ExerciseDemo exerciseId={exercise.id} />
             </li>
           );
         })}

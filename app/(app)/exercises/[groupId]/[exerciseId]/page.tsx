@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ExerciseLevel } from "@/components/exercise/exercise-level";
+import { ExerciseDemo } from "@/components/exercise/exercise-demo";
 import { MuscleMap, exerciseIntensity } from "@/components/muscle-map/muscle-map";
 import { getExercise, getGroup, MUSCLE_HEADS } from "@/lib/catalog";
 import { roundSeconds } from "@/lib/game";
@@ -45,6 +46,8 @@ export default async function ExercisePage({
           {exercise.compound ? "Compound" : "Isolation"} · {roundSeconds(exercise.compound) / 60} min rounds
         </span>
       </div>
+
+      <ExerciseDemo exerciseId={exercise.id} />
 
       <MuscleMap intensity={exerciseIntensity(exercise)} className="mt-8" />
 
