@@ -26,7 +26,7 @@ interface Round {
   limitReached: boolean;
 }
 
-export function ExerciseLevel({ exercise, state, sets }: { exercise: Exercise; state: LevelState | null; sets: HistorySet[] }) {
+export function ExerciseLevel({ exercise, state, sets, planStep }: { exercise: Exercise; state: LevelState | null; sets: HistorySet[]; planStep?: { done: number; total: number } | null }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +41,10 @@ export function ExerciseLevel({ exercise, state, sets }: { exercise: Exercise; s
     nextButton.current?.focus();
   }, []);
   const seconds = roundSeconds(exercise.compound);
+  const plannedDone = planStep ? Math.min(planStep.total, planStep.done + loggedIds.filter((id) => !sets.some((set) => set.id === id)).length) : null;
+  const exerciseDone = planStep != null && plannedDone === planStep.total;
+  const nextLabel = planStep ? exerciseDone ? "Exercise done" : `Next round · ${plannedDone}/${planStep.total}` : "Next round";
+  const startLabel = planStep ? exerciseDone ? "Exercise done" : `Start round · ${plannedDone}/${planStep.total}` : "Start round";
 
   function startRound() {
     if (!state || busy) return;
@@ -133,11 +137,11 @@ export function ExerciseLevel({ exercise, state, sets }: { exercise: Exercise; s
             </p>
           )}
           {round ? (
-            <RoundTimer key={round.setId} endsAt={round.endsAt} completedAt={round.completedAt} seconds={seconds} roundNumber={loggedIds.length + (round.result === null ? 1 : 0)} result={round.result} onCancel={() => setRound(null)} onNext={startRound} nextButtonRef={nextButton} pending={busy}>
+            <RoundTimer key={round.setId} endsAt={round.endsAt} completedAt={round.completedAt} seconds={seconds} roundNumber={loggedIds.length + (round.result === null ? 1 : 0)} result={round.result} onCancel={() => setRound(null)} onNext={exerciseDone ? () => router.push("/workout") : startRound} nextLabel={nextLabel} nextButtonRef={nextButton} pending={busy}>
               <LogRepsSheet disabled={busy} weightKg={round.state.weightKg} level={round.state.level} submittedReps={round.submittedReps} onSave={logReps} />
             </RoundTimer>
           ) : <div className="flex gap-3">
-            <Button disabled={busy} onClick={startRound} className="h-11 flex-1 rounded-xl"><Play className="size-5" aria-hidden="true" />Start round</Button>
+            <Button disabled={busy} onClick={exerciseDone ? () => router.push("/workout") : startRound} className="h-11 flex-1 rounded-xl"><Play className="size-5" aria-hidden="true" />{startLabel}</Button>
             <WeightSheet mode="adjust" exercise={exercise} state={state} onSave={saveWeight}>
               <Button disabled={busy} variant="outline" size="icon" className="size-11 rounded-xl" aria-label="Adjust weight"><SlidersHorizontal className="size-5" aria-hidden="true" /></Button>
             </WeightSheet>

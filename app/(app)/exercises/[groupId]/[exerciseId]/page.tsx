@@ -86,7 +86,7 @@ export default async function ExercisePage({
           <Link href="/workout" className="inline-flex h-11 items-center text-sm text-brand hover:underline">Back to workout</Link>
         </div>
       )}
-      <ExerciseLevel key={exercise.id} exercise={exercise} state={state} sets={sets.map((set) => ({ ...set, createdAt: set.createdAt.toISOString() }))} />
+      <ExerciseLevel key={exercise.id} exercise={exercise} state={state} sets={sets.map((set) => ({ ...set, createdAt: set.createdAt.toISOString() }))} planStep={planStep && { done: planStep.done, total: planStep.sets }} />
     </section>
   );
 }

@@ -521,3 +521,27 @@ Implemented the five defects and both validation gaps without new dependencies o
 - **Plan review:** An independent read-only review confirmed that the keyboard symptoms share fixed bottom-sheet positioning and that the timer effects ignore the successful-log state. The plan now scopes keyboard behavior to the numeric sheets, requires a visible completed label, samples time at acknowledgement, and checks the zero-time edge. The exact Safari viewport behavior is still unverified, so the plan selects the CSS or `visualViewport` approach after device measurements. The timer fix belongs in client round state/display; the server action and set data should remain unchanged.
 - **Verification so far:** A simulated 400 px visible viewport kept Save above its edge in Calibrate, Adjust, and Log reps; a 260 px viewport let Calibrate scroll to Save. A temporary browser harness showed the timer frozen at `01:54` after 1.6 seconds and displayed `Round complete` plus `Next round`; the harness was removed. All 50 unit tests, lint (one pre-existing ignored-file warning), and production build passed. `git diff --check` passed.
 - **Remaining limitation:** A desktop simulated viewport cannot faithfully open the iPhone numeric keyboard. Physical-device confirmation is required before closing MOBILE-01 and MOBILE-02. Live successful/failed set-save and Undo flows have not been exercised against disposable data in this pass; MOBILE-03 remains open for that check.
+
+# Current issues — minimal repair plan (2026-09-28)
+
+## Specification
+
+- **Goal:** Address ISSUE-01 through ISSUE-04 in `context/current-issues.md` with small changes that preserve experience, equipment, and calibration limits.
+- **Scope:** Workout generation and preview, planned exercise action label, and measured navigation delay. No schema change or new dependency planned.
+- **Acceptance:** The preview states the plan's estimated duration and does not imply a short plan fills 90 minutes; full-body selection covers legs, push, and pull when eligible; planned exercise actions show accurate saved-set progress through completion and Undo; navigation gives prompt feedback, and any performance fix targets a measured bottleneck.
+
+## Tasks
+
+- [x] Trace the generator, profile limits, exercise flow, and navigation paths.
+- [x] Check the 90-minute plan against existing limits. Keep the safety limits, ask the generator to use feasible capacity, and show the actual timed-round estimate and constraint before Start. Label the choice as a maximum.
+- [x] Confirm the screenshot includes legs/push/pull. Ask for those patterns when eligible and label the pattern in the preview; avoid another coverage validator without evidence of invalid generated plans.
+- [x] Pass the planned step count to the exercise action. Show `Start round · 0/3`, then `Next round · 1/3`, and at `3/3` offer `Exercise done` returning to Workout. Reconcile local saves with server counts.
+- [x] Add immediate pending feedback to tabs and parallelize two independent layout reads. Production mobile timing remains an acceptance check because no authenticated phone trace is available in this workspace.
+- [x] Run 50 unit tests, 56 PostgreSQL integration checks, lint, production build, and diff checks; update issue statuses.
+- [ ] Commit and push `development`, open and merge its PR, and sync local `main`.
+
+## Review
+
+- **Design check:** ISSUE-01 and ISSUE-02 share a volume constraint. Current validation checks only that estimated time stays below the choice. A beginner can have at most four exercises and three sets each; calibrated-exercise limits can narrow the plan further. Raising volume globally to force 90 minutes would change training rules, so the narrow fix is to fill feasible capacity and display the honest estimate.
+- **Verification so far:** Read-only code inspection and the supplied screenshots. The screenshot shows seven planned sets across squat, bench press, and lat pulldown. No production timing trace or saved generation input was available; no cause is assigned to Vercel.
+- **Implementation review:** Kept the generator's profile/calibration caps and existing estimator. The workout screenshot contains seven sets across legs, push, and pull. UI changes reuse the planned-step query and Next.js link pending state; no schema or dependency change. All 50 unit tests and 56 PostgreSQL integration checks pass. Lint has one pre-existing warning in a Playwright support file, production build/TypeScript passes, and `git diff --check` passes. Physical-phone timing and an authenticated button-flow check remain unverified; the production speed contribution of network, Vercel, and database work is not yet known.

@@ -9,8 +9,8 @@ import { ActiveWorkoutBanner } from "@/components/workout/active-workout-banner"
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   await auth.protect();
   const userId = await requireUserId();
-  if (!await getTrainingProfile(userId)) redirect("/onboarding");
-  const session = await getActiveSession(userId);
+  const [profile, session] = await Promise.all([getTrainingProfile(userId), getActiveSession(userId)]);
+  if (!profile) redirect("/onboarding");
   return (
     <div className="min-h-dvh bg-page">
       <TopBar />

@@ -1,7 +1,7 @@
 "use client";
 
 import { Dumbbell, Flame, House } from "lucide-react";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 
 const tabs = [
@@ -9,6 +9,11 @@ const tabs = [
   { label: "Exercises", href: "/exercises", icon: Dumbbell },
   { label: "Workout", href: "/workout", icon: Flame },
 ] as const;
+
+function NavLabel({ label }: { label: string }) {
+  const { pending } = useLinkStatus();
+  return <span aria-live="polite">{pending ? `Opening ${label}…` : label}</span>;
+}
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -32,7 +37,7 @@ export function BottomNav() {
               className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-1 text-xs ${active ? "text-brand" : "text-copy-muted"}`}
             >
               <Icon className="h-5 w-5" aria-hidden="true" />
-              <span>{label}</span>
+              <NavLabel label={label} />
             </Link>
           );
         })}
