@@ -69,11 +69,12 @@ Gym AI is a mobile-first web app (installable as a PWA) that turns gym training 
 
 ### AI Workout Generator
 
-- Inputs: duration (30 / 45 / 60 / 90 min) and focus (Auto, Push, Pull, Legs, Upper, Full body). "Lower" is the same as Legs, so it is one option.
+- Inputs: duration (60 / 90 / 120 min) and focus (Auto, Push, Pull, Legs, Upper, Full body). "Lower" is the same as Legs, so it is one option.
 - Duration starts from saved preferences; an explicit choice overrides it. Auto selects Full body for 1–3 planned days, otherwise push/pull/legs by oldest training. Explicit focus always wins.
 - Context sent to the AI: five training-preference fields, eligible equipment, recent sessions, days since each muscle group was trained, current levels. No identity or medical fields.
-- New/beginner users receive at most four exercises and three sets each, within the requested duration. Equipment filters apply before spending an AI attempt; insufficient candidates produce a preferences/focus error.
-- Start checks current equipment and experience against the preview. Editing preferences does not rewrite active or historical workouts.
+- Full body uses 8–10 exercises and 1–2 sets each; at 60 minutes it has 9–12 total sets. Push/pull/legs use 4–5 exercises, 2–3 sets at 60 minutes and exactly 3 at 90/120. Calibration is a preference; new users receive the same session structure.
+- Planning includes 5–7 minutes per set with rest, based on catalog difficulty estimates. Warm-up is extra. Required muscle coverage, equipment, volume and time are validated; impossible candidate pools fail before charging a generation attempt.
+- Start checks the chosen duration, session targets and current equipment against the preview. Editing preferences does not rewrite active or historical workouts. Saved 30/45-minute preferences read as 60 for future sessions.
 - Output: catalog exercises with a number of sets and a short note each. The AI never sets weights, reps or levels; those come from the level system.
 
 ## Scope

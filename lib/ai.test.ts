@@ -6,13 +6,13 @@ import { candidateExercises } from "./plan.ts";
 
 const profile: TrainingProfile = { goal: "build_muscle", experience: "experienced", daysPerWeek: 4, sessionMinutes: 60, equipment: ["barbell", "dumbbell", "machine", "cable"] };
 
-test("AI request sends focus candidates and explicit calibrated caps without account data", async (t) => {
+test("AI request sends focus candidates and shared targets and timing without account data", async (t) => {
   const key = process.env.OPENAI_API_KEY;
   process.env.OPENAI_API_KEY = "test-no-network";
   const candidates = candidateExercises("legs");
   const output = {
     title: "Legs", summary: "A balanced session.",
-    exercises: candidates.slice(0, 3).map(({ id }) => ({ exerciseId: id, sets: 3, note: "Move with control." })),
+    exercises: candidates.slice(0, 4).map(({ id }) => ({ exerciseId: id, sets: 3, note: "Move with control." })),
   };
   let request: Record<string, unknown> = {};
   let responseOutput: unknown[] = [];
@@ -28,7 +28,7 @@ test("AI request sends focus candidates and explicit calibrated caps without acc
   }];
   try {
     for (const count of [0, 1, 2]) {
-      // Cable Crunch is eligible for legs; a calibrated push exercise must not affect its cap.
+      // Calibration affects candidate metadata, never the count/volume targets.
       const calibratedIds = ["barbell-back-squat", "cable-crunch"].slice(0, count);
       const levels = Object.fromEntries([...calibratedIds.map((id) => [id, 1]), ["barbell-bench-press", 2]]);
       responseOutput = message(output);
@@ -37,18 +37,25 @@ test("AI request sends focus candidates and explicit calibrated caps without acc
       } }), output);
       assert.equal(request.model, MODEL);
       assert.deepEqual(request.reasoning, { effort: "low" });
-      assert.ok(String(request.instructions).includes(`calibrated candidate IDs are ${JSON.stringify(calibratedIds)}`));
-      assert.ok(String(request.instructions).includes(`at most ${count >= 2 ? 1 : 3 - count} exercises outside that list`));
       const input = JSON.parse(String(request.input));
-      assert.deepEqual(Object.keys(input).sort(), ["candidates", "daysSinceGroup", "durationMin", "focus", "maxExercises", "maxSets", "recentSessions", "trainingProfile"]);
-      assert.equal(input.maxExercises, 6);
+      assert.deepEqual(Object.keys(input).sort(), ["candidates", "daysSinceGroup", "durationMin", "focus", "recentSessions", "requiredCoverage", "targets", "trainingProfile"]);
       assert.deepEqual(input.trainingProfile, profile);
-      assert.equal(input.maxSets, 5);
+      assert.equal(input.targets.maxExercises, 5);
+      assert.equal(input.targets.maxSets, 3);
       assert.match(String(request.instructions), /build_muscle/);
-      assert.match(String(request.instructions), /Experience changes cue clarity/);
+      assert.match(String(request.instructions), /Calibration never limits/);
+      assert.ok(input.requiredCoverage.some((r: { name: string }) => r.name === "hamstrings"));
+      assert.ok(input.candidates.every((e: { setMinutes: number; restMinutes: number }) => e.setMinutes >= 2 && e.restMinutes >= 3));
+      assert.ok(input.candidates.every((e: Record<string, unknown>) => !('roundMinutes' in e) && 'primary' in e && 'secondary' in e));
       assert.deepEqual(input.candidates.map((row: { id: string }) => row.id), candidates.map(({ id }) => id));
       assert.equal(input.candidates.find((row: { id: string }) => row.id === "cable-crunch").level, count === 2 ? 1 : null);
     }
+    responseOutput = message({ ...output, exercises: [...output.exercises].reverse() });
+    const ordered = await generatePlan({ focus: "legs", durationMin: 60, context: {
+      profile, lastTrained: {}, daysSinceGroup: {}, recentSessions: [], levels: {},
+    } });
+    assert.equal(ordered.exercises.at(-1)!.exerciseId, "leg-extension");
+    assert.deepEqual(new Set(ordered.exercises.map(e => e.exerciseId)), new Set(output.exercises.map(e => e.exerciseId)));
     responseOutput = [];
     await assert.rejects(() => generatePlan({ focus: "legs", durationMin: 60, context: {
       profile, lastTrained: {}, daysSinceGroup: {}, recentSessions: [], levels: {},
@@ -59,23 +66,22 @@ test("AI request sends focus candidates and explicit calibrated caps without acc
     } }));
     const dumbbells = candidateExercises("full_body", ["dumbbell"]);
     const beginner = { ...profile, experience: "new" as const, daysPerWeek: 3, sessionMinutes: 90 as const, equipment: ["dumbbell" as const] };
-    const personalized = { ...output, exercises: dumbbells.slice(0, 3).map(e => ({ exerciseId: e.id, sets: 3, note: "Control." })) };
+    const personalized = { ...output, exercises: dumbbells.slice(0, 8).map(e => ({ exerciseId: e.id, sets: 1, note: "Control." })) };
     responseOutput = message(personalized);
-    await generatePlan({ focus: "full_body", durationMin: 30, context: { profile: beginner, lastTrained: {}, daysSinceGroup: {}, recentSessions: [], levels: { "barbell-bench-press": 3, "lat-pulldown": 2 } } });
+    await generatePlan({ focus: "full_body", durationMin: 60, context: { profile: beginner, lastTrained: {}, daysSinceGroup: {}, recentSessions: [], levels: { "barbell-bench-press": 3, "lat-pulldown": 2 } } });
     const payload = JSON.parse(String(request.input));
     assert.deepEqual(payload.trainingProfile, beginner);
-    assert.equal(payload.durationMin, 30);
-    assert.equal(payload.maxExercises, 4);
-    assert.equal(payload.maxSets, 3);
+    assert.equal(payload.durationMin, 60);
+    assert.equal(payload.targets.maxExercises, 10);
+    assert.equal(payload.targets.maxSets, 2);
     assert.deepEqual(payload.candidates.map((e: { id: string }) => e.id), dumbbells.map(e => e.id));
-    assert.match(String(request.instructions), /calibrated candidate IDs are \[\]/);
-    assert.match(String(request.instructions), /at most 3 exercises outside/);
+    assert.ok(payload.candidates.every((e: { level: number | null }) => e.level === null));
     const format = (request.text as { format: { schema: { properties: { exercises: { maxItems: number; items: { properties: { sets: { maximum: number }; exerciseId: { enum: string[] } } } } } } } }).format;
-    assert.equal(format.schema.properties.exercises.maxItems, 4);
-    assert.equal(format.schema.properties.exercises.items.properties.sets.maximum, 3);
+    assert.equal(format.schema.properties.exercises.maxItems, 10);
+    assert.equal(format.schema.properties.exercises.items.properties.sets.maximum, 2);
     assert.deepEqual(format.schema.properties.exercises.items.properties.exerciseId.enum, dumbbells.map(e => e.id));
     responseOutput = message({ ...personalized, exercises: personalized.exercises.map(e => ({ ...e, sets: 4 })) });
-    await assert.rejects(() => generatePlan({ focus: "full_body", durationMin: 30, context: { profile: beginner, lastTrained: {}, daysSinceGroup: {}, recentSessions: [], levels: {} } }));
+    await assert.rejects(() => generatePlan({ focus: "full_body", durationMin: 60, context: { profile: beginner, lastTrained: {}, daysSinceGroup: {}, recentSessions: [], levels: {} } }));
   } finally {
     if (key === undefined) delete process.env.OPENAI_API_KEY;
     else process.env.OPENAI_API_KEY = key;

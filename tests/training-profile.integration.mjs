@@ -21,7 +21,7 @@ const { saveTrainingProfile } = await import("../actions/training-profile.ts");
 const { getTrainingProfile } = await import("../lib/queries.ts");
 const { prisma } = await import("../lib/prisma.ts");
 const profile = { goal: "build_muscle", experience: "new", daysPerWeek: 3, sessionMinutes: 60, equipment: ["barbell", "dumbbell"] };
-const edited = { goal: "general_fitness", experience: "regular", daysPerWeek: 7, sessionMinutes: 45, equipment: ["cable"] };
+const edited = { goal: "general_fitness", experience: "regular", daysPerWeek: 7, sessionMinutes: 120, equipment: ["cable"] };
 const users = [];
 function asUser(run) {
   const state = { userId: `spec16-test-${randomUUID()}`, invalidations: [] };

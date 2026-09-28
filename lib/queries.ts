@@ -4,11 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { getExercise, type MuscleGroupId, type MuscleHeadId } from "@/lib/catalog";
 import { workoutPlanSchema } from "@/lib/plan-schema";
 import type { TrainingProfile } from "@/lib/training-profile";
-import { trainingProfileSchema, trainingProfileSelect } from "@/lib/training-profile-schema";
+import { storedTrainingProfileSchema, trainingProfileSelect } from "@/lib/training-profile-schema";
 
 export async function getTrainingProfile(userId: string): Promise<TrainingProfile | null> {
   const row = await prisma.trainingProfile.findUnique({ where: { userId }, select: trainingProfileSelect });
-  const parsed = trainingProfileSchema.safeParse(row);
+  const parsed = storedTrainingProfileSchema.safeParse(row);
   return parsed.success ? parsed.data : null;
 }
 

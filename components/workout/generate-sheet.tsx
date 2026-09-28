@@ -68,7 +68,7 @@ export function GenerateSheet({ children, progress, hasActiveWorkout, defaultDur
     setError(null);
     startTransition(async () => {
       try {
-        const result = await callAction(() => startWorkout({ plan }));
+        const result = await callAction(() => startWorkout({ plan, durationMin }));
         if (!result.ok) setError(result.error);
         else {
           setOpen(false);
@@ -89,7 +89,7 @@ export function GenerateSheet({ children, progress, hasActiveWorkout, defaultDur
           <SheetTitle className="flex items-center gap-2 font-display text-xl">
             <Sparkles className="size-5 text-ai" aria-hidden="true" />Generate workout
           </SheetTitle>
-          <SheetDescription>Choose your maximum time and training focus. Your plan may be shorter based on your training profile and available exercises.</SheetDescription>
+          <SheetDescription>Choose time for working sets and rest. Warm-up is extra. For shorter sessions, use the Exercises menu.</SheetDescription>
           <Link href="/settings/training" className="inline-flex min-h-11 items-center text-sm text-ai underline underline-offset-4">Training preferences</Link>
         </SheetHeader>
         <SheetClose asChild>
@@ -116,7 +116,7 @@ export function GenerateSheet({ children, progress, hasActiveWorkout, defaultDur
           <form ref={inputsRef} className="space-y-5" onSubmit={(event) => { event.preventDefault(); generate(); }}>
             <div className="space-y-2">
               <h3 id={`${id}-duration`} className="text-sm font-medium">Time available (up to)</h3>
-              <ToggleGroup disabled={pending} type="single" variant="outline" value={String(durationMin)} aria-labelledby={`${id}-duration`} className="grid w-full grid-cols-4 gap-2" onValueChange={(value) => {
+              <ToggleGroup disabled={pending} type="single" variant="outline" value={String(durationMin)} aria-labelledby={`${id}-duration`} className="grid w-full grid-cols-3 gap-2" onValueChange={(value) => {
                 const next = DURATIONS_MIN.find((duration) => String(duration) === value);
                 if (next !== undefined) setDurationMin(next);
               }}>

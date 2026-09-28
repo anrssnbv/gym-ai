@@ -1,3 +1,41 @@
+# Install corrected workout generator — 2026-09-28
+
+## Specification and plan
+
+- Goal: install the agreed 60/90/120-minute prompt and generate three real previews.
+- Scope: shared difficulty timing, focus targets/coverage, duration controls, generation/Start validation, and legacy preference reads. Keep the live exercise timer and stored workouts intact.
+- Decisions: reuse catalog metadata and existing schemas; calibration is a preference. Isolation uses 2+3 minutes, machine/cable compounds 2.5+3.5, free-weight compounds 3+4. These are planning estimates, not measured exercise durations.
+- Acceptance: 60-minute full body has 8–10 exercises and 9–12 sets; splits have 4–5 exercises, 2–3 sets at 60 minutes and exactly 3 at 90/120; coverage and total time pass shared checks; old 30/45 preferences read as 60.
+
+- [x] Install prompt, shared policy, compatible reads and UI wording.
+- [x] Run focused regression tests, integration checks, lint/build and review the diff.
+- [x] Generate three varied real previews and record their exact sets, coverage and timing.
+- [ ] Commit/push development, merge its PR after checks and update local main.
+
+## Review
+
+Shared policy, actual prompt and duration controls are implemented. Three final real model samples pass: full body 60 → 9 exercises/10 sets/58 minutes, push 90 → 5/15/87, pull 120 → 5/15/81. Testing caught three-shoulder full-body output; explicit delt grouping, a worked example, a two-exercise group cap and stable compound-first sorting address it. No dependency, schema migration or live timer change. The unrelated user deletion of `context/feature-specs/09-15-review.md` is excluded. Verification: 47 unit tests pass; all generation/Start/profile integration checks pass. The full 58-check database run hit two transaction-start timeouts in unchanged exercise tests; rerunning that complete 16-check suite passes. Production build/TypeScript and diff checks pass; lint has one existing warning in an ignored browser helper. Independent review found no further issue. Live tests call the actual generator locally; a new browser UI smoke was not run.
+
+# Workout planning calibration review — 2026-09-28
+
+## Specification
+
+- Goal: explain the short 90-minute full-body result and propose the user's target of 7–8 exercises, 1–2 sets each, and 10–14 total sets.
+- Scope: review the prompt, candidates, profile/calibration limits, timing, generation validation, and Start behavior. Product implementation is outside this review.
+- Decisions: distinguish confirmed code behavior from the unknown production request; propose consistent policy before changing prompt wording.
+- Acceptance: concrete reproductions, policy conflicts, a candidate session, and a focused implementation/verification plan in `context/workout-planning-review.md`.
+
+## Tasks
+
+- [x] Trace generation, validation, timing, and Start; review relevant lessons.
+- [x] Reproduce short and incomplete full-body selections using local helpers; run existing planning tests.
+- [x] Review constraints independently and document proposed policy, example, prompt changes, and acceptance cases.
+- [x] Reopen the volume/coverage findings for the clarified target and record the reusable lesson.
+
+## Review
+
+The current rules permit a 3-exercise/8-set plan estimated at 18 minutes and even an all-chest plan under full body. An 8-exercise/12-set example estimates 28 minutes and is rejected when uncalibrated. All 14 planning tests pass, confirming current policy rather than the requested behavior. The review proposes changing calibration and beginner caps alongside explicit structure and coverage checks. No product code or production data changed; live model behavior and the actual production profile remain unverified.
+
 # Production incident repair plan — 2026-09-25
 
 ## Specification
@@ -545,3 +583,23 @@ Implemented the five defects and both validation gaps without new dependencies o
 - **Design check:** ISSUE-01 and ISSUE-02 share a volume constraint. Current validation checks only that estimated time stays below the choice. A beginner can have at most four exercises and three sets each; calibrated-exercise limits can narrow the plan further. Raising volume globally to force 90 minutes would change training rules, so the narrow fix is to fill feasible capacity and display the honest estimate.
 - **Verification so far:** Read-only code inspection and the supplied screenshots. The screenshot shows seven planned sets across squat, bench press, and lat pulldown. No production timing trace or saved generation input was available; no cause is assigned to Vercel.
 - **Implementation review:** Kept the generator's profile/calibration caps and existing estimator. The workout screenshot contains seven sets across legs, push, and pull. UI changes reuse the planned-step query and Next.js link pending state; no schema or dependency change. All 50 unit tests and 56 PostgreSQL integration checks pass. Lint has one pre-existing warning in a Playwright support file, production build/TypeScript passes, and `git diff --check` passes. Physical-phone timing and an authenticated button-flow check remain unverified; the production speed contribution of network, Vercel, and database work is not yet known.
+
+# Workout prompt rewrite — 60/90/120 minutes
+
+## Specification
+
+- Goal: turn the user's 5–7-minute set-and-rest budget into a clear, internally consistent generator prompt.
+- Scope: prompt draft, arithmetic review, compatibility findings, and necessary clarification. Application implementation follows resolution of the remaining timing decisions.
+- Acceptance: preserve the requested full-body and push shapes, account for rest, prevent combinations that exceed the time budget, and identify every existing rule that conflicts with the draft.
+
+## Tasks
+
+- [x] Read the current prompt, estimator, duration choices, profile validation, and prior review.
+- [x] Write the replacement prompt and verify example distributions for 60/90/120 minutes.
+- [x] Review contradictions and record required changes to schema, validation, catalog input, and legacy preference handling.
+- [x] Ask about exercise difficulty versus LV, longer split-session structure, and inclusion of warm-up/setup.
+- [x] Incorporate the user's answers: timing follows difficulty; longer split sessions use 3 sets per exercise and 12–15 total; warm-up is outside the selected duration.
+
+## Review
+
+Saved `context/workout-generator-prompt.md` and marked the prior target proposal superseded. At a six-minute cycle, full-body examples have 10/15/20 sets for 60/90/120 minutes, with warm-up outside that budget. Longer split sessions remain at 12–15 sets and three sets per exercise, so a 120-minute choice can finish earlier. Explicitly identified that 12 seven-minute cycles cannot fit 60 minutes and that existing calibration and beginner caps prevent the requested full-body shape. All clarification answers are incorporated. Product code and the deployed setup are unchanged; no live model calls are needed to verify the prompt specification's arithmetic.

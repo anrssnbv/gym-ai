@@ -7,33 +7,32 @@ import type { ActionResult } from "@/lib/action-result";
 import { requireUserId } from "@/lib/auth";
 import { sessionEnd } from "@/lib/game";
 import { findOpenSession, getPlanningContext } from "@/lib/queries";
-import { DAILY_PLAN_LIMIT, DURATIONS_MIN, FOCUS_CHOICES, candidateExercises, dedupeExercises, estimatePlanMinutes, isValidPlanSelection, profilePlanLimits, resolveProfileAutoFocus, type WorkoutPlan } from "@/lib/plan";
+import { DAILY_PLAN_LIMIT, DURATIONS_MIN, FOCUS_CHOICES, candidateExercises, canPlanWorkout, isValidPlanSelection, planTargets, resolveProfileAutoFocus, type WorkoutPlan } from "@/lib/plan";
 import { prisma } from "@/lib/prisma";
 import { planOutputSchema, workoutPlanSchema } from "@/lib/plan-schema";
-import { trainingProfileSchema, trainingProfileSelect } from "@/lib/training-profile-schema";
+import { storedTrainingProfileSchema, trainingProfileSelect } from "@/lib/training-profile-schema";
 import { serializableTransaction } from "@/lib/transactions";
 
+const durationSchema = z.union(DURATIONS_MIN.map((duration) => z.literal(duration)));
 const generationSchema = z.object({
-  durationMin: z.union(DURATIONS_MIN.map((duration) => z.literal(duration))),
+  durationMin: durationSchema,
   focus: z.enum(FOCUS_CHOICES),
 });
 const dailyLimit = { ok: false, error: "Daily limit reached (10 plans). Try again tomorrow." } as const;
 const generationError = { ok: false, error: "Couldn't generate a workout. Try again." } as const;
 const configurationError = { ok: false, error: "AI coach is not configured." } as const;
-const startSchema = z.object({ plan: workoutPlanSchema });
+const startSchema = z.object({ plan: workoutPlanSchema, durationMin: durationSchema });
 const missingProfile = { ok: false, error: "Complete your Training preferences before generating a workout." } as const;
 
 export async function startWorkout(input: unknown): Promise<ActionResult<{ sessionId: string }>> {
   const userId = await requireUserId();
   const parsed = startSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Invalid input" };
-  const { plan } = parsed.data;
+  const { plan, durationMin } = parsed.data;
   const result = await serializableTransaction<{ sessionId: string }>(async (tx) => {
-    const profile = trainingProfileSchema.safeParse(await tx.trainingProfile.findUnique({ where: { userId }, select: trainingProfileSelect }));
+    const profile = storedTrainingProfileSchema.safeParse(await tx.trainingProfile.findUnique({ where: { userId }, select: trainingProfileSelect }));
     if (!profile.success) return missingProfile;
-    const ids = new Set(candidateExercises(plan.focus, profile.data.equipment).map(({ id }) => id));
-    const limits = profilePlanLimits(90, profile.data.experience);
-    if (plan.exercises.length > limits.maxExercises || plan.exercises.some(({ exerciseId, sets }) => !ids.has(exerciseId) || sets > limits.maxSets)) {
+    if (!isValidPlanSelection(plan, durationMin, profile.data.equipment)) {
       return { ok: false, error: "Your Training preferences no longer match this plan. Generate a new workout." };
     }
     const now = new Date();
@@ -69,8 +68,8 @@ export async function generateWorkout(input: unknown): Promise<ActionResult<Work
     const { durationMin } = parsed.data;
     const focus = parsed.data.focus === "auto" ? resolveProfileAutoFocus(context.lastTrained, profile.daysPerWeek) : parsed.data.focus;
     const candidates = candidateExercises(focus, profile.equipment);
-    if (candidates.length < 3) return { ok: false, error: "Not enough exercises for this focus and equipment. Choose another focus or update Training preferences." };
-    const limits = profilePlanLimits(durationMin, profile.experience);
+    if (!canPlanWorkout(focus, durationMin, profile.equipment)) return { ok: false, error: "Not enough exercises for this focus and equipment. Choose another focus or update Training preferences." };
+    const limits = planTargets(focus, durationMin);
     if (!process.env.OPENAI_API_KEY || /[\s\p{Cc}]/u.test(process.env.OPENAI_API_KEY)) return configurationError;
     stage = "quota";
     if (await prisma.planGeneration.count({ where }) >= DAILY_PLAN_LIMIT) return dailyLimit;
@@ -84,11 +83,11 @@ export async function generateWorkout(input: unknown): Promise<ActionResult<Work
     stage = "provider";
     const output = await generatePlan({ focus, durationMin, context: { ...context, profile } });
     stage = "validation";
-    const selection = planOutputSchema(candidates.map(({ id }) => id), limits.maxExercises, limits.maxSets)
-      .safeParse(dedupeExercises({ ...output, focus }));
+    const selection = planOutputSchema(candidates.map(({ id }) => id), limits.maxExercises, limits.maxSets, limits.minExercises, limits.minSets)
+      .safeParse(output);
     if (!selection.success) return generationError;
     const plan = { ...selection.data, focus };
-    if (!isValidPlanSelection(plan, context.levels, profile.equipment) || estimatePlanMinutes(plan) > durationMin) return generationError;
+    if (!isValidPlanSelection(plan, durationMin, profile.equipment)) return generationError;
     return { ok: true, data: plan };
   } catch {
     console.error("Workout generation failed", { stage });

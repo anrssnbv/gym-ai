@@ -8,7 +8,7 @@ Environment: `https://gym-ai-seven-alpha.vercel.app` on an iPhone using 4G. Thes
 - **Observed:** The workout screenshot lists only Barbell Back Squat (3 sets), Barbell Bench Press (2), and Lat Pulldown (2). That is **7 visible planned sets**; the user recalled 8. The user estimates this workout would take about 30–40 minutes, far below the selected 90 minutes.
 - **Expected:** The generated plan should reasonably match the selected session length. If training preferences, equipment, or safety limits prevent that, show an honest estimated duration and explain the constraint before Start.
 - **Initial code finding:** The generator accepts as few as three exercises and validates only that its estimated time does not **exceed** the chosen duration. The 90-minute choice therefore acts as a ceiling, not a target. Confirm the saved profile and actual generation input before selecting a volume rule.
-- **Status:** Code addressed: the generator now aims to use feasible capacity, and the preview displays sets and estimated timed-round minutes with a clear explanation when shorter than the selected limit. The selected value is labeled as a maximum. A 90-minute session is still impossible under some experience and calibration limits; validate the wording and generated result on the user's device after deployment.
+- **Status:** Open after target clarification (2026-09-28). The user expects 7–8 exercises, 1–2 sets each, and 10–14 total sets for this full-body request. Existing preview wording does not meet that target. Local helpers accept a synthetic 3-exercise/8-set plan estimated at 18 minutes; calibration and beginner limits can prohibit the requested structure. See `context/workout-planning-review.md` for the policy proposal and verification plan. No new product fix has been applied in this review.
 
 ## ISSUE-02 — “Full body” coverage feels incomplete
 
@@ -16,7 +16,7 @@ Environment: `https://gym-ai-seven-alpha.vercel.app` on an iPhone using 4G. Thes
 - **Observed:** The same plan has one squat, one chest press, and one back pull. The squat does cover legs, so the screenshot is not literally chest and back only. The user still finds three exercises too narrow for a full 90-minute full-body session.
 - **Expected:** A full-body plan should cover the major areas in a balanced way for the available time and the user's training profile, or clearly describe a deliberately limited session.
 - **Initial code finding:** Full-body validation allows push, pull, legs, and core exercises but does not require a balanced selection across them. Assess coverage together with ISSUE-01; avoid adding volume that conflicts with experience or equipment limits.
-- **Status:** Code addressed: generation now explicitly asks for legs, push, and pull when eligible, and the preview labels each exercise's movement pattern. The supplied screenshot already contains all three patterns. Check a fresh full-body generation after deployment.
+- **Status:** Open after target clarification (2026-09-28). The three movement labels do not satisfy the user's broader coverage expectation. Local helpers also accept three chest presses as full body, proving coverage is not enforced. See `context/workout-planning-review.md` for explicit coverage, count, and set targets and the limits that must change together.
 
 ## ISSUE-03 — Set progress is unclear on the exercise action button
 

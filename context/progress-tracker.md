@@ -8,6 +8,8 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
+- Corrected workout generation (2026-09-28): actual prompt and shared 60/90/120-minute targets now count 5–7-minute work/rest cycles, preserve full-body coverage and cap longer split sessions at three sets per exercise. New users can receive full plans without calibration caps; historical plans/preferences remain readable. Three final live API samples pass (58/87/81 estimated minutes); see `workout-generator-live-review.md`. Delivery in progress.
+
 - Specs 01–16 implemented. QA fixes complete; physical-phone checks remain. Production is deployed at https://gym-ai-seven-alpha.vercel.app.
 - Production recovery: [PR #20](https://github.com/anrssnbv/gym-ai/pull/20) merged as `8140279`. The exposed OpenAI key was revoked and replaced in both Vercel projects; fresh Preview and Production builds passed. An authenticated primary-Production test generated a valid three-exercise Push Day with one attempt and no session or sets before Start. Sanitized new-deployment logs contained no key or generation failure. The second project's Clerk 500 remains resolved. PROD-01/02/03 are closed in `current-issues.md`; protected Preview prevented an authenticated browser test there.
 - Spec 16 implemented: profile storage/action, onboarding/edit UI, and personalized AI generation. All 50 unit tests, 56 database checks, lint, TypeScript, production build, and Playwright checks pass; physical-phone acceptance remains.
