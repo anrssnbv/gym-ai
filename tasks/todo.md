@@ -1,3 +1,22 @@
+# 17 Exercise movement illustrations — implementation
+
+## Specification and plan
+
+- Goal: implement the 50-image movement guide in Spec 17, including its two entry points and accessible text.
+- Scope: original local WebP artwork, matching content and inventory, shared toggle UI, and the specified audits. Preserve existing training and workout behavior.
+- Decisions: prove one representative illustration and image pipeline first; create each catalog image separately; reuse the catalog and Next Image; load each image only when opened.
+- Acceptance: every catalog ID has reviewed unique portrait artwork within the size budget and typed instructions; preview and detail controls work on mobile without loading closed images; existing actions and unknown-route behavior remain intact.
+
+- [x] Mark Spec 17 in progress and verify the catalog, UI, and Next Image API.
+- [x] Create, inspect, and inventory all 50 original exercise illustrations.
+- [x] Add typed exercise-specific text and the shared on-demand demo component to both entry points.
+- [x] Audit assets and content, check mobile UI and crossflows, and run test, lint, build.
+- [ ] Update tracker with evidence; commit and push development, merge PR into main, and sync local main.
+
+## Review
+
+The final artwork inventory has 50 reviewed original assets. A contact sheet of all 50 and full-size Hack Squat plus barbell, dumbbell, machine, cable, compound, and isolation examples were inspected; incorrect first-pass Preacher Curl and Back Extension art was regenerated. Asset audit, 48 unit tests, 58 database integration tests, TypeScript, lint (one preexisting script warning), and production build passed. At 360 × 640, the exercise page and a fixed 10-item plan preview showed no closed-state image requests and one request when Hack Squat opened, with working scroll and no horizontal overflow. Keyboard, image failure, invalid route, back link, and calibration entry were checked. The installed-iPhone check is pending. The live local Generate action returned its retry error, so the sheet check used the same PlanPreview component with a fixed plan. A disposable Clerk user and its two scoped rows were removed after testing. The unrelated deletion of `context/feature-specs/09-15-review.md` was preserved and excluded from delivery.
+
 # 17 Exercise movement illustrations — specification only
 
 ## Specification

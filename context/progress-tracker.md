@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Phase 5 — training preferences implemented through spec 16; specs 02, 05, 06, 07, 10, 15, and 16 physical-phone checks pending.
+- Phase 6 — exercise movement illustrations implemented through spec 17; physical-phone checks for specs 02, 05, 06, 07, 10, 15, 16, and 17 pending.
 
 ## Current Goal
 
-- Spec 17 is drafted for exercise movement illustrations. It plans one reviewed, locally hosted two-position image and short instructions for every current catalog exercise, available on the exercise page and on demand in generated plan previews. Specification only; no application assets or behavior changed yet. See `feature-specs/17-exercise-movement-illustrations.md`.
+- Spec 17 implemented (2026-09-28): 50 reviewed 960 × 1200 local WebPs (2.3 MB total; largest 76 KB), 50 typed instruction entries, and one shared on-demand control on the exercise page and plan preview. The all-50 contact sheet and Hack Squat/full-size modality examples were reviewed; `exercise-demos.test.ts` audits IDs, dimensions, size, uniqueness, text, and inventory. At 360 × 640, a 10-item preview requested zero images while closed and only Hack Squat's image when opened; the sheet stayed scrollable without horizontal overflow. Keyboard focus, image-error fallback, 404 routes, back navigation, and calibration-sheet opening passed. Unit 48/48, integration 58/58, TypeScript, lint (one existing Playwright-script warning), and production build passed. A live local Generate attempt returned the existing retry message, so preview interaction used a fixed plan; installed-iPhone check remains. See `feature-specs/17-exercise-movement-illustrations.md` and `exercise-demo-artwork.md`.
 
 - Corrected workout generation (2026-09-28): actual prompt and shared 60/90/120-minute targets now count 5–7-minute work/rest cycles, preserve full-body coverage and cap longer split sessions at three sets per exercise. New users can receive full plans without calibration caps; historical plans/preferences remain readable. Three final live API samples pass (58/87/81 estimated minutes); see `workout-generator-live-review.md`. Delivered in [PR #27](https://github.com/anrssnbv/gym-ai/pull/27), merged as `ed74d0d`; local main/development synced.
 
@@ -21,7 +21,7 @@ Update this file after every meaningful implementation change.
 
 ## Roadmap
 
-All specs 01–17 are written. 09–15 were written after 08; 16 was written after the QA fixes; 17 is a planned UI and artwork unit based on the current exercise and workout screens. If a unit changes names or contracts, update the later specs before running them (see `ai-workflow-rules.md` → Writing The Next Spec).
+All specs 01–17 are written. 09–15 were written after 08; 16 was written after the QA fixes; 17 is implemented on the current exercise and workout screens. If a unit changes names or contracts, update the later specs before running them (see `ai-workflow-rules.md` → Writing The Next Spec).
 
 ### Phase 1 — UI foundation (no backend)
 
@@ -56,7 +56,7 @@ All specs 01–17 are written. 09–15 were written after 08; 16 was written aft
 
 ### Phase 6 — Exercise guidance
 
-- [ ] 17 exercise-movement-illustrations — reviewed two-position movement image and short instructions for each catalog exercise, opened from the exercise detail page or a generated-plan preview. This adds visual form guidance alongside the muscle map. See `feature-specs/17-exercise-movement-illustrations.md`.
+- [x] 17 exercise-movement-illustrations — reviewed two-position movement image and short instructions for each catalog exercise, opened from the exercise detail page or a generated-plan preview. Installed-iPhone check pending. See `feature-specs/17-exercise-movement-illustrations.md`.
 
 ### Backlog (not planned)
 
