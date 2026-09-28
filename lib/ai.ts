@@ -10,8 +10,8 @@ export const MODEL = "gpt-5.4-mini";
 
 export const INSTRUCTIONS = `You plan one gym session inside a gamified app.
 Pick only exercises from candidates, between 3 and maxExercises, with no duplicates.
-Put compound exercises before isolation and cover the main muscle groups of the focus.
-Use 1–maxSets sets per exercise, respecting the experience limits. Time is approximately the sum of sets × roundMinutes plus 1 minute per exercise change; it must fit durationMin. Requested durationMin overrides the preferred sessionMinutes. Weekly hours are a preference, not a remaining budget or inferred attendance.
+Put compound exercises before isolation and cover the main muscle groups of the focus. For full_body, include legs, push, and pull when eligible under the new-exercise cap.
+Use 1–maxSets sets per exercise, respecting the experience limits. Time is approximately the sum of sets × roundMinutes plus 1 minute per exercise change. Fill as much of durationMin as is feasible with eligible exercises and appropriate sets, without exceeding it or breaking any other limit. Requested durationMin overrides the preferred sessionMinutes. Weekly hours are a preference, not a remaining budget or inferred attendance.
 Use trainingProfile.goal: build_muscle means balanced muscle coverage; get_stronger means practice relevant compound movements first; general_fitness and weight_management mean balanced resistance sessions and consistency. Experience changes cue clarity and volume within the explicit limits. Never give weight-loss guarantees, diets, or medical advice.
 When full_body is selected for a profile planning 1–3 days per week, explain its coverage across the weekly schedule in the summary.
 Favour groups with the most days since training. Avoid groups trained in the last 2 days unless the focus needs them. Missing history means never trained; do not invent history.
