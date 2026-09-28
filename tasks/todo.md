@@ -9,12 +9,12 @@
 
 - [x] Measure hosted navigation and inspect function, database, and client timing evidence.
 - [x] Identify the dominant cause and choose a narrow fix; review the design once.
-- [ ] Apply the fix and verify latency, behavior, tests, and build.
-- [ ] Update review and tracker; push `development`, merge PR, sync local `main`.
+- [x] Apply the fix and verify latency, behavior, tests, and build.
+- [x] Update review and tracker; push `development`, merge PR, sync local `main`.
 
 ## Review
 
-Before the change, entering Exercises triggered 10–14 category prefetch requests. In a signed-in hosted comparison, Exercises → Workout took 2.14 s with those requests and 0.78 s with them blocked; returning Home took 0.98 s versus 0.48 s. Vercel Fluid Compute was already enabled and functions ran in `iad1`, so a hosting move had no supporting evidence. The fix disables prefetch only on the 10 muscle cards. Local checks: 48 unit tests and Next.js production build passed; lint had one existing warning in `.playwright-mcp/production-smoke-login.js`. Hosted preview verification and release remain.
+Before the change, entering Exercises triggered 10–14 category prefetch requests. In a signed-in hosted comparison, Exercises → Workout took 2.14 s with those requests and 0.78 s with them blocked; returning Home took 0.98 s versus 0.48 s. Vercel Fluid Compute was already enabled and functions ran in `iad1`, so a hosting move had no supporting evidence. The fix disables prefetch only on the 10 muscle cards. Local checks: 48 unit tests and Next.js production build passed; lint had one existing warning in `.playwright-mcp/production-smoke-login.js`. Both Vercel preview checks passed. [PR #32](https://github.com/anrssnbv/gym-ai/pull/32) merged, both local branches synced, and the production deployment was Ready. On production, six tab changes triggered zero muscle category prefetches; the second Exercises → Workout transition took 0.54 s and Home took 0.46 s. Opening Chest still worked. The disposable Clerk user and its single profile row were removed. These timings are from desktop automation on one connection, so they do not establish exact latency on the user's 4G phone.
 
 # 17 Exercise movement illustrations — implementation
 
