@@ -1,3 +1,23 @@
+# Workout planning calibration review — 2026-09-28
+
+## Specification
+
+- Goal: explain the short 90-minute full-body result and propose the user's target of 7–8 exercises, 1–2 sets each, and 10–14 total sets.
+- Scope: review the prompt, candidates, profile/calibration limits, timing, generation validation, and Start behavior. Product implementation is outside this review.
+- Decisions: distinguish confirmed code behavior from the unknown production request; propose consistent policy before changing prompt wording.
+- Acceptance: concrete reproductions, policy conflicts, a candidate session, and a focused implementation/verification plan in `context/workout-planning-review.md`.
+
+## Tasks
+
+- [x] Trace generation, validation, timing, and Start; review relevant lessons.
+- [x] Reproduce short and incomplete full-body selections using local helpers; run existing planning tests.
+- [x] Review constraints independently and document proposed policy, example, prompt changes, and acceptance cases.
+- [x] Reopen the volume/coverage findings for the clarified target and record the reusable lesson.
+
+## Review
+
+The current rules permit a 3-exercise/8-set plan estimated at 18 minutes and even an all-chest plan under full body. An 8-exercise/12-set example estimates 28 minutes and is rejected when uncalibrated. All 14 planning tests pass, confirming current policy rather than the requested behavior. The review proposes changing calibration and beginner caps alongside explicit structure and coverage checks. No product code or production data changed; live model behavior and the actual production profile remain unverified.
+
 # Production incident repair plan — 2026-09-25
 
 ## Specification
