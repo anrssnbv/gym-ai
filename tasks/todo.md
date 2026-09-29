@@ -12,11 +12,11 @@
 - [x] Complete all 50 illustrations, inventory, and media checks.
 - [x] Manually test with Playwright; reproduce and fix discovered bugs.
 - [x] Review the diff and run focused tests, unit tests, lint, and production build.
-- [ ] Update evidence, push development, merge the PR after checks, sync main, and verify production.
+- [x] Update evidence, push development, merge the PR after checks, sync main, and verify production.
 
 ## Review
 
-Implementation and local verification complete. All 50 detailed anatomical assets reviewed (1.78 MiB total). 49 unit tests, 59 integration tests, lint (one existing helper warning), TypeScript, and build passed. Manual checks and fixes are recorded in `context/spec18-ui-ux-review.md`. Deployment and physical-device checks remain.
+Implementation and release verified through PR #36. All 50 detailed anatomical assets reviewed (1.78 MiB total). 49 unit tests, 59 integration tests, lint (one existing helper warning), TypeScript, and build passed. Both Vercel previews and production deployments passed. Authenticated production checks confirmed the UI, deferred images and preserved category-prefetch behavior; warm navigation remained near baseline. Disposable test identity/data removed. See `context/spec18-ui-ux-review.md`. Physical-device checks and final user screen review remain.
 
 # 18 UI/UX improvements — design proposal
 

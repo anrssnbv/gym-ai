@@ -35,7 +35,9 @@ All 50 replacement illustrations passed individual review and a final contact-sh
 
 ## Release verification
 
-Pending the final artwork audit and deployment. Hosted baseline on the same automated browser/connection: first Exercises/Workout/Home transitions 1499/1414/1422 ms; warm transitions 880/885/880 ms. These are one observed run, not a phone or network performance guarantee.
+[PR #36](https://github.com/anrssnbv/gym-ai/pull/36) merged as `4d8b637` after both Vercel preview checks passed. Both production deployment checks also passed. Authenticated production verification confirmed the new theme, Home resume control, workout hierarchy, exercise controls, readable captions, and the new 51,402-byte Hack Squat asset. Closed guides requested zero movement images; opening Hack Squat requested only that image. Six tab transitions triggered zero category prefetches and zero movement downloads. No horizontal overflow was found. The disposable test account and all its scoped database rows were removed.
+
+Hosted baseline on the same automated browser/connection: first Exercises/Workout/Home transitions 1499/1414/1422 ms; warm transitions 880/885/880 ms. After release, observed transitions were 902/893/1897 ms, then 904/932/887 ms warm. Warm timings remain close to baseline; one Home transition was slower. This small sample does not establish a speed improvement or a phone/network performance guarantee. The redesign adds no category or movement-image prefetching.
 
 ## Remaining device checks
 
