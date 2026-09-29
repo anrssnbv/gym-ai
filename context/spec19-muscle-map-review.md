@@ -22,7 +22,9 @@
 
 ## Release
 
-Pending. Hosted baseline for the disposable account: Exercises/Workout/Home 1458/1419/1406 ms, then 906/935/911 ms warm. Compare after deployment under the same browser/connection; this is a small observed sample, not a phone performance guarantee.
+[PR #38](https://github.com/anrssnbv/gym-ai/pull/38) merged as `5a79bbe`; both Vercel preview and production deployments passed. Authenticated production checks confirmed both exact asset sizes, all seven chest rows, Bench Press primary/secondary targeting, Home low/medium/high values, unique SVG IDs and no overflow. The menu fetched only the two anatomy assets with no category prefetch; the closed movement guide fetched no movement image. The disposable identity, 14 fixture sets, ended session and profile were removed.
+
+Hosted baseline for the same browser/account: Exercises/Workout/Home 1458/1419/1406 ms, then 906/935/911 ms warm. After deployment: 874/889/871 ms, then 880/857/859 ms. This small sample shows no observed slowdown; cache/server conditions differ, so it does not establish a speed improvement or phone performance guarantee.
 
 ## Remaining limitation
 

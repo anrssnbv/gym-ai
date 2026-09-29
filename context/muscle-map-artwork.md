@@ -1,6 +1,6 @@
 # Muscle-map artwork inventory
 
-Spec 19, 2026-09-29. **Pilots approved; integrated and verified locally.** The user approved the chest/back/shoulder pilots: “Use these pilots and continue.” Both assets are now used by the shared `MuscleMap` component.
+Spec 19, 2026-09-29. **Pilots approved; integrated, deployed and verified.** The user approved the chest/back/shoulder pilots: “Use these pilots and continue.” Both assets are now used by the shared `MuscleMap` component.
 
 Both figures are original images created with the built-in OpenAI image generator. No external artwork or licenses were used. The approved Spec 18 Cable Curl image supplied the style reference. Source PNGs remain in the local Codex generated-images archive; delivered WebPs are stored in `public/muscle-maps/`.
 
@@ -34,4 +34,4 @@ Audit: `node context/feature-specs/19-pilots/check-pilots.mjs`.
 
 The shared renderer preserves catalog labels, primary/secondary intensity and Home activity thresholds. Each instance uses unique React IDs for SVG filters, masks and crop clips. Small shoulder thumbnails show the primary side; group cards retain both views. Chest/back/shoulder framing extends upward to include the complete trapezius region. Exercise rows wrap at enlarged text sizes.
 
-App checks passed for all 50 exercise rows, seven representative full maps, zero/low/medium/high activity, image failure, keyboard focus, 360/390/1280 px layouts and 200% text. The exercise menu requests only the two shared anatomy assets, once each. Closed movement guides remain unloaded. See [verification](spec19-muscle-map-review.md). Physical iPhone review and release verification remain.
+App checks passed for all 50 exercise rows, seven representative full maps, zero/low/medium/high activity, image failure, keyboard focus, 360/390/1280 px layouts and 200% text. The exercise menu requests only the two shared anatomy assets, once each. Closed movement guides remain unloaded. See [verification](spec19-muscle-map-review.md). Production verification passed after PR #38; physical iPhone review remains.

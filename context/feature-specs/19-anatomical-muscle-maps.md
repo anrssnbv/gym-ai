@@ -1,6 +1,6 @@
 # 19 — Detailed anatomical muscle maps
 
-**Status: in progress — implementation and local verification complete; release pending.**
+**Status: implemented and deployed — physical-phone acceptance pending.**
 **Date:** 2026-09-29.
 
 Replace the geometric muscle maps with naturally proportioned, shaded anatomical figures matching the approved exercise movement illustrations from Spec 18. Prioritize the Exercises menu and exercise lists; preserve the shared map's existing target and activity highlighting.
@@ -85,7 +85,7 @@ This spec supersedes Spec 04's low-poly drawing and half-body mirroring requirem
 - [x] Network review shows only the required shared anatomy assets, no runtime generation, no movement-image downloads while closed and no category-prefetch regression.
 - [x] `npm test`, `npm run lint` and `npm run build` pass. No training-behavior changes occur.
 - [ ] Phone: the user confirms readable chest/back maps, image loading and scrolling on the actual device.
-- [ ] Inventory, UI context, progress tracker and release evidence are updated.
+- [x] Inventory, UI context, progress tracker and release evidence are updated.
 
 ## Review of the plan
 
