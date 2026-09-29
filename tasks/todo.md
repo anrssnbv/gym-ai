@@ -1,3 +1,21 @@
+# 18 UI/UX improvements — design proposal
+
+## Specification and plan
+
+- Goal: propose a cohesive app-wide design and anatomy-style movement illustrations, with a choice of visual directions.
+- Scope: audit existing UI and art, compare official fitness-app references, write Spec 18 and a static comparison board. Implementation follows the user's selection.
+- Decision: recommend a refined dark/lime theme; preserve the existing workout rules and shared components.
+- Acceptance: three distinct, comparable directions; a screen-by-screen plan; an all-50 illustration contract; mobile, accessibility, and performance verification gates.
+
+- [x] Review the current UI, representative artwork, prior specs, and official design references.
+- [x] Draft three visual directions and the implementation/acceptance plan.
+- [x] Inspect the comparison board and review document consistency; record the result.
+- [ ] User selects the visual direction before application implementation.
+
+## Review
+
+Spec 18 documents the current illustration mismatch and screen hierarchy, three design directions, a recommendation, the all-50 artwork contract, and implementation/acceptance gates. The static comparison board was inspected in Playwright at 1280 px and checked at 390 px without horizontal overflow. Official Hevy, Strong, Fitbod, and W3C references are linked. Existing progress buttons, stopped timers, keyboard-aware sheets, and deferred image loading are explicitly preserved. No app code changed; application tests were not needed. Proposal documents are committed locally while the user chooses a direction; implementation and release remain pending. The unrelated staged deletion of `09-15-review.md` is excluded.
+
 # Hosted page navigation latency — investigation and fix
 
 ## Specification and plan
