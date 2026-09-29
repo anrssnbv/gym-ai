@@ -10,7 +10,7 @@ export default async function TrainingSettingsPage() {
   if (!profile) redirect("/onboarding");
   return <div className="space-y-5">
     <Link href="/" className="inline-flex min-h-11 items-center text-sm text-copy-secondary underline underline-offset-4">Back to Home</Link>
-    <h1 className="font-display text-2xl font-semibold">Training preferences</h1>
+    <h1 className="font-display text-[1.75rem] font-semibold">Training preferences</h1>
     <TrainingProfileForm key={userId} initialProfile={profile} mode="edit" />
   </div>;
 }

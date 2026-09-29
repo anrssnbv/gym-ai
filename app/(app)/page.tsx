@@ -40,47 +40,24 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl text-copy">Home</h1>
-      <section aria-labelledby="power-heading" className="rounded-2xl border border-line bg-surface p-5">
-        <h2 id="power-heading" className="text-sm text-copy-muted">Power level</h2>
-        <div className="mt-2 flex items-baseline justify-between gap-3">
-          <p className="font-display text-4xl text-level tabular-nums">{dashboard.power}</p>
-          <p className="font-display text-lg text-copy">{rank.name}</p>
+      <h1 className="font-display text-[28px] text-copy">Home</h1>
+
+      <section aria-labelledby="next-action-heading" className="space-y-4 rounded-2xl border border-line bg-surface p-4">
+        <div className="space-y-2">
+          <h2 id="next-action-heading" className="text-xl font-semibold">{active ? "Keep your workout going" : "Ready for your next workout?"}</h2>
+          <p className="text-sm text-copy-muted">{active ? "Pick up where you left off." : "Build a workout around your time, equipment, and training goals."}</p>
         </div>
-        {rank.nextMin === null ? (
-          <p className="mt-4 text-sm text-level">Max rank</p>
+        {active ? (
+          <Button asChild className="h-12 w-full rounded-xl"><Link href="/workout">Resume workout</Link></Button>
         ) : (
-          <div className="mt-4 space-y-2">
-            <Progress value={((dashboard.power - rank.min) / (rank.nextMin - rank.min)) * 100} aria-label="Power level" aria-valuemin={rank.min} aria-valuemax={rank.nextMin} aria-valuenow={dashboard.power} aria-valuetext={`${dashboard.power} / ${rank.nextMin}`} className="h-2 [&_[data-slot=progress-indicator]]:bg-level" />
-            <p className="text-right text-xs text-copy-muted tabular-nums">{dashboard.power} / {rank.nextMin}</p>
-          </div>
+          <GenerateSheet progress={progress} hasActiveWorkout={false} defaultDurationMin={profile.sessionMinutes}>
+            <Button className="h-12 w-full rounded-xl"><Sparkles className="size-5" aria-hidden="true" />Generate workout</Button>
+          </GenerateSheet>
         )}
       </section>
 
-      <GenerateSheet progress={progress} hasActiveWorkout={!!active} defaultDurationMin={profile.sessionMinutes}>
-        <Button className="h-11 w-full rounded-xl bg-ai text-on-brand hover:bg-ai/90">
-          <Sparkles className="size-5" aria-hidden="true" />Generate workout
-        </Button>
-      </GenerateSheet>
-
-      <dl className="grid grid-cols-2 gap-3">
-        {stats.map((stat) => (
-          <div key={stat.label} className="min-w-0 rounded-2xl border border-line bg-surface p-4">
-            <dt className="text-sm text-copy-muted">{stat.label}</dt>
-            <dd className="mt-2 break-words font-display text-xl text-copy tabular-nums">{stat.value}</dd>
-            {stat.detail && <dd className="mt-1 text-xs text-copy-muted">{stat.detail}</dd>}
-          </div>
-        ))}
-      </dl>
-
-      <section aria-labelledby="muscles-heading" className="rounded-2xl border border-line bg-surface p-4">
-        <h2 id="muscles-heading" className="font-display text-lg text-copy">Muscles — last 7 days</h2>
-        <MuscleMap intensity={intensity} view="both" ariaLabel={activity.length ? `Muscles trained in the last 7 days: ${activity.join("; ")}.` : "No muscles trained in the last 7 days."} className="mx-auto mt-4 max-w-72" />
-        {activity.length === 0 && <p className="mt-3 text-center text-sm text-copy-muted">Log a set to light up your muscles.</p>}
-      </section>
-
       <section aria-labelledby="recent-heading" className="space-y-3">
-        <h2 id="recent-heading" className="font-display text-lg text-copy">Recent workouts</h2>
+        <h2 id="recent-heading" className="font-display text-xl text-copy">Recent workouts</h2>
         {dashboard.recent.length === 0 ? (
           <div className="rounded-2xl border border-line bg-surface p-5 text-center">
             <p className="text-sm text-copy-muted">No workouts yet.</p>
@@ -93,14 +70,46 @@ export default async function HomePage() {
                 <Link href={`/workout/${workout.id}`} className="flex min-h-11 items-center gap-3 p-4 hover:bg-elevated focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-copy"><LocalTime date={workout.startedAt.toISOString()} options={{ month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }} /></p>
-                    <p className="mt-1 text-xs text-copy-muted">{formatDuration(workout.endedAt.getTime() - workout.startedAt.getTime())} · {workout.setCount} sets</p>
+                    <p className="mt-1 text-sm text-copy-muted">{formatDuration(workout.endedAt.getTime() - workout.startedAt.getTime())} · {workout.setCount} sets</p>
                   </div>
-                  {workout.levelUps > 0 && <span className="shrink-0 text-xs font-semibold text-level">LV ↑ {workout.levelUps}</span>}
+                  {workout.levelUps > 0 && <span className="shrink-0 text-sm font-semibold text-level">LV ↑ {workout.levelUps}</span>}
                   <ChevronRight className="size-4 shrink-0 text-copy-muted" aria-hidden="true" />
                 </Link>
               </li>
             ))}
           </ul>
+        )}
+      </section>
+
+      <dl className="grid grid-cols-2 gap-3">
+        {stats.map((stat) => (
+          <div key={stat.label} className="min-w-0 rounded-2xl border border-line bg-surface p-4">
+            <dt className="text-sm text-copy-muted">{stat.label}</dt>
+            <dd className="mt-2 break-words font-display text-xl text-copy tabular-nums">{stat.value}</dd>
+            {stat.detail && <dd className="mt-1 text-sm text-copy-muted">{stat.detail}</dd>}
+          </div>
+        ))}
+      </dl>
+
+      <section aria-labelledby="muscles-heading" className="rounded-2xl border border-line bg-surface p-4">
+        <h2 id="muscles-heading" className="font-display text-xl text-copy">Muscles — last 7 days</h2>
+        <MuscleMap intensity={intensity} view="both" ariaLabel={activity.length ? `Muscles trained in the last 7 days: ${activity.join("; ")}.` : "No muscles trained in the last 7 days."} className="mx-auto mt-4 max-w-72" />
+        {activity.length === 0 && <p className="mt-3 text-center text-sm text-copy-muted">Log a set to light up your muscles.</p>}
+      </section>
+
+      <section aria-labelledby="power-heading" className="rounded-2xl border border-line bg-surface p-4">
+        <h2 id="power-heading" className="text-sm text-copy-muted">Power level</h2>
+        <div className="mt-2 flex items-baseline justify-between gap-3">
+          <p className="font-display text-2xl text-copy tabular-nums">{dashboard.power}</p>
+          <p className="font-display text-base text-copy">{rank.name}</p>
+        </div>
+        {rank.nextMin === null ? (
+          <p className="mt-4 text-sm text-copy-secondary">Max rank</p>
+        ) : (
+          <div className="mt-4 space-y-2">
+            <Progress value={((dashboard.power - rank.min) / (rank.nextMin - rank.min)) * 100} aria-label="Power level" aria-valuemin={rank.min} aria-valuemax={rank.nextMin} aria-valuenow={dashboard.power} aria-valuetext={`${dashboard.power} / ${rank.nextMin}`} className="h-2 [&_[data-slot=progress-indicator]]:bg-brand" />
+            <p className="text-right text-sm text-copy-muted tabular-nums">{dashboard.power} / {rank.nextMin}</p>
+          </div>
         )}
       </section>
     </div>

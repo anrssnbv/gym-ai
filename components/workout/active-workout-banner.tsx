@@ -41,14 +41,14 @@ export function ActiveWorkoutBanner({ session }: { session: ActiveSession | null
     }
   }, [stale, lastActivityAt, router]);
 
-  if (!session || stale || pathname === "/workout" || pathname.startsWith("/workout/")) return null;
+  if (!session || stale || pathname === "/" || pathname === "/workout" || pathname.startsWith("/workout/") || /^\/exercises\/[^/]+\/[^/]+$/.test(pathname)) return null;
 
   return (
-    <Link href="/workout" className="mb-6 flex min-h-11 w-full items-center gap-3 rounded-2xl border border-brand/30 bg-brand-dim p-3">
+    <Link href="/workout" className="mb-6 flex min-h-11 w-full items-center gap-3 rounded-2xl border border-line bg-surface p-3 focus-visible:outline-2 focus-visible:outline-brand">
       <span className="size-2 shrink-0 rounded-full bg-brand motion-safe:animate-pulse" aria-hidden="true" />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium">Workout in progress</p>
-        <p className="text-xs text-copy-muted">
+        <p className="text-sm text-copy-muted">
           <ElapsedTime since={session.startedAt} /> · {session.setCount} sets
         </p>
       </div>

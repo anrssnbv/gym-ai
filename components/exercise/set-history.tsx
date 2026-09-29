@@ -62,7 +62,7 @@ export function SetHistory({ exerciseId, sets, disabled, onUndo, onPendingChange
 
   return (
     <section className="mt-8" aria-label="Set history">
-      <h2 className="font-display text-xl text-copy">History</h2>
+      <h2 className="font-display text-xl text-copy">Set history</h2>
       {error && <p role="alert" className="mt-3 text-sm text-danger">{error}</p>}
       {retryTarget && error && (
         <Button variant="outline" className="mt-3 h-11" disabled={pending || disabled} onClick={() => undo(retryTarget)}>Retry Undo</Button>
@@ -71,11 +71,11 @@ export function SetHistory({ exerciseId, sets, disabled, onUndo, onPendingChange
         {sets.map((set, index) => (
           <li key={set.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
             <div className="space-y-1">
-              <p className="text-xs text-copy-muted">
+              <p className="text-sm text-copy-muted">
                 <LocalTime date={set.createdAt} options={{ month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }} />
               </p>
               <div className="flex items-center gap-2">
-                <span className="text-sm tabular-nums">{formatKg(set.weightKg)} × {set.reps}</span>
+                <span className="text-base tabular-nums">{formatKg(set.weightKg)} × {set.reps} reps</span>
                 {set.leveledUp && <Badge variant="secondary" className="text-level">LV ↑</Badge>}
               </div>
             </div>

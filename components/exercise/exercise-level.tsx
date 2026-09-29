@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState, useTransition } from "react";
+import { useCallback, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, Play, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ interface Round {
   limitReached: boolean;
 }
 
-export function ExerciseLevel({ exercise, state, sets, planStep }: { exercise: Exercise; state: LevelState | null; sets: HistorySet[]; planStep?: { done: number; total: number } | null }) {
+export function ExerciseLevel({ exercise, state, sets, planStep, learningContent }: { exercise: Exercise; state: LevelState | null; sets: HistorySet[]; planStep?: { done: number; total: number } | null; learningContent?: ReactNode }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -43,8 +43,8 @@ export function ExerciseLevel({ exercise, state, sets, planStep }: { exercise: E
   const seconds = roundSeconds(exercise.compound);
   const plannedDone = planStep ? Math.min(planStep.total, planStep.done + loggedIds.filter((id) => !sets.some((set) => set.id === id)).length) : null;
   const exerciseDone = planStep != null && plannedDone === planStep.total;
-  const nextLabel = planStep ? exerciseDone ? "Exercise done" : `Next round · ${plannedDone}/${planStep.total}` : "Next round";
-  const startLabel = planStep ? exerciseDone ? "Exercise done" : `Start round · ${plannedDone}/${planStep.total}` : "Start round";
+  const nextLabel = planStep ? `${exerciseDone ? "Exercise done" : "Next set"} · ${plannedDone}/${planStep.total}` : "Next set";
+  const startLabel = planStep ? `${exerciseDone ? "Exercise done" : plannedDone ? "Next set" : "Start set"} · ${plannedDone}/${planStep.total}` : "Start set";
 
   function startRound() {
     if (!state || busy) return;
@@ -104,7 +104,8 @@ export function ExerciseLevel({ exercise, state, sets, planStep }: { exercise: E
 
   return (
     <>
-    <section className="mt-8 space-y-5 rounded-2xl border border-line bg-surface p-5" aria-label="Exercise level">
+    <section className="mt-4 space-y-4 rounded-2xl border border-line bg-surface p-4" aria-label="Exercise controls">
+      {planStep && <p className="text-sm tabular-nums text-copy-secondary" aria-live="polite">{plannedDone} / {planStep.total} sets completed</p>}
       {state === null ? (
         <>
           <Lock className="size-8 text-copy-muted" aria-hidden="true" />
@@ -113,14 +114,14 @@ export function ExerciseLevel({ exercise, state, sets, planStep }: { exercise: E
             <p className="text-sm text-copy-muted">Pick a weight you can lift for 12 clean reps.</p>
           </div>
           <WeightSheet mode="calibrate" exercise={exercise} onSave={saveWeight}>
-            <Button disabled={busy} className="h-11 w-full rounded-xl">Calibrate</Button>
+            <Button disabled={busy} className="h-12 w-full rounded-xl">Calibrate</Button>
           </WeightSheet>
         </>
       ) : (
         <>
-          <h2 className="font-display text-2xl text-level">LV {state.level}</h2>
           <div className="space-y-1">
-            <p className="font-display text-4xl tabular-nums">{formatKg(state.weightKg)}</p>
+            <h2 className="text-sm font-medium text-copy-secondary">Working weight · Level {state.level}</h2>
+            <p className="text-4xl font-semibold tabular-nums break-words">{formatKg(state.weightKg)}</p>
             {exercise.equipment === "dumbbell" && <p className="text-sm text-copy-muted">per dumbbell</p>}
             <p className="text-sm text-copy-muted">+{formatKg(state.stepKg)} per level</p>
           </div>
@@ -137,13 +138,13 @@ export function ExerciseLevel({ exercise, state, sets, planStep }: { exercise: E
             </p>
           )}
           {round ? (
-            <RoundTimer key={round.setId} endsAt={round.endsAt} completedAt={round.completedAt} seconds={seconds} roundNumber={loggedIds.length + (round.result === null ? 1 : 0)} result={round.result} onCancel={() => setRound(null)} onNext={exerciseDone ? () => router.push("/workout") : startRound} nextLabel={nextLabel} nextButtonRef={nextButton} pending={busy}>
+            <RoundTimer key={round.setId} endsAt={round.endsAt} completedAt={round.completedAt} seconds={seconds} roundNumber={(plannedDone ?? loggedIds.length) + (round.result === null ? 1 : 0)} result={round.result} onCancel={() => setRound(null)} onNext={exerciseDone ? () => router.push("/workout") : startRound} nextLabel={nextLabel} nextButtonRef={nextButton} pending={busy}>
               <LogRepsSheet disabled={busy} weightKg={round.state.weightKg} level={round.state.level} submittedReps={round.submittedReps} onSave={logReps} />
             </RoundTimer>
           ) : <div className="flex gap-3">
-            <Button disabled={busy} onClick={exerciseDone ? () => router.push("/workout") : startRound} className="h-11 flex-1 rounded-xl"><Play className="size-5" aria-hidden="true" />{startLabel}</Button>
+            <Button disabled={busy} onClick={exerciseDone ? () => router.push("/workout") : startRound} className="min-h-12 h-auto min-w-0 flex-1 rounded-xl py-3 whitespace-normal"><Play className="size-5 shrink-0" aria-hidden="true" />{startLabel}</Button>
             <WeightSheet mode="adjust" exercise={exercise} state={state} onSave={saveWeight}>
-              <Button disabled={busy} variant="outline" size="icon" className="size-11 rounded-xl" aria-label="Adjust weight"><SlidersHorizontal className="size-5" aria-hidden="true" /></Button>
+              <Button disabled={busy} variant="outline" size="icon" className="size-12 shrink-0 rounded-xl" aria-label="Adjust weight"><SlidersHorizontal className="size-5" aria-hidden="true" /></Button>
             </WeightSheet>
           </div>}
           {round?.limitReached && (
@@ -156,6 +157,7 @@ export function ExerciseLevel({ exercise, state, sets, planStep }: { exercise: E
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       {reward && <LevelUpOverlay level={reward.level} weightKg={reward.weightKg} onClose={closeReward} />}
     </section>
+    {learningContent}
     <SetHistory exerciseId={exercise.id} sets={sets} disabled={pending} onUndo={reconcileUndo} onPendingChange={setUndoPending} />
     </>
   );

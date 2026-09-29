@@ -18,7 +18,7 @@ interface RoundTimerProps {
   pending?: boolean;
 }
 
-export function RoundTimer({ endsAt, completedAt, seconds, roundNumber, result, onCancel, onNext, nextLabel = "Next round", nextButtonRef, children, pending = false }: RoundTimerProps) {
+export function RoundTimer({ endsAt, completedAt, seconds, roundNumber, result, onCancel, onNext, nextLabel = "Next set", nextButtonRef, children, pending = false }: RoundTimerProps) {
   const [remaining, setRemaining] = useState(() => Math.max(0, Math.ceil((endsAt - Date.now()) / 1000)));
 
   useEffect(() => {
@@ -78,22 +78,22 @@ export function RoundTimer({ endsAt, completedAt, seconds, roundNumber, result, 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <p className="text-sm text-copy-muted">Round {roundNumber}</p>
-        <p className="font-mono text-5xl tabular-nums" role="timer" aria-label="Round time remaining">{time}</p>
-        <Progress value={displayedRemaining / seconds * 100} aria-label="Round time remaining" aria-valuenow={displayedRemaining} aria-valuemin={0} aria-valuemax={seconds} aria-valuetext={`${displayedRemaining} seconds remaining`} className="h-2" />
+        <p className="text-sm text-copy-muted">Set {roundNumber}</p>
+        <p className="font-mono text-5xl tabular-nums" role="timer" aria-label="Set time remaining">{time}</p>
+        <Progress value={displayedRemaining / seconds * 100} aria-label="Set time remaining" aria-valuenow={displayedRemaining} aria-valuemin={0} aria-valuemax={seconds} aria-valuetext={`${displayedRemaining} seconds remaining`} className="h-2" />
       </div>
       <div aria-live="polite" className="space-y-2 text-sm">
-        {result !== null && <p className="text-copy-muted">Round complete</p>}
+        {result !== null && <p className="text-copy-muted">Set saved</p>}
         {result !== null && <p>{result}</p>}
         {displayedRemaining === 0 && result === null && <p className="text-copy-muted">Time&apos;s up — log your reps</p>}
       </div>
       {result === null ? (
         <div className="flex gap-3">
           {children}
-          <Button disabled={pending} variant="secondary" className="h-11 rounded-xl" onClick={onCancel}>Cancel</Button>
+          <Button disabled={pending} variant="secondary" className="min-h-12 h-auto py-3 whitespace-normal rounded-xl" onClick={onCancel}>Cancel</Button>
         </div>
       ) : (
-        <Button disabled={pending} ref={nextButtonRef} autoFocus className="h-11 w-full rounded-xl" onClick={onNext}>{nextLabel}</Button>
+        <Button disabled={pending} ref={nextButtonRef} autoFocus className="min-h-12 h-auto py-3 whitespace-normal w-full rounded-xl" onClick={onNext}>{nextLabel}</Button>
       )}
     </div>
   );

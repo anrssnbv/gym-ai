@@ -34,7 +34,7 @@ export function BottomNav() {
               key={href}
               href={href}
               aria-current={active ? "page" : undefined}
-              className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-1 text-xs ${active ? "text-brand" : "text-copy-muted"}`}
+              className={`flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-1 border-t-2 px-1 text-sm ${active ? "border-brand bg-brand-dim font-medium text-brand" : "border-transparent text-copy-muted hover:bg-subtle"}`}
             >
               <Icon className="h-5 w-5" aria-hidden="true" />
               <NavLabel label={label} />

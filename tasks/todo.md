@@ -1,3 +1,43 @@
+# 18 UI/UX improvements — implementation
+
+## Specification and plan
+
+- Goal: implement the selected Anatomy Studio direction and verify the complete workout flow manually with Playwright.
+- Scope: shared theme, all existing screens, set-completion presentation, 50 consistent anatomical movement assets, documentation, and release checks.
+- Decisions: reuse existing components and behavior; use static local artwork; preserve authentication, workout generation rules, keyboard-aware sheets, and deferred media.
+- Acceptance: Spec 18 checklist, representative approved artwork, accurate planned counts including Undo, browser checks at phone/desktop sizes, existing tests/lint/build, and verified deployment. Physical iPhone checks require the user's device and will be reported separately.
+
+- [x] Produce and manually review representative screens; user approves three artwork pilots.
+- [x] Implement shared theme and consistent screen hierarchy.
+- [x] Complete all 50 illustrations, inventory, and media checks.
+- [x] Manually test with Playwright; reproduce and fix discovered bugs.
+- [x] Review the diff and run focused tests, unit tests, lint, and production build.
+- [ ] Update evidence, push development, merge the PR after checks, sync main, and verify production.
+
+## Review
+
+Implementation and local verification complete. All 50 detailed anatomical assets reviewed (1.78 MiB total). 49 unit tests, 59 integration tests, lint (one existing helper warning), TypeScript, and build passed. Manual checks and fixes are recorded in `context/spec18-ui-ux-review.md`. Deployment and physical-device checks remain.
+
+# 18 UI/UX improvements — design proposal
+
+## Specification and plan
+
+- Goal: propose a cohesive app-wide design and anatomy-style movement illustrations, with a choice of visual directions.
+- Scope: audit existing UI and art, compare official fitness-app references, write Spec 18 and a static comparison board. Implementation follows the user's selection.
+- Decision: the user selected Direction A — Anatomy Studio; preserve the existing workout rules and shared components.
+- Acceptance: three distinct, comparable directions; a screen-by-screen plan; an all-50 illustration contract; mobile, accessibility, and performance verification gates.
+
+- [x] Review the current UI, representative artwork, prior specs, and official design references.
+- [x] Draft three visual directions and the implementation/acceptance plan.
+- [x] Inspect the comparison board and review document consistency; record the result.
+- [x] User selects Direction A before application implementation.
+
+## Review
+
+Direction A selected on 2026-09-29. The spec now records the decision and separates it from the pending detailed-screen and illustration-pilot review. Selection changes are documentation only and remain committed locally.
+
+Spec 18 documents the current illustration mismatch and screen hierarchy, three design directions, a recommendation, the all-50 artwork contract, and implementation/acceptance gates. The static comparison board was inspected in Playwright at 1280 px and checked at 390 px without horizontal overflow. Official Hevy, Strong, Fitbod, and W3C references are linked. Existing progress buttons, stopped timers, keyboard-aware sheets, and deferred image loading are explicitly preserved. No app code changed; application tests were not needed. Proposal documents are committed locally while the user chooses a direction; implementation and release remain pending. The unrelated staged deletion of `09-15-review.md` is excluded.
+
 # Hosted page navigation latency — investigation and fix
 
 ## Specification and plan
