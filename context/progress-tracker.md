@@ -4,13 +4,13 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Spec 18 — **in progress**: implementing Direction A (Anatomy Studio), unified illustrations, and manual Playwright verification.
+- Spec 18 — **implemented and deployed**: Direction A, all 50 detailed anatomical illustrations, and manual Playwright verification complete. Physical iPhone checks and final user screen review remain.
 
 - Phase 6 — exercise movement illustrations implemented through spec 17; physical-phone checks for specs 02, 05, 06, 07, 10, 15, 16, and 17 pending.
 
 ## Current Goal
 
-- Spec 18 implementation (2026-09-29): the user chose **A — Anatomy Studio** and approved the revised detailed anatomical pilots. Shared theme and screen hierarchy are implemented; all 50 artwork replacements and release verification are being completed. Local manual Playwright checks cover saved-set progress, failed-save retry, Undo, timer freeze, generation, deferred images, onboarding, and enlarged text. See [UI/UX improvements](feature-specs/18-ui-ux-improvements.md).
+- Spec 18 delivered (2026-09-29): [PR #36](https://github.com/anrssnbv/gym-ai/pull/36), merge `4d8b637`. Shared Anatomy Studio theme and screen hierarchy, accurate planned progress with separate additional sets, and all 50 approved-style anatomical assets (1.78 MiB total). Manual Playwright checks passed for progress/retry/Undo/timer, real generation, deferred/error images, onboarding/settings, phone/desktop layouts and enlarged text. 49 unit tests, 59 integration tests, TypeScript, lint and build passed; both Vercel preview and production checks passed. Production warm navigation remained near baseline, with zero category/image prefetches. Disposable test identity and data removed. [Verification evidence](spec18-ui-ux-review.md) records fixes and remaining physical iPhone/user screen review.
 
 - Workout generation reliability (2026-09-28): [PR #34](https://github.com/anrssnbv/gym-ai/pull/34) retries a model response once when strict plan validation rejects it, without consuming a second daily attempt. The live failure was intermittent: one 60-minute full-body attempt returned the retry message, the next succeeded. PostgreSQL integration checks (11), 48 unit tests, lint, production build, and both Vercel checks passed. After release, an authenticated production attempt returned a valid 10-set full-body preview. The disposable test identity and its profile/attempt rows were removed. A second invalid model response can still fail; the precise first-failure stage was not visible in available logs.
 

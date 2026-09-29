@@ -1,13 +1,13 @@
 # 18 — Consistent UI/UX and exercise illustrations
 
-**Status: in progress — implementing Direction A.**
+**Status: implemented and deployed — physical iPhone checks and final user screen review remain.**
 **Date:** 2026-09-29. The user selected **A — Anatomy Studio**. Directions B and C remain comparison references only.
 
 ## Selected direction
 
 Use charcoal backgrounds, soft lime actions and muscle highlights, neutral gray anatomical figures and equipment, Geist Sans typography, and spacious layouts. Apply the shared interaction and illustration contracts below. Keep a single dark theme for this release.
 
-Implementation is underway. The user rejected the first schematic SVG pilots, requested more detailed anatomy, then approved the revised Hack Squat, Bench Press, and Cable Curl samples: “Use this detailed style.” The collection uses detailed gray anatomical figures, lime/olive muscle regions, charcoal backgrounds, and two vertically stacked positions in local WebP assets.
+Implementation is delivered in PR #36. The user rejected the first schematic SVG pilots, requested more detailed anatomy, then approved the revised Hack Squat, Bench Press, and Cable Curl samples: “Use this detailed style.” The collection uses detailed gray anatomical figures, lime/olive muscle regions, charcoal backgrounds, and two vertically stacked positions in local WebP assets.
 
 ## Goal
 
@@ -155,17 +155,17 @@ The first artwork milestone is **three reviewed examples**, including Hack Squat
 - [ ] No horizontal overflow, clipped labels, hidden focused controls, or keyboard-covered primary action in tested layouts. Desktop/mobile viewport and 200% text checks pass; physical iPhone keyboard check remains.
 - [x] Normal text contrast is at least 4.5:1; large text and meaningful non-text controls at least 3:1, following [W3C text contrast guidance](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html) and [non-text contrast guidance](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html). Visible focus, keyboard access, screen-reader names, and reduced motion remain functional.
 - [x] Current exercise limits, logging, Undo, leveling, generation, ownership, and authentication checks still pass.
-- [ ] Hosted performance and deferred-media checks pass; physical-phone findings are recorded explicitly.
+- [x] Hosted performance and deferred-media checks pass; physical-phone findings are recorded explicitly. Warm navigation remained near baseline; physical iPhone checks remain pending.
 
 ## Boundaries and compatibility
 
 No AI prompt, workout prescription, database migration, hosting move, pricing change, social feature, theme switcher, video library, or new training metric belongs in this spec. Preserve server validation and authorization.
 
-Direction A in this spec is the target visual direction, superseding the design guidance in spec 01 / `ui-context.md` and the artwork style in spec 17 for the upcoming implementation. Spec 17's exercise identity, educational purpose, deferred loading, accessible text, and coverage requirements remain. Production appearance and `ui-context.md` will be updated during implementation.
+Direction A in this spec is the target visual direction, superseding the design guidance in spec 01 / `ui-context.md` and the artwork style in spec 17 for the upcoming implementation. Spec 17's exercise identity, educational purpose, deferred loading, accessible text, and coverage requirements remain. Production appearance and `ui-context.md` now reflect Direction A.
 
 ## Review of the proposal
 
-The smallest coherent solution is shared tokens plus targeted layout changes and replacement art. A palette-only change would leave exercise actions too far down the page and retain the illustration mismatch. A full app rewrite would add risk without solving more of the stated problem. The user has selected Direction A; detailed screen and artwork review remains the next milestone.
+The smallest coherent solution is shared tokens plus targeted layout changes and replacement art. A palette-only change would leave exercise actions too far down the page and retain the illustration mismatch. A full app rewrite would add risk without solving more of the stated problem. The user selected Direction A and approved the detailed artwork pilots; implementation and release evidence appears below.
 
 ## Implementation evidence
 
