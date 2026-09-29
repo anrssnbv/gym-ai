@@ -1,3 +1,18 @@
+# 19 Anatomical muscle maps — specification
+
+- Goal: specify proportionate muscle maps matching the approved detailed movement guides.
+- Scope: documentation only; preserve dynamic target/activity highlights and existing training behavior.
+- Decision: two neutral shaded figures with aligned catalog regions; review chest/back/shoulder pilots before full coverage.
+- Acceptance: exact shared-component scope, framing/asset contracts, preserved semantics, and observable visual/accessibility/performance checks.
+
+- [x] Inspect current geometry, crops and all shared-map callers.
+- [x] Write Spec 19 with implementation steps and acceptance criteria.
+- [x] Review scope against the user request and current component contracts.
+
+## Review
+
+Spec 19 records the reported chest/back proportion problem and requires detailed shaded anatomy, consistent framing and registered highlights. It preserves all 50 movement guides and Home activity semantics. No application code or artwork changed; implementation and user pilot review remain pending.
+
 # 18 UI/UX improvements — implementation
 
 ## Specification and plan
