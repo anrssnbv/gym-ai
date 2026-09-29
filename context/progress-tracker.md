@@ -4,7 +4,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Spec 19 — **in progress**: pilots approved; all 27 anatomical regions integrated and locally verified. Release verification pending.
+- Spec 19 — **implemented and deployed**: approved anatomy covers all 27 regions; local and production verification pass. Physical-phone acceptance pending.
 
 - Spec 18 — **implemented and deployed**: Direction A, all 50 detailed anatomical illustrations, and manual Playwright verification complete. Physical iPhone checks and final user screen review remain.
 
@@ -12,7 +12,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
-- Spec 19 in progress (2026-09-29): [Detailed anatomical muscle maps](feature-specs/19-anatomical-muscle-maps.md). Pilots approved, both detailed base figures and all 27 region overlays integrated. All 50 exercise rows, seven full maps, Home activity levels, image failure, network behavior and enlarged text checked in Playwright. Tests, TypeScript, lint and build pass. Release pending; see [verification](spec19-muscle-map-review.md).
+- Spec 19 implemented and deployed (2026-09-29): [Detailed anatomical muscle maps](feature-specs/19-anatomical-muscle-maps.md). Pilots approved, both detailed base figures and all 27 region overlays integrated. All 50 exercise rows, seven full maps, Home activity levels, image failure, network behavior and enlarged text checked in Playwright. Tests, TypeScript, lint and build pass. [PR #38](https://github.com/anrssnbv/gym-ai/pull/38) merged; both production deployments and authenticated smoke checks passed. Physical-phone acceptance remains; see [verification](spec19-muscle-map-review.md).
 
 - Spec 18 delivered (2026-09-29): [PR #36](https://github.com/anrssnbv/gym-ai/pull/36), merge `4d8b637`. Shared Anatomy Studio theme and screen hierarchy, accurate planned progress with separate additional sets, and all 50 approved-style anatomical assets (1.78 MiB total). Manual Playwright checks passed for progress/retry/Undo/timer, real generation, deferred/error images, onboarding/settings, phone/desktop layouts and enlarged text. 49 unit tests, 59 integration tests, TypeScript, lint and build passed; both Vercel preview and production checks passed. Production warm navigation remained near baseline, with zero category/image prefetches. Disposable test identity and data removed. [Verification evidence](spec18-ui-ux-review.md) records fixes and remaining physical iPhone/user screen review.
 

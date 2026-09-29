@@ -10,11 +10,11 @@
 - [x] Obtain user pilot review required by Spec 19.
 - [x] Complete catalog regions and integrate shared renderer and framing.
 - [x] Verify image failure, accessibility, activity states, layouts and network behavior; run tests/lint/build.
-- [ ] Update evidence and release through development → PR → main.
+- [x] Update evidence and release through development → PR → main.
 
 ## Review
 
-Pilots approved and implementation verified locally: all 27 heads, 50 exercise rows, activity states, image failure and text zoom. See `context/spec19-muscle-map-review.md`. Release pending; physical-phone acceptance remains. The unrelated staged deletion of `context/feature-specs/09-15-review.md` remains excluded.
+Pilots approved and implementation verified locally: all 27 heads, 50 exercise rows, activity states, image failure and text zoom. See `context/spec19-muscle-map-review.md`. PR #38 merged and production verified; physical-phone acceptance remains. The unrelated staged deletion of `context/feature-specs/09-15-review.md` remains excluded.
 
 # 19 Anatomical muscle maps — specification
 
