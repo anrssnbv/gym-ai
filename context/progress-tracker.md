@@ -4,13 +4,15 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
+- Spec 19 — **in progress**: pilots approved; all 27 anatomical regions integrated and locally verified. Release verification pending.
+
 - Spec 18 — **implemented and deployed**: Direction A, all 50 detailed anatomical illustrations, and manual Playwright verification complete. Physical iPhone checks and final user screen review remain.
 
 - Phase 6 — exercise movement illustrations implemented through spec 17; physical-phone checks for specs 02, 05, 06, 07, 10, 15, 16, and 17 pending.
 
 ## Current Goal
 
-- Spec 19 specified (2026-09-29): [Detailed anatomical muscle maps](feature-specs/19-anatomical-muscle-maps.md) addresses overly wide chest/short back shapes and the style mismatch with movement guides. Plan: two proportionate shaded body figures, registered catalog highlights, consistent framing, and reviewed chest/back/shoulder pilots. Implementation has not started.
+- Spec 19 in progress (2026-09-29): [Detailed anatomical muscle maps](feature-specs/19-anatomical-muscle-maps.md). Pilots approved, both detailed base figures and all 27 region overlays integrated. All 50 exercise rows, seven full maps, Home activity levels, image failure, network behavior and enlarged text checked in Playwright. Tests, TypeScript, lint and build pass. Release pending; see [verification](spec19-muscle-map-review.md).
 
 - Spec 18 delivered (2026-09-29): [PR #36](https://github.com/anrssnbv/gym-ai/pull/36), merge `4d8b637`. Shared Anatomy Studio theme and screen hierarchy, accurate planned progress with separate additional sets, and all 50 approved-style anatomical assets (1.78 MiB total). Manual Playwright checks passed for progress/retry/Undo/timer, real generation, deferred/error images, onboarding/settings, phone/desktop layouts and enlarged text. 49 unit tests, 59 integration tests, TypeScript, lint and build passed; both Vercel preview and production checks passed. Production warm navigation remained near baseline, with zero category/image prefetches. Disposable test identity and data removed. [Verification evidence](spec18-ui-ux-review.md) records fixes and remaining physical iPhone/user screen review.
 

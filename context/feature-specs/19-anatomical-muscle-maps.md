@@ -1,6 +1,6 @@
 # 19 — Detailed anatomical muscle maps
 
-**Status: specified; implementation not started.**
+**Status: in progress — implementation and local verification complete; release pending.**
 **Date:** 2026-09-29.
 
 Replace the geometric muscle maps with naturally proportioned, shaded anatomical figures matching the approved exercise movement illustrations from Spec 18. Prioritize the Exercises menu and exercise lists; preserve the shared map's existing target and activity highlighting.
@@ -74,19 +74,23 @@ This spec supersedes Spec 04's low-poly drawing and half-body mirroring requirem
 
 ## Check when done
 
-- [ ] User approves chest, back and shoulder pilots at real card/thumbnail/full-map sizes.
-- [ ] Chest width and back length look natural; all ten group cards use coherent framing and match the movement-guide style.
-- [ ] Every catalog head has correctly registered, visible coverage in an appropriate view; no missing regions or highlights spilling onto adjacent muscles.
-- [ ] Bench Press, Incline Dumbbell Press, Hammer Curl, Overhead Cable Extension, Leg Extension, Seated Calf Raise and Face Pull retain their distinct primary/secondary targeting.
-- [ ] Full front/rear and zero/low/medium/high Home states preserve existing data semantics and accessible descriptions.
-- [ ] Asset audit confirms both files, dimensions and size limits; geometry tests check complete IDs and new canvas bounds. Remove obsolete half-body assumptions from tests.
-- [ ] Playwright checks at 360 × 640, 390 × 844, desktop and 200% text show no distortion, clipped targets, horizontal overflow or unreadable labels.
-- [ ] Blocked asset requests leave understandable text and usable controls; keyboard and screen-reader names remain intact.
-- [ ] Network review shows only the required shared anatomy assets, no runtime generation, no movement-image downloads while closed and no category-prefetch regression.
-- [ ] `npm test`, `npm run lint` and `npm run build` pass. No training-behavior changes occur.
+- [x] User approves chest, back and shoulder pilots at real card/thumbnail/full-map sizes. Approved 2026-09-29: “Use these pilots and continue.”
+- [x] Chest width and back length look natural; all ten group cards use coherent framing and match the movement-guide style.
+- [x] Every catalog head has correctly registered, visible coverage in an appropriate view; no missing regions or highlights spilling onto adjacent muscles.
+- [x] Bench Press, Incline Dumbbell Press, Hammer Curl, Overhead Cable Extension, Leg Extension, Seated Calf Raise and Face Pull retain their distinct primary/secondary targeting.
+- [x] Full front/rear and zero/low/medium/high Home states preserve existing data semantics and accessible descriptions.
+- [x] Asset audit confirms both files, dimensions and size limits; geometry tests check complete IDs and new canvas bounds. Remove obsolete half-body assumptions from tests.
+- [x] Playwright checks at 360 × 640, 390 × 844, desktop and 200% text show no distortion, clipped targets, horizontal overflow or unreadable labels.
+- [x] Blocked asset requests leave understandable text and usable controls; keyboard and screen-reader names remain intact.
+- [x] Network review shows only the required shared anatomy assets, no runtime generation, no movement-image downloads while closed and no category-prefetch regression.
+- [x] `npm test`, `npm run lint` and `npm run build` pass. No training-behavior changes occur.
 - [ ] Phone: the user confirms readable chest/back maps, image loading and scrolling on the actual device.
 - [ ] Inventory, UI context, progress tracker and release evidence are updated.
 
 ## Review of the plan
 
 Two shared base figures with aligned highlights retain the current dynamic behavior and avoid dozens of separately maintained target images. The main risk is highlight registration, so the pilot includes both neutral anatomy and working overlays. Correcting only crops or recoloring the existing polygons would not meet the requested visual change.
+
+## Implementation evidence
+
+See [verification](../spec19-muscle-map-review.md) and [artwork inventory](../muscle-map-artwork.md). Small shoulder thumbnails select the primary side for readability; the group card and full map retain both views.

@@ -27,7 +27,7 @@ export default async function ExercisesPage() {
             prefetch={false}
             className="min-w-0 rounded-2xl border border-line bg-surface p-4 transition-colors hover:border-line-strong focus-visible:outline-2 focus-visible:outline-brand"
           >
-            <MuscleMap intensity={Object.fromEntries(group.heads.map((id) => [id, 3 as const]))} focusGroup={group.id} className="mb-4 h-20 w-full" />
+            <MuscleMap intensity={Object.fromEntries(group.heads.map((id) => [id, 3 as const]))} focusGroup={group.id} className="mb-4 h-30 w-full" />
             <h2 className="font-display text-xl text-copy">{group.name}</h2>
             <p className="mt-1 text-sm text-copy-secondary">
               {exercises.length} exercises
