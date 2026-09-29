@@ -1,7 +1,13 @@
 # 18 — Consistent UI/UX and exercise illustrations
 
-**Status: proposal — awaiting the user's visual direction.**
-**Date:** 2026-09-29. This task produces a design plan and comparison, not an application redesign. Choose A, B, or C before implementation. The recommendation is A.
+**Status: Direction A selected — implementation pending.**
+**Date:** 2026-09-29. The user selected **A — Anatomy Studio**. Directions B and C remain comparison references only.
+
+## Selected direction
+
+Use charcoal backgrounds, soft lime actions and muscle highlights, neutral gray anatomical figures and equipment, Geist Sans typography, and spacious layouts. Apply the shared interaction and illustration contracts below. Keep a single dark theme for this release.
+
+Next design milestone: detailed exercise and active-workout screens plus the Hack Squat, Bench Press, and Cable Curl illustration pilots. Direction selection is complete; the detailed screens and artwork have not yet been reviewed or implemented.
 
 ## Goal
 
@@ -47,7 +53,7 @@ Open [the comparison board](18-ui-ux-directions.html). All three use the same ex
 | Levels and rewards | Small secondary badges | Inline text beside progress | Small metadata beside weight |
 | Tradeoff | Least visual migration; best continuity with existing muscle maps | Needs a full light-theme review of Clerk, sheets, inputs, maps, and PWA chrome | More information per screen; requires care to avoid small or crowded controls |
 
-All directions use Geist Sans, consistent icons, clear focus styles, and one action color. Choose one theme for the first release; a theme switcher is separate scope. Palette values are proposals and must pass contrast checks before adoption.
+All directions use Geist Sans, consistent icons, clear focus styles, and one action color. Direction A is selected for the first release; a theme switcher is separate scope. Palette values must pass contrast checks before adoption.
 
 **Recommendation:** A keeps the recognizable lime/anatomy identity while removing visual competition. The largest usability improvement comes from information order and consistent states, not recoloring alone.
 
@@ -103,11 +109,11 @@ The requested change is a different drawing style, not another photorealistic ge
 
 The first artwork milestone is **three reviewed examples**, including Hack Squat, before producing the entire set. The current task does not generate replacement art.
 
-## Implementation plan after selection
+## Implementation plan for Direction A
 
 ### 1. Confirm direction and a representative screen
 
-- Record A/B/C and any requested adjustment in this spec.
+- Direction A is recorded as selected. Use its palette and spacious layout for the detailed designs.
 - Produce exercise-detail and active-workout designs with real long names, zero/partial/complete progress, and one matching anatomy/movement specimen.
 - Review the selected design with the user before rolling it across the app. Confirm the three illustration pilots before catalog-wide replacement.
 
@@ -138,7 +144,8 @@ The first artwork milestone is **three reviewed examples**, including Hack Squat
 
 ## Acceptance checklist
 
-- [ ] User chooses one direction; spec records the choice and approved pilots.
+- [x] User chooses Direction A; spec records the choice.
+- [ ] Detailed screens and three illustration pilots reviewed with the user.
 - [ ] All listed screens follow the same typography, spacing, action hierarchy, icon style, and states.
 - [ ] Workout controls appear before large learning sections; expanded content remains reachable without overlap.
 - [ ] `0/3 → 1/3 → 3/3`, failed save, Undo, manual exercise, and final return to Workout behave correctly.
@@ -154,8 +161,8 @@ The first artwork milestone is **three reviewed examples**, including Hack Squat
 
 No AI prompt, workout prescription, database migration, hosting move, pricing change, social feature, theme switcher, video library, or new training metric belongs in this spec. Preserve server validation and authorization.
 
-After selection, this spec supersedes the visual direction in spec 01 / `ui-context.md` and the artwork style in spec 17. Spec 17's exercise identity, educational purpose, deferred loading, accessible text, and coverage requirements remain. Until selection, existing specs and production appearance remain authoritative.
+Direction A in this spec is the target visual direction, superseding the design guidance in spec 01 / `ui-context.md` and the artwork style in spec 17 for the upcoming implementation. Spec 17's exercise identity, educational purpose, deferred loading, accessible text, and coverage requirements remain. Production appearance and `ui-context.md` will be updated during implementation.
 
 ## Review of the proposal
 
-The smallest coherent solution is shared tokens plus targeted layout changes and replacement art. A palette-only change would leave exercise actions too far down the page and retain the illustration mismatch. A full app rewrite would add risk without solving more of the stated problem. Start with A unless the user selects another direction; do not interpret this recommendation as approval.
+The smallest coherent solution is shared tokens plus targeted layout changes and replacement art. A palette-only change would leave exercise actions too far down the page and retain the illustration mismatch. A full app rewrite would add risk without solving more of the stated problem. The user has selected Direction A; detailed screen and artwork review remains the next milestone.

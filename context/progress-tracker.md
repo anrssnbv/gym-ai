@@ -8,7 +8,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
-- Spec 18 proposed (2026-09-29): [UI/UX improvements](feature-specs/18-ui-ux-improvements.md) compares three visual directions and plans unified anatomical movement illustrations, shared presentation, and clearer training hierarchy. [Comparison board](feature-specs/18-ui-ux-directions.html). Awaiting the user's direction selection; application implementation has not started.
+- Spec 18 direction selected (2026-09-29): the user chose **A — Anatomy Studio**, with charcoal surfaces, soft lime accents, spacious layouts, and matching anatomical movement illustrations. [UI/UX improvements](feature-specs/18-ui-ux-improvements.md) defines the implementation plan; [comparison board](feature-specs/18-ui-ux-directions.html) retains all three references. Detailed screens and three illustration pilots are the next milestone; application implementation has not started.
 
 - Workout generation reliability (2026-09-28): [PR #34](https://github.com/anrssnbv/gym-ai/pull/34) retries a model response once when strict plan validation rejects it, without consuming a second daily attempt. The live failure was intermittent: one 60-minute full-body attempt returned the retry message, the next succeeded. PostgreSQL integration checks (11), 48 unit tests, lint, production build, and both Vercel checks passed. After release, an authenticated production attempt returned a valid 10-set full-body preview. The disposable test identity and its profile/attempt rows were removed. A second invalid model response can still fail; the precise first-failure stage was not visible in available logs.
 
