@@ -1,3 +1,36 @@
+# 19 Anatomical muscle maps — implementation
+
+- Goal: replace schematic maps with detailed proportionate anatomy while preserving target/activity semantics.
+- Scope: shared base artwork, registered highlight geometry, map framing, failure/accessibility behavior, and verification.
+- Decision: implement and show chest/back/shoulder pilots first; Spec 19 requires user review before tracing other regions.
+- Acceptance: Spec 19 checklist, approved pilots, complete catalog coverage, preserved behavior and verified release.
+
+- [x] Capture old maps and create detailed front/rear base assets.
+- [x] Trace and verify chest/back/shoulder pilots at card, thumbnail and full sizes.
+- [x] Obtain user pilot review required by Spec 19.
+- [x] Complete catalog regions and integrate shared renderer and framing.
+- [x] Verify image failure, accessibility, activity states, layouts and network behavior; run tests/lint/build.
+- [ ] Update evidence and release through development → PR → main.
+
+## Review
+
+Pilots approved and implementation verified locally: all 27 heads, 50 exercise rows, activity states, image failure and text zoom. See `context/spec19-muscle-map-review.md`. Release pending; physical-phone acceptance remains. The unrelated staged deletion of `context/feature-specs/09-15-review.md` remains excluded.
+
+# 19 Anatomical muscle maps — specification
+
+- Goal: specify proportionate muscle maps matching the approved detailed movement guides.
+- Scope: documentation only; preserve dynamic target/activity highlights and existing training behavior.
+- Decision: two neutral shaded figures with aligned catalog regions; review chest/back/shoulder pilots before full coverage.
+- Acceptance: exact shared-component scope, framing/asset contracts, preserved semantics, and observable visual/accessibility/performance checks.
+
+- [x] Inspect current geometry, crops and all shared-map callers.
+- [x] Write Spec 19 with implementation steps and acceptance criteria.
+- [x] Review scope against the user request and current component contracts.
+
+## Review
+
+Spec 19 records the reported chest/back proportion problem and requires detailed shaded anatomy, consistent framing and registered highlights. It preserves all 50 movement guides and Home activity semantics. No application code or artwork changed; implementation and user pilot review remain pending.
+
 # 18 UI/UX improvements — implementation
 
 ## Specification and plan

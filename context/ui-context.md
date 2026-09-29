@@ -54,7 +54,7 @@ Colors live in `app/globals.css`; components use semantic Tailwind tokens. Clerk
 
 ## Anatomy and movement artwork
 
-- Muscle maps: existing local SVG body regions with the shared gray/lime/olive palette; primary heads = 3, secondary = 1. Dashboard intensity means recorded sets over seven days, not physiological recovery.
+- Muscle maps: two shared shaded gray anatomical WebPs with registered SVG highlight regions; primary heads = 3, secondary = 1. Preserve natural body proportions and comparable upper-body framing. SVG filter/mask failures leave neutral space and usable target text. Small shoulder thumbnails show the primary side; full maps show front/back. Dashboard intensity still means recorded sets over seven days, not physiological recovery. See `muscle-map-artwork.md`.
 - Movement guides: original reviewed flat anatomical raster illustrations, 960 × 1200 local WebP, at most 160 KB. Detailed connected body contours, identifiable equipment, lime primary and olive secondary muscles, no photographic skin or gym scenery.
 - Two vertically stacked positions; HTML identifies Top: Start and Bottom: the exercise-specific second position, followed by setup, movement/return instructions, and a text/color muscle legend.
 - Same shared demo on exercise detail and plan preview. Files load only on opening; instructions survive media failure. See `exercise-demo-artwork.md` for the per-exercise inventory.

@@ -39,14 +39,14 @@ export default async function GroupPage({
           <Link
             key={exercise.id}
             href={`/exercises/${groupId}/${exercise.id}`}
-            className="flex items-start gap-4 rounded-2xl border border-line bg-surface p-4 transition-colors hover:border-line-strong focus-visible:outline-2 focus-visible:outline-brand"
+            className="flex flex-wrap items-start gap-4 rounded-2xl border border-line bg-surface p-4 transition-colors hover:border-line-strong focus-visible:outline-2 focus-visible:outline-brand"
           >
             <MuscleMap
               intensity={exerciseIntensity(exercise)}
               focusGroup={group.id}
-              className="w-16 shrink-0"
+              className="h-[104px] w-[80px] shrink-0"
             />
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-[1_1_10rem]">
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <h2 className="font-display text-lg text-copy">{exercise.name}</h2>
                 {progress[exercise.id] && (
