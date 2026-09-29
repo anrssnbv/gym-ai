@@ -59,7 +59,7 @@ export function LogRepsSheet({ disabled, weightKg, level, submittedReps, onSave 
           }
         }}>
           <Label htmlFor={id} className="sr-only">Reps</Label>
-          <Input ref={input} id={id} name="reps" type="number" inputMode="numeric" step="1" min={REPS_LIMITS.min} max={REPS_LIMITS.max} required value={submittedReps ?? reps} onChange={(event) => setReps(event.target.value)} readOnly={submittedReps !== null || saving} className="h-16 rounded-xl text-center font-mono text-3xl tabular-nums md:text-3xl" />
+          <Input ref={input} id={id} name="reps" type="number" inputMode="numeric" step="1" min={REPS_LIMITS.min} max={REPS_LIMITS.max} required value={submittedReps ?? reps} onChange={(event) => setReps(event.target.value)} readOnly={submittedReps !== null || saving} className="h-16 rounded-xl text-center font-sans text-3xl tabular-nums md:text-3xl" />
           {error && <p role="alert" className="text-sm text-danger">{error}</p>}
           {error && submittedReps !== null && <p className="text-sm text-copy-muted">Retry will save the same {submittedReps} reps.</p>}
           <Button disabled={saving} type="submit" className="h-11 w-full rounded-xl">{saving ? "Saving…" : "Save"}</Button>

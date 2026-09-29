@@ -32,13 +32,14 @@ export default async function GroupPage({
         <ChevronLeft className="h-4 w-4" aria-hidden="true" />
         Exercises
       </Link>
-      <h1 className="mt-2 font-display text-2xl text-copy">{group.name}</h1>
+      <h1 className="mt-2 font-display text-[1.75rem] text-copy">{group.name}</h1>
+      <p className="mt-2 text-copy-muted">Choose an exercise to see your weight and start a set.</p>
       <div className="mt-6 flex flex-col gap-3">
         {getExercisesByGroup(group.id).map((exercise) => (
           <Link
             key={exercise.id}
             href={`/exercises/${groupId}/${exercise.id}`}
-            className="flex items-start gap-3 rounded-2xl border border-line bg-surface p-4"
+            className="flex items-start gap-4 rounded-2xl border border-line bg-surface p-4 transition-colors hover:border-line-strong focus-visible:outline-2 focus-visible:outline-brand"
           >
             <MuscleMap
               intensity={exerciseIntensity(exercise)}
@@ -50,16 +51,16 @@ export default async function GroupPage({
                 <h2 className="font-display text-lg text-copy">{exercise.name}</h2>
                 {progress[exercise.id] && (
                   <>
-                    <span className="font-display text-level">LV {progress[exercise.id].level}</span>
+                    <span className="text-sm text-copy-muted">Level {progress[exercise.id].level}</span>
                     <span className="text-sm text-copy-secondary">{formatKg(progress[exercise.id].weightKg)}</span>
                   </>
                 )}
               </div>
-              <div className="mt-2 flex items-center gap-2">
+              <div className="mt-2 flex flex-wrap items-center gap-2">
                 <Badge variant="secondary" className="capitalize">
                   {exercise.equipment}
                 </Badge>
-                <span className="text-xs text-copy-muted">
+                <span className="text-sm text-copy-muted">
                   {exercise.compound ? "Compound" : "Isolation"}
                 </span>
               </div>

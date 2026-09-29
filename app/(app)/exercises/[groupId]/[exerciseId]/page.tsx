@@ -1,4 +1,4 @@
-import { Check, ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -30,66 +30,77 @@ export default async function ExercisePage({
     <section>
       <Link
         href={`/exercises/${groupId}`}
-        className="inline-flex h-11 items-center gap-1 text-sm text-copy-muted"
+        className="inline-flex min-h-11 items-center gap-1 rounded-lg text-sm text-copy-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       >
         <ChevronLeft className="h-4 w-4" aria-hidden="true" />
         {group.name}
       </Link>
-      <h1 className="mt-2 font-display text-2xl text-copy">
+      <h1 className="mt-2 text-[28px] leading-tight font-semibold text-copy">
         {exercise.name}
       </h1>
-      <div className="mt-3 flex items-center gap-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         <Badge variant="secondary" className="capitalize">
           {exercise.equipment}
         </Badge>
         <span className="text-sm text-copy-muted">
-          {exercise.compound ? "Compound" : "Isolation"} · {roundSeconds(exercise.compound) / 60} min rounds
+          {exercise.compound ? "Compound" : "Isolation"} · {roundSeconds(exercise.compound) / 60} min set timer
         </span>
       </div>
 
-      <ExerciseDemo exerciseId={exercise.id} />
-
-      <MuscleMap intensity={exerciseIntensity(exercise)} className="mt-8" />
-
-      <section className="mt-8">
-        <h2 className="font-display text-xl text-copy">Targets</h2>
-        <ul className="mt-3 space-y-3">
-          {exercise.primary.map((head) => (
-            <li key={head} className="rounded-2xl border border-line bg-surface p-4">
-              <p className="text-sm text-copy">{MUSCLE_HEADS[head].name}</p>
-              <p className="mt-1 text-sm text-copy-muted">
-                {MUSCLE_HEADS[head].anatomy}
-              </p>
-            </li>
-          ))}
-        </ul>
-        {exercise.secondary.length > 0 && (
-          <div className="mt-6">
-            <h3 className="text-sm font-medium text-copy-secondary">
-              Also works
-            </h3>
-            <ul className="mt-2 flex flex-wrap gap-2">
-              {exercise.secondary.map((head) => (
-                <li
-                  key={head}
-                  className="rounded-full bg-subtle px-3 py-2 text-sm text-copy-muted"
-                >
-                  {MUSCLE_HEADS[head].name}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </section>
       {planStep && (
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-x-3">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-x-3">
           <p className="flex items-center gap-2 text-sm text-copy-secondary">
-            {planStep.done >= planStep.sets ? <><Check className="size-4 text-brand" aria-hidden="true" />Workout · done</> : `Workout · set ${planStep.done + 1} of ${planStep.sets}`}
+            Workout exercise
           </p>
-          <Link href="/workout" className="inline-flex h-11 items-center text-sm text-brand hover:underline">Back to workout</Link>
+          <Link href="/workout" className="inline-flex min-h-11 items-center rounded-lg text-sm text-brand hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">Back to workout</Link>
         </div>
       )}
-      <ExerciseLevel key={exercise.id} exercise={exercise} state={state} sets={sets.map((set) => ({ ...set, createdAt: set.createdAt.toISOString() }))} planStep={planStep && { done: planStep.done, total: planStep.sets }} />
+      <ExerciseLevel
+        key={exercise.id}
+        exercise={exercise}
+        state={state}
+        sets={sets.map((set) => ({ ...set, createdAt: set.createdAt.toISOString() }))}
+        planStep={planStep && { done: planStep.done, total: planStep.sets }}
+        learningContent={<>
+          <ExerciseDemo exerciseId={exercise.id} />
+
+          <details className="mt-3 rounded-2xl border border-line bg-surface p-4">
+            <summary className="min-h-11 cursor-pointer content-center rounded-lg font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">Muscles worked</summary>
+            <MuscleMap intensity={exerciseIntensity(exercise)} className="mx-auto mt-4 max-w-80" />
+
+            <section className="mt-4">
+              <h2 className="font-display text-xl text-copy">Primary muscles</h2>
+              <ul className="mt-3 space-y-3">
+                {exercise.primary.map((head) => (
+                  <li key={head} className="rounded-2xl border border-line bg-surface p-4">
+                    <p className="text-sm text-copy">{MUSCLE_HEADS[head].name}</p>
+                    <p className="mt-1 text-sm text-copy-muted">
+                      {MUSCLE_HEADS[head].anatomy}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+              {exercise.secondary.length > 0 && (
+                <div className="mt-6">
+                  <h3 className="text-sm font-medium text-copy-secondary">
+                    Secondary muscles
+                  </h3>
+                  <ul className="mt-2 flex flex-wrap gap-2">
+                    {exercise.secondary.map((head) => (
+                      <li
+                        key={head}
+                        className="rounded-full bg-subtle px-3 py-2 text-sm text-copy-muted"
+                      >
+                        {MUSCLE_HEADS[head].name}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </section>
+          </details>
+        </>}
+      />
     </section>
   );
 }

@@ -17,7 +17,8 @@ export default async function OnboardingPage() {
       </div>
     </header>
     <main className="mx-auto w-full max-w-md space-y-5 px-4 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-      <h1 className="text-sm text-copy-secondary">Let’s tailor your training</h1>
+      <h1 className="text-[1.75rem]">Your training</h1>
+      <p className="text-copy-muted">A few preferences to tailor your workouts.</p>
       <TrainingProfileForm key={userId} initialProfile={null} mode="onboarding" />
     </main>
   </div>;

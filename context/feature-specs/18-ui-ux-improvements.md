@@ -1,13 +1,13 @@
 # 18 — Consistent UI/UX and exercise illustrations
 
-**Status: Direction A selected — implementation pending.**
+**Status: in progress — implementing Direction A.**
 **Date:** 2026-09-29. The user selected **A — Anatomy Studio**. Directions B and C remain comparison references only.
 
 ## Selected direction
 
 Use charcoal backgrounds, soft lime actions and muscle highlights, neutral gray anatomical figures and equipment, Geist Sans typography, and spacious layouts. Apply the shared interaction and illustration contracts below. Keep a single dark theme for this release.
 
-Next design milestone: detailed exercise and active-workout screens plus the Hack Squat, Bench Press, and Cable Curl illustration pilots. Direction selection is complete; the detailed screens and artwork have not yet been reviewed or implemented.
+Implementation is underway. The user rejected the first schematic SVG pilots, requested more detailed anatomy, then approved the revised Hack Squat, Bench Press, and Cable Curl samples: “Use this detailed style.” The collection uses detailed gray anatomical figures, lime/olive muscle regions, charcoal backgrounds, and two vertically stacked positions in local WebP assets.
 
 ## Goal
 
@@ -107,7 +107,7 @@ The requested change is a different drawing style, not another photorealistic ge
 8. Review all 50 assets for anatomy, grip/contact, equipment, and movement; update the creator/license inventory. Competitor screenshots are inspiration only and are not reusable artwork.
 9. Load illustrations only when opened. Instructions remain usable if media fails. Muscle target details remain available independently from the movement guide.
 
-The first artwork milestone is **three reviewed examples**, including Hack Squat, before producing the entire set. The current task does not generate replacement art.
+The first artwork milestone is **three reviewed examples**, including Hack Squat, before producing the entire set. The current implementation includes replacement art after that review.
 
 ## Implementation plan for Direction A
 
@@ -145,16 +145,16 @@ The first artwork milestone is **three reviewed examples**, including Hack Squat
 ## Acceptance checklist
 
 - [x] User chooses Direction A; spec records the choice.
-- [ ] Detailed screens and three illustration pilots reviewed with the user.
-- [ ] All listed screens follow the same typography, spacing, action hierarchy, icon style, and states.
-- [ ] Workout controls appear before large learning sections; expanded content remains reachable without overlap.
-- [ ] `0/3 → 1/3 → 3/3`, failed save, Undo, manual exercise, and final return to Workout behave correctly.
-- [ ] Planned totals exclude unplanned extras and never show more completed planned sets than the plan contains.
-- [ ] All 50 movement guides match the anatomical style and depict the correct exercise and equipment.
-- [ ] Both demo entry points use the same artwork/text; instructions remain accessible during loading/failure.
-- [ ] No horizontal overflow, clipped labels, hidden focused controls, or keyboard-covered primary action in tested layouts.
-- [ ] Normal text contrast is at least 4.5:1; large text and meaningful non-text controls at least 3:1, following [W3C text contrast guidance](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html) and [non-text contrast guidance](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html). Visible focus, keyboard access, screen-reader names, and reduced motion remain functional.
-- [ ] Current exercise limits, logging, Undo, leveling, generation, ownership, and authentication checks still pass.
+- [ ] Detailed screens and three illustration pilots reviewed with the user. Pilots are approved; implemented screens were manually reviewed in Playwright and remain available for user review.
+- [x] All listed screens follow the same typography, spacing, action hierarchy, icon style, and states.
+- [x] Workout controls appear before large learning sections; expanded content remains reachable without overlap.
+- [x] `0/3 → 1/3 → 3/3`, failed save, Undo, manual exercise, and final return to Workout behave correctly.
+- [x] Planned totals exclude unplanned extras and never show more completed planned sets than the plan contains.
+- [x] All 50 movement guides match the anatomical style and depict the correct exercise and equipment.
+- [x] Both demo entry points use the same artwork/text; instructions remain accessible during loading/failure.
+- [ ] No horizontal overflow, clipped labels, hidden focused controls, or keyboard-covered primary action in tested layouts. Desktop/mobile viewport and 200% text checks pass; physical iPhone keyboard check remains.
+- [x] Normal text contrast is at least 4.5:1; large text and meaningful non-text controls at least 3:1, following [W3C text contrast guidance](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html) and [non-text contrast guidance](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html). Visible focus, keyboard access, screen-reader names, and reduced motion remain functional.
+- [x] Current exercise limits, logging, Undo, leveling, generation, ownership, and authentication checks still pass.
 - [ ] Hosted performance and deferred-media checks pass; physical-phone findings are recorded explicitly.
 
 ## Boundaries and compatibility
@@ -166,3 +166,7 @@ Direction A in this spec is the target visual direction, superseding the design 
 ## Review of the proposal
 
 The smallest coherent solution is shared tokens plus targeted layout changes and replacement art. A palette-only change would leave exercise actions too far down the page and retain the illustration mismatch. A full app rewrite would add risk without solving more of the stated problem. The user has selected Direction A; detailed screen and artwork review remains the next milestone.
+
+## Implementation evidence
+
+See [verification and remaining device checks](../spec18-ui-ux-review.md) and [all-50 artwork inventory](../exercise-demo-artwork.md). The implementation retains existing components and actions without new dependencies.

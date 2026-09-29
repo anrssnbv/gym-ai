@@ -1,5 +1,7 @@
 # Lessons
 
+- When a user asks for anatomical illustrations matching a muscle map, use connected human contours and identifiable muscle shapes. Segmented mannequin or capsule-limb studies are not a substitute; validate a representative sample before producing a catalog. Source: Spec 18 pilot feedback, 2026-09-29.
+
 - When the user replaces a local provider key during deployment work, synchronize the authorized hosted environments, redeploy, and test the authenticated production action. Local API success and a Ready build do not verify production credentials. Source: missed Vercel key update, 2026-09-28.
 
 - Define working-set time, rest, and session overhead before changing a workout generator's volume rules. The exercise countdown is not a session-duration estimate; check the full arithmetic against the user's concrete examples before encouraging the model to fill time.

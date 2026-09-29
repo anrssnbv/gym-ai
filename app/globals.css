@@ -34,8 +34,8 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-display);
-  --font-heading: var(--font-display);
+  --font-display: var(--font-geist-sans);
+  --font-heading: var(--font-geist-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -76,29 +76,29 @@
 
 :root {
   color-scheme: dark;
-  --bg-page: #0a0a0f;
-  --bg-surface: #12121a;
-  --bg-elevated: #1a1a24;
-  --bg-subtle: #232330;
-  --border-default: #262633;
-  --border-strong: #3a3a4a;
-  --text-primary: #f5f5f7;
-  --text-secondary: #c2c2d0;
-  --text-muted: #8a8a9c;
-  --accent-primary: #c6ff3d;
-  --accent-primary-dim: rgba(198, 255, 61, 0.12);
-  --accent-primary-contrast: #0a0a0f;
-  --accent-level: #ffb627;
-  --accent-ai: #8b7bff;
-  --accent-ai-dim: rgba(139, 123, 255, 0.14);
-  --state-error: #ff5c6c;
+  --bg-page: #101414;
+  --bg-surface: #1a2020;
+  --bg-elevated: #222a29;
+  --bg-subtle: #2b3532;
+  --border-default: #3a4843;
+  --border-strong: #788d81;
+  --text-primary: #f4f7f5;
+  --text-secondary: #c7d1cb;
+  --text-muted: #afbeb5;
+  --accent-primary: #c6f36b;
+  --accent-primary-dim: rgba(198, 243, 107, 0.1);
+  --accent-primary-contrast: #16220d;
+  --accent-level: #d5c697;
+  --accent-ai: var(--text-secondary);
+  --accent-ai-dim: var(--bg-subtle);
+  --state-error: #ff7380;
   --state-warning: #fbbf24;
   --state-success: #34d399;
-  --body-base: #1f1f2a;
-  --muscle-idle: #2e2e3e;
-  --muscle-1: rgba(198, 255, 61, 0.28);
-  --muscle-2: rgba(198, 255, 61, 0.58);
-  --muscle-3: #c6ff3d;
+  --body-base: #87948e;
+  --muscle-idle: #a6b1ab;
+  --muscle-1: #849967;
+  --muscle-2: #a6c97a;
+  --muscle-3: #c6f36b;
 
   --background: var(--bg-page);
   --foreground: var(--text-primary);
@@ -116,7 +116,7 @@
   --accent-foreground: var(--text-primary);
   --destructive: var(--state-error);
   --border: var(--border-default);
-  --input: var(--border-default);
+  --input: var(--border-strong);
   --ring: var(--accent-primary);
   --chart-1: var(--accent-primary);
   --chart-2: var(--accent-level);
@@ -141,16 +141,30 @@
   body {
     @apply bg-page text-copy font-sans antialiased;
   }
+  h1, h2, h3 {
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    overflow-wrap: anywhere;
+  }
 }
 
-@keyframes level-up-scale {
-  from { transform: scale(0.8); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 3px;
 }
 
-@keyframes level-up-glow {
-  0%, 100% { filter: drop-shadow(0 0 0 transparent); }
-  40% { filter: drop-shadow(0 0 1.5rem var(--accent-level)); }
+/* App-wide control sizing also covers utility defaults in generated UI primitives. */
+[data-slot="button"] {
+    min-height: 3rem;
+    min-width: 2.75rem;
+    border-radius: 0.75rem;
+    white-space: normal;
+    height: auto;
+    padding-block: 0.75rem;
+}
+[data-slot="input"] {
+    min-height: 3rem;
+    border-radius: 0.75rem;
 }
 
 @media (prefers-reduced-motion: reduce) {

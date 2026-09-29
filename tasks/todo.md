@@ -1,3 +1,23 @@
+# 18 UI/UX improvements — implementation
+
+## Specification and plan
+
+- Goal: implement the selected Anatomy Studio direction and verify the complete workout flow manually with Playwright.
+- Scope: shared theme, all existing screens, set-completion presentation, 50 consistent anatomical movement assets, documentation, and release checks.
+- Decisions: reuse existing components and behavior; use static local artwork; preserve authentication, workout generation rules, keyboard-aware sheets, and deferred media.
+- Acceptance: Spec 18 checklist, representative approved artwork, accurate planned counts including Undo, browser checks at phone/desktop sizes, existing tests/lint/build, and verified deployment. Physical iPhone checks require the user's device and will be reported separately.
+
+- [x] Produce and manually review representative screens; user approves three artwork pilots.
+- [x] Implement shared theme and consistent screen hierarchy.
+- [x] Complete all 50 illustrations, inventory, and media checks.
+- [x] Manually test with Playwright; reproduce and fix discovered bugs.
+- [x] Review the diff and run focused tests, unit tests, lint, and production build.
+- [ ] Update evidence, push development, merge the PR after checks, sync main, and verify production.
+
+## Review
+
+Implementation and local verification complete. All 50 detailed anatomical assets reviewed (1.78 MiB total). 49 unit tests, 59 integration tests, lint (one existing helper warning), TypeScript, and build passed. Manual checks and fixes are recorded in `context/spec18-ui-ux-review.md`. Deployment and physical-device checks remain.
+
 # 18 UI/UX improvements — design proposal
 
 ## Specification and plan

@@ -20,9 +20,10 @@ export function LevelUpOverlay({ level, weightKg, onClose }: LevelUpOverlayProps
   return (
     <div role="status" aria-live="polite" className="fixed inset-0 z-[60] bg-page/90">
       <button type="button" autoFocus onClick={onClose} onKeyDown={(event) => { if (event.key === "Tab") event.preventDefault(); }} aria-label={`Level ${level} cleared. New weight: ${formatKg(weightKg)}. Dismiss`} className="flex size-full flex-col items-center justify-center gap-4 p-6 text-center focus-visible:outline-2 focus-visible:outline-brand">
-        <div className="flex flex-col items-center gap-4 motion-safe:animate-[level-up-scale_350ms_ease-out,level-up-glow_1500ms_ease-out]">
-          <ChevronsUp className="size-16 text-level" aria-hidden="true" />
-          <p className="font-display text-5xl text-level">LEVEL {level}</p>
+        <div className="flex flex-col items-center gap-4 rounded-2xl border border-line bg-surface p-6">
+          <ChevronsUp className="size-8 text-brand" aria-hidden="true" />
+          <p className="text-sm text-level">Level {level}</p>
+          <p className="text-2xl font-semibold">Level cleared</p>
           <p className="text-xl">New weight: {formatKg(weightKg)}</p>
         </div>
       </button>

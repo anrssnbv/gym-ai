@@ -13,7 +13,7 @@ import { callAction } from "@/lib/action-result";
 import { DURATIONS_MIN, FOCUS_CHOICES, FOCUS_HINTS, FOCUS_LABELS, type FocusChoice, type WorkoutPlan } from "@/lib/plan";
 import type { TrainingProfile } from "@/lib/training-profile";
 
-const toggleClass = "h-11 min-w-0 rounded-xl border-line px-2 data-[state=on]:border-ai/50 data-[state=on]:bg-ai-dim data-[state=on]:text-ai";
+const toggleClass = "min-h-12 h-auto min-w-0 rounded-xl border-line-strong px-2 py-3 text-sm whitespace-normal data-[state=on]:border-brand data-[state=on]:bg-brand-dim data-[state=on]:text-brand";
 
 export function GenerateSheet({ children, progress, hasActiveWorkout, defaultDurationMin }: {
   children: ReactNode;
@@ -100,9 +100,9 @@ export function GenerateSheet({ children, progress, hasActiveWorkout, defaultDur
         {preview && plan ? (
           <div ref={previewRef} tabIndex={-1} className="space-y-5 outline-none">
             <PlanPreview plan={plan} timeLimitMin={durationMin} progress={progress} />
-            <div className="space-y-2">
+            <div className="sticky bottom-0 space-y-2 border-t border-line bg-elevated pt-4">
               {error && <p role="alert" className="text-sm text-danger">{error}</p>}
-              <Button disabled={pending} onClick={start} className="h-11 w-full rounded-xl bg-ai text-on-brand hover:bg-ai/90">
+              <Button disabled={pending} onClick={start} className="min-h-12 w-full rounded-xl">
                 {request === "start" ? "Starting…" : hasActiveWorkout ? "Add to current workout" : "Start workout"}
               </Button>
               <Button disabled={pending} variant="outline" onClick={generate} className="h-11 w-full rounded-xl">
@@ -134,7 +134,7 @@ export function GenerateSheet({ children, progress, hasActiveWorkout, defaultDur
               <p id={`${id}-hint`} aria-live="polite" className="min-h-10 text-sm text-copy-muted">{FOCUS_HINTS[focus]}</p>
             </div>
             {error && <p role="alert" className="text-sm text-danger">{error}</p>}
-            <Button disabled={pending} type="submit" className="h-11 w-full rounded-xl bg-ai text-on-brand hover:bg-ai/90">
+            <Button disabled={pending} type="submit" className="min-h-12 w-full rounded-xl">
               <Sparkles className={`size-5 ${request === "generate" ? "motion-safe:animate-pulse" : ""}`} aria-hidden="true" />
               {request === "generate" ? "Planning…" : "Generate"}
             </Button>

@@ -6,7 +6,7 @@ import { finishWorkout } from "@/actions/workout";
 import { Button } from "@/components/ui/button";
 import { callAction } from "@/lib/action-result";
 
-export function FinishWorkoutButton() {
+export function FinishWorkoutButton({ secondary = false }: { secondary?: boolean }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +31,7 @@ export function FinishWorkoutButton() {
   return (
     <div className="space-y-3">
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
-      <Button className="h-12 w-full rounded-xl" disabled={pending} onClick={finish}>
+      <Button variant={secondary ? "outline" : "default"} className="h-12 w-full rounded-xl" disabled={pending} onClick={finish}>
         {pending ? "Finishing…" : "Finish workout"}
       </Button>
     </div>
