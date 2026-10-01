@@ -39,7 +39,7 @@ export default async function WorkoutSummaryPage({ params }: { params: Promise<{
         {session.plan && (
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="font-display text-xl">{session.plan.title}</h2>
-            <Badge variant="secondary">{FOCUS_LABELS[session.plan.focus]}</Badge>
+            <Badge>{FOCUS_LABELS[session.plan.focus]}</Badge>
           </div>
         )}
         <p className="text-sm text-copy-muted">

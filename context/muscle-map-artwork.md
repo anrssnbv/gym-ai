@@ -19,18 +19,17 @@ Encoding uses the existing Sharp dependency: contain within 960 × 1920, charcoa
 
 ## Registered pilot regions and review
 
-`feature-specs/19-pilots/regions.mjs` traces the chest's three catalog regions, four back regions, and three deltoid regions against the new figures. It is partial pilot geometry, not the complete replacement for `HEAD_PATHS`.
+The approved preview captures chest, back, and shoulder highlights from the pilot. Production geometry lives in `components/muscle-map/body-paths.ts`.
 
-The reproducible [preview](feature-specs/19-pilots/preview.html) presents 120 px group artwork, 80 × 104 px exercise thumbnails, full-body maps and the unchanged movement-guide reference. [Before](feature-specs/19-pilots/before.png) records existing geometry/crops. [Desktop](feature-specs/19-pilots/desktop.png) and [phone viewport](feature-specs/19-pilots/mobile.png) show the pilots.
+The archived [preview](feature-specs/19-pilots/preview.html) presents 120 px group artwork, 80 × 104 px exercise thumbnails, full-body maps and the unchanged movement-guide reference. [Before](feature-specs/19-pilots/before.png) records existing geometry/crops. [Desktop](feature-specs/19-pilots/desktop.png) and [phone viewport](feature-specs/19-pilots/mobile.png) show the pilots.
 
 Manual Playwright checks: no horizontal overflow at 360, 390 or 1280 px; actual 200% text (32 px body text) fits. Both base images are fetched once despite repeated views. SVG filter image sources and luminance masks preserve shading and suppress highlights when an asset fails. Blocked-image testing caught broken SVG image placeholders in the first implementation; using `feImage` fixed this, leaving blank neutral image space and readable card text. This remains a static pilot, not a completed app or physical-iPhone test.
 
-Rebuild: `node context/feature-specs/19-pilots/build-preview.mjs`.
-Audit: `node context/feature-specs/19-pilots/check-pilots.mjs`.
+The pilot generator and its duplicate partial geometry were removed after approval. Current asset and region checks live in `components/muscle-map/body-paths.test.ts`.
 
 ## Completed registration and integration
 
-`components/muscle-map/body-paths.ts` contains all 27 catalog heads as full bilateral contours on the 960 × 1920 canvas. Arm, abdominal and lower-body regions were traced against the same assets, with full-size overlay review. Deeper heads use explanatory surface regions. The pilot geometry remains frozen with its approval preview; production geometry is maintained in `body-paths.ts`.
+`components/muscle-map/body-paths.ts` contains all 27 catalog heads as full bilateral contours on the 960 × 1920 canvas. Arm, abdominal and lower-body regions were traced against the same assets, with full-size overlay review. Deeper heads use explanatory surface regions. The approved pilot remains as a static preview and screenshots.
 
 The shared renderer preserves catalog labels, primary/secondary intensity and Home activity thresholds. Each instance uses unique React IDs for SVG filters, masks and crop clips. Small shoulder thumbnails show the primary side; group cards retain both views. Chest/back/shoulder framing extends upward to include the complete trapezius region. Exercise rows wrap at enlarged text sizes.
 

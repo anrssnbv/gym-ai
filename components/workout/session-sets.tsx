@@ -36,7 +36,7 @@ export function SessionSets({ sets }: { sets: SessionSet[] }) {
               {exerciseSets.map((set) => (
                 <li key={set.id} className="flex flex-wrap items-center gap-2 py-2">
                   <span className="text-sm tabular-nums">{formatKg(set.weightKg)} × {set.reps}</span>
-                  {set.leveledUp && <Badge variant="secondary" className="text-level">LV ↑</Badge>}
+                  {set.leveledUp && <Badge className="text-level">LV ↑</Badge>}
                 </li>
               ))}
             </ul>

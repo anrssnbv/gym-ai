@@ -39,7 +39,7 @@ export default async function ExercisePage({
         {exercise.name}
       </h1>
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Badge variant="secondary" className="capitalize">
+        <Badge className="capitalize">
           {exercise.equipment}
         </Badge>
         <span className="text-sm text-copy-muted">
