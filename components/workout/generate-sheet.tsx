@@ -116,7 +116,7 @@ export function GenerateSheet({ children, progress, hasActiveWorkout, defaultDur
           <form ref={inputsRef} className="space-y-5" onSubmit={(event) => { event.preventDefault(); generate(); }}>
             <div className="space-y-2">
               <h3 id={`${id}-duration`} className="text-sm font-medium">Time available (up to)</h3>
-              <ToggleGroup disabled={pending} type="single" variant="outline" value={String(durationMin)} aria-labelledby={`${id}-duration`} className="grid w-full grid-cols-3 gap-2" onValueChange={(value) => {
+              <ToggleGroup disabled={pending} type="single" value={String(durationMin)} aria-labelledby={`${id}-duration`} className="grid w-full grid-cols-3 gap-2" onValueChange={(value) => {
                 const next = DURATIONS_MIN.find((duration) => String(duration) === value);
                 if (next !== undefined) setDurationMin(next);
               }}>
@@ -125,7 +125,7 @@ export function GenerateSheet({ children, progress, hasActiveWorkout, defaultDur
             </div>
             <div className="space-y-2">
               <h3 id={`${id}-focus`} className="text-sm font-medium">Focus</h3>
-              <ToggleGroup disabled={pending} type="single" variant="outline" value={focus} aria-labelledby={`${id}-focus`} aria-describedby={`${id}-hint`} className="grid w-full grid-cols-2 gap-2" onValueChange={(value) => {
+              <ToggleGroup disabled={pending} type="single" value={focus} aria-labelledby={`${id}-focus`} aria-describedby={`${id}-hint`} className="grid w-full grid-cols-2 gap-2" onValueChange={(value) => {
                 const next = FOCUS_CHOICES.find((choice) => choice === value);
                 if (next !== undefined) setFocus(next);
               }}>

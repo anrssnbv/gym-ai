@@ -76,7 +76,7 @@ export function SetHistory({ exerciseId, sets, disabled, onUndo, onPendingChange
               </p>
               <div className="flex items-center gap-2">
                 <span className="text-base tabular-nums">{formatKg(set.weightKg)} × {set.reps} reps</span>
-                {set.leveledUp && <Badge variant="secondary" className="text-level">LV ↑</Badge>}
+                {set.leveledUp && <Badge className="text-level">LV ↑</Badge>}
               </div>
             </div>
             {index === 0 && (

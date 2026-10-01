@@ -57,7 +57,7 @@ export default async function GroupPage({
                 )}
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <Badge variant="secondary" className="capitalize">
+                <Badge className="capitalize">
                   {exercise.equipment}
                 </Badge>
                 <span className="text-sm text-copy-muted">

@@ -31,7 +31,7 @@ export default async function WorkoutPage() {
       <section className="space-y-6">
         <header className="space-y-2">
           <h1 className="font-display text-[28px] text-copy">{plan?.title ?? "Workout"}</h1>
-          {plan && <><Badge variant="secondary">{FOCUS_LABELS[plan.focus]}</Badge><p className="text-sm text-copy-muted">{plan.summary}</p></>}
+          {plan && <><Badge>{FOCUS_LABELS[plan.focus]}</Badge><p className="text-sm text-copy-muted">{plan.summary}</p></>}
           <p className="flex flex-wrap gap-x-3 text-sm text-copy-muted">
             <span>Started <LocalTime date={session.startedAt.toISOString()} options={{ hour: "numeric", minute: "2-digit" }} /></span>
             <ElapsedTime since={session.startedAt.toISOString()} />

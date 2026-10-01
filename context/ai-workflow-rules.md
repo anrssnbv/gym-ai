@@ -45,7 +45,7 @@ Specs 09–15 were written on 2026-09-25, after 08 was done, against the code as
 
 - Checks marked **(phone)** are done by the user on a real device.
 - Wake Lock and the install prompt need HTTPS. Use the Vercel preview URL (connect the repo to Vercel once the shell exists) or a tunnel such as `cloudflared`.
-- To open the dev server over the LAN instead, add the machine's IP to `allowedDevOrigins` in `next.config.ts` (Next 16 blocks other dev origins by default).
+- To open the dev server over the LAN instead, create `next.config.ts` with the machine's IP in `allowedDevOrigins` (Next 16 blocks other dev origins by default).
 - When a spec adds env vars, add them to Vercel too. From spec 08 on, deployments run `prisma migrate deploy`.
 
 ## Keeping Docs In Sync

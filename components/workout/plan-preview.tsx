@@ -11,7 +11,7 @@ export function PlanPreview({ plan, timeLimitMin, progress = {} }: { plan: Worko
       <div className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="font-display text-xl">{plan.title}</h3>
-          <Badge variant="secondary">{FOCUS_LABELS[plan.focus]}</Badge>
+          <Badge>{FOCUS_LABELS[plan.focus]}</Badge>
         </div>
         <p className="text-sm text-copy-muted">{plan.summary}</p>
         <p className="text-sm tabular-nums text-copy-secondary">{plan.exercises.length} exercises · {plan.exercises.reduce((total, item) => total + item.sets, 0)} sets · about {estimatedMinutes} min</p>

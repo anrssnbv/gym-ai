@@ -761,3 +761,25 @@ Saved `context/workout-generator-prompt.md` and marked the prior target proposal
 ## Review
 
 The production action returned its generic error for a disposable account, then succeeded with the same 60-minute full-body settings. The failed request reserved one generation attempt, so it reached the provider/validation path; no matching provider exception was visible in sanitized Vercel logs. One direct local model call and three follow-up calls returned valid plans. The narrow correction retries a returned plan once only when schema or workout rules reject it, preserving validation and charging one daily attempt per click. The focused PostgreSQL integration test (11 checks), 48 unit tests, lint (one existing Playwright helper warning), and production build passed. Both Vercel checks passed and [PR #34](https://github.com/anrssnbv/gym-ai/pull/34) merged; local `main` and `development` synced. The new production build returned a valid 60-minute full-body preview on its first test. The disposable Clerk user, profile, and three generation-attempt rows were removed. The exact cause of the original intermittent failure was not observable from available provider logs; a second rejected response can still produce the retry message.
+
+# UI code simplification — 2026-10-01
+
+## Specification
+
+- Goal: remove confirmed unused UI and pilot code without changing current behavior.
+- Scope: unused Card, approved pilot generators, Badge and workout toggle wrappers, empty Next config, and documentation that names removed scripts. Preserve static pilot evidence and the separately staged review-document deletion.
+- Decision: both workout selectors always use one horizontal outlined Radix toggle group, so keep Radix selection behavior and inline that fixed styling. All Badge callers use the same secondary style.
+- Acceptance: unchanged workout selectors, badges, sheets, and maps; static pilot preview remains available; tests, lint, type check, and build pass.
+
+## Tasks
+
+- [x] Inspect callers, relevant Next.js docs, and baseline tests (50 pass).
+- [x] Remove unused code and update pilot documentation.
+- [x] Verify tests, lint, type check, build, and diff; challenge the result for a simpler approach.
+
+## Review
+
+- Removed about 300 net lines of app, preview, and config code. Kept the fixed Badge and Radix toggle styling in small wrappers; removing Radix would add custom selection and keyboard behavior.
+- Baseline and final unit tests: 50 passed. TypeScript, lint, production build, and `git diff --check` passed. Lint retained one existing ignored Playwright helper warning.
+- Authenticated Playwright: 90-minute and Full body radios selected correctly, selected colors remained visible, chest exercise badges rendered, and the workout sheet fit 390 px with no horizontal overflow. Console showed only existing development-key and database SSL warnings.
+- Static pilot HTML and screenshots remain. The unrelated staged deletion of `context/feature-specs/09-15-review.md` remains outside this change.
