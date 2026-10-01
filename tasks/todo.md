@@ -783,3 +783,18 @@ The production action returned its generic error for a disposable account, then 
 - Baseline and final unit tests: 50 passed. TypeScript, lint, production build, and `git diff --check` passed. Lint retained one existing ignored Playwright helper warning.
 - Authenticated Playwright: 90-minute and Full body radios selected correctly, selected colors remained visible, chest exercise badges rendered, and the workout sheet fit 390 px with no horizontal overflow. Console showed only existing development-key and database SSL warnings.
 - Static pilot HTML and screenshots remain. The unrelated staged deletion of `context/feature-specs/09-15-review.md` remains outside this change.
+
+# Specs 20–23 — workout usability and progress
+
+- Goal: specify four independent improvements: exercise swaps, repeatable workouts, previous set values, and progress charts.
+- Scope: documentation in `context/feature-specs`; no application behavior changes.
+- Decisions: preserve existing plans, sets, calibration, and AI quota; use current catalog and history; require ownership and retry-safe writes.
+- Acceptance: four numbered specs follow the project template, define a narrow first release and observable checks, and do not conflict with existing workout rules.
+
+- [x] Read the template, related specs, data model, actions, and UI flow.
+- [x] Draft four independent specs with behavior, storage, UI, scope limits, and acceptance checks.
+- [x] Review consistency and verify the documentation diff.
+
+## Review
+
+Reviewed against specs 11, 12, 15, 16, the spec template, and current plan/session/set code. The four files are independent and include ownership, retry, and mobile checks. Markdown and whitespace checks passed. No application code changed; runtime tests are deferred to implementation.
