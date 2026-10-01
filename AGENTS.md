@@ -10,5 +10,6 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Git workflow
 
-- Make project changes directly on `development`. Do not create task branches unless the user explicitly asks for one.
-- After changes are fixed and verified, commit and push `development`, open a pull request from `development` to `main`, wait for required checks, merge it, and fast-forward local `main` to the merged commit. Do this without asking again unless the user gives a different instruction.
+- Keep only `main` and `development` branches locally and on GitHub. Make all project changes directly on `development`; do not create other branches.
+- After changes are fixed and verified: commit on `development` → push `development` to GitHub → open a pull request from `development` to `main` → wait for required checks and merge → switch to local `main` and run `git pull --ff-only origin main`.
+- Switch back to `development`, fast-forward it to local `main`, and push `development` so both branches start the next change at the merged commit. Follow this workflow without asking again unless the user gives a different instruction.

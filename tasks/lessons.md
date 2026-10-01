@@ -1,5 +1,7 @@
 # Lessons
 
+- When a project uses only `development` and `main`, verify both local and remote branch lists before cleanup and state the full merge and local pull sequence in `AGENTS.md`. A vague "sync main" rule leaves the user's intended workflow unclear.
+
 - When unifying anatomical visuals, inspect both movement guides and every shared muscle-map surface at actual display sizes. Matching colors alone does not align body proportions, crop scale or anatomical detail. Source: Spec 19 feedback on chest/back maps, 2026-09-29.
 
 - When a user asks for anatomical illustrations matching a muscle map, use connected human contours and identifiable muscle shapes. Segmented mannequin or capsule-limb studies are not a substitute; validate a representative sample before producing a catalog. Source: Spec 18 pilot feedback, 2026-09-29.
