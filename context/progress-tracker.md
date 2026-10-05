@@ -4,6 +4,8 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
+- Spec 20 — **implemented and locally verified**: an unstarted planned exercise can be swapped for a same-group, same-pattern, permitted, no-slower catalog option. The owned transaction preserves row order, set count, history, and plan coverage; the 360 px sheet includes a guide link, confirmation, empty/error states, and focus return. All 51 unit tests, 19 focused PostgreSQL checks, lint (one existing Playwright helper warning), TypeScript, and build pass. Playwright verified a live swap, stable 0/10 count, no horizontal overflow, Escape/focus, and a failed-request Retry state. The retry could not complete after the local browser session expired; server-side idempotent retry passed. Temporary browser-test session was removed. Authenticated production and physical-phone checks remain.
+
 - Spec 19 — **implemented and deployed**: approved anatomy covers all 27 regions; local and production verification pass. Physical-phone acceptance pending.
 
 - Spec 18 — **implemented and deployed**: Direction A, all 50 detailed anatomical illustrations, and manual Playwright verification complete. Physical iPhone checks and final user screen review remain.

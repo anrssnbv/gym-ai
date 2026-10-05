@@ -17,7 +17,7 @@ registerHooks({ resolve(specifier, context, nextResolve) {
   if (specifier.startsWith("@/")) return nextResolve(new URL(`${specifier.slice(2)}.ts`, root).href, context);
   return nextResolve(specifier, context);
 } });
-const { startWorkout, finishWorkout } = await import("../actions/workout.ts");
+const { startWorkout, finishWorkout, swapPlannedExercise } = await import("../actions/workout.ts");
 const { calibrateExercise, logSet, undoLastSet } = await import("../actions/exercise.ts");
 const { getActiveSession, getActivePlanStep, getSessionDetail, getDashboard } = await import("../lib/queries.ts");
 const { prisma } = await import("../lib/prisma.ts");
@@ -41,6 +41,57 @@ const setData = (userId, sessionId, exerciseId = ids[0]) => ({ userId, sessionId
 test("planned workout actions and queries against PostgreSQL", async (t) => {
   try {
     await t.test("authentication precedes malformed input validation", () => assert.rejects(() => startWorkout(null), /Integration action needs a test user/));
+    await t.test("swap also requires authentication before input validation", () => assert.rejects(() => swapPlannedExercise(null), /Integration action needs a test user/));
+    await t.test("swap persists in place despite later preference changes and keeps history", () => asUser(async ({ userId }) => {
+      const { sessionId } = success(await startWorkout({ plan, durationMin: 60 }));
+      await prisma.setLog.create({ data: setData(userId, sessionId, ids[2]) });
+      await prisma.trainingProfile.update({ where: { userId }, data: { equipment: ["machine"] } });
+      const input = { sessionId, stepIndex: 0, expectedExerciseId: ids[0], replacementId: "wide-chest-press" };
+      const before = await getSessionDetail(userId, sessionId);
+      success(await swapPlannedExercise(input));
+      success(await swapPlannedExercise(input)); // lost-response retry
+      const after = await getSessionDetail(userId, sessionId);
+      assert.equal(after.plan.exercises[0].exerciseId, "wide-chest-press");
+      assert.equal(after.plan.exercises[0].note, "See the movement guide for technique.");
+      assert.deepEqual(after.plan.exercises.slice(1), before.plan.exercises.slice(1));
+      assert.equal(after.plan.exercises[0].sets, before.plan.exercises[0].sets);
+      assert.deepEqual(after.sets, before.sets);
+      assert.deepEqual(await getActivePlanStep(userId, "wide-chest-press"), { done: 0, sets: 2 });
+      assert.equal(await getActivePlanStep(userId, ids[0]), null);
+      const { estimatePlanMinutes } = await import("../lib/plan.ts");
+      assert.ok(estimatePlanMinutes(after.plan) <= estimatePlanMinutes(before.plan));
+    }));
+    await t.test("swap rejects invalid, duplicate, slower and unavailable alternatives", () => asUser(async ({ userId }) => {
+      const { sessionId } = success(await startWorkout({ plan, durationMin: 60 }));
+      const input = { sessionId, stepIndex: 0, expectedExerciseId: ids[0] };
+      for (const replacementId of [ids[4], ids[1], "barbell-bench-press", "lat-pulldown", "unknown"]) {
+        assert.equal((await swapPlannedExercise({ ...input, replacementId })).ok, false);
+      }
+      await prisma.trainingProfile.update({ where: { userId }, data: { equipment: ["barbell"] } });
+      assert.equal((await swapPlannedExercise({ ...input, replacementId: "wide-chest-press" })).ok, false);
+      assert.deepEqual((await getSessionDetail(userId, sessionId)).plan, plan);
+    }));
+    await t.test("logged, finished, stale and foreign sessions cannot be swapped", () => asUser(async ({ userId }) => {
+      const { sessionId } = success(await startWorkout({ plan, durationMin: 60 }));
+      const input = { sessionId, stepIndex: 0, expectedExerciseId: ids[0], replacementId: "wide-chest-press" };
+      await prisma.setLog.create({ data: setData(userId, sessionId) });
+      assert.equal((await swapPlannedExercise(input)).ok, false);
+      await asUser(async () => assert.equal((await swapPlannedExercise(input)).ok, false));
+      success(await finishWorkout());
+      assert.equal((await swapPlannedExercise(input)).ok, false);
+      assert.deepEqual((await getSessionDetail(userId, sessionId)).plan, plan);
+      const old = await prisma.workoutSession.create({ data: { userId, plan, startedAt: new Date(Date.now() - 4 * 60 * 60 * 1000) } });
+      assert.equal((await swapPlannedExercise({ ...input, sessionId: old.id })).ok, false);
+    }));
+    await t.test("a second tab with an old exercise ID cannot overwrite a newer swap", () => asUser(async ({ userId }) => {
+      const { sessionId } = success(await startWorkout({ plan, durationMin: 60 }));
+      const input = { sessionId, stepIndex: 0, expectedExerciseId: ids[0] };
+      success(await swapPlannedExercise({ ...input, replacementId: "wide-chest-press" }));
+      const rejected = await swapPlannedExercise({ ...input, replacementId: "cable-crossover" });
+      assert.equal(rejected.ok, false);
+      assert.equal(rejected.stale, true);
+      assert.equal((await getSessionDetail(userId, sessionId)).plan.exercises[0].exerciseId, "wide-chest-press");
+    }));
     await t.test("invalid shape, set count, and unknown catalog ID create no session", () => asUser(async ({ userId, invalidations }) => {
       for (const input of [null, {}, { plan: {} }, ...invalidPlans.map(plan => ({ plan, durationMin: 60 })), { plan: { ...plan, exercises: plan.exercises.map(e => ({ ...e, sets: 0 })) }, durationMin: 60 }, { plan }, { plan, durationMin: 30 }]) {
         assert.deepEqual(await startWorkout(input), { ok: false, error: "Invalid input" });

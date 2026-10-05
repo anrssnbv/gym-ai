@@ -5,9 +5,10 @@ import { z } from "zod";
 import { generatePlan } from "@/lib/ai";
 import type { ActionResult } from "@/lib/action-result";
 import { requireUserId } from "@/lib/auth";
+import { getExercise } from "@/lib/catalog";
 import { sessionEnd } from "@/lib/game";
 import { findOpenSession, getPlanningContext } from "@/lib/queries";
-import { DAILY_PLAN_LIMIT, DURATIONS_MIN, FOCUS_CHOICES, candidateExercises, canPlanWorkout, isValidPlanSelection, planTargets, resolveProfileAutoFocus, type WorkoutPlan } from "@/lib/plan";
+import { DAILY_PLAN_LIMIT, DURATIONS_MIN, FOCUS_CHOICES, candidateExercises, canPlanWorkout, isValidPlanSelection, planTargets, replacementExercises, resolveProfileAutoFocus, type WorkoutPlan } from "@/lib/plan";
 import { prisma } from "@/lib/prisma";
 import { planOutputSchema, workoutPlanSchema } from "@/lib/plan-schema";
 import { storedTrainingProfileSchema, trainingProfileSelect } from "@/lib/training-profile-schema";
@@ -23,6 +24,48 @@ const generationError = { ok: false, error: "Couldn't generate a workout. Try ag
 const configurationError = { ok: false, error: "AI coach is not configured." } as const;
 const startSchema = z.object({ plan: workoutPlanSchema, durationMin: durationSchema });
 const missingProfile = { ok: false, error: "Complete your Training preferences before generating a workout." } as const;
+const stalePlan = { ok: false, error: "Your workout changed on another screen. Review the plan and try again.", stale: true } as const;
+const swapSchema = z.object({
+  sessionId: z.string().min(1).max(100),
+  stepIndex: z.number().int().min(0).max(9),
+  expectedExerciseId: z.string().min(1).max(80),
+  replacementId: z.string().min(1).max(80),
+});
+
+export async function swapPlannedExercise(input: unknown): Promise<ActionResult<null>> {
+  const userId = await requireUserId();
+  const parsed = swapSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Invalid input" };
+  const { sessionId, stepIndex, expectedExerciseId, replacementId } = parsed.data;
+  if (!getExercise(expectedExerciseId) || !getExercise(replacementId)) return { ok: false, error: "Invalid input" };
+  const result = await serializableTransaction(async (tx) => {
+    const active = await findOpenSession(tx, userId, new Date());
+    if (!active || active.id !== sessionId || active.stale) return stalePlan;
+    const row = await tx.workoutSession.findFirst({ where: { id: sessionId, userId, endedAt: null }, select: { plan: true } });
+    const planResult = workoutPlanSchema.safeParse(row?.plan);
+    if (!planResult.success) return stalePlan;
+    const plan = planResult.data;
+    const currentId = plan.exercises[stepIndex]?.exerciseId;
+    if (currentId === replacementId && expectedExerciseId !== replacementId) return { ok: true, data: null };
+    if (currentId !== expectedExerciseId) return stalePlan;
+    const savedSets = await tx.setLog.count({ where: { userId, sessionId, exerciseId: expectedExerciseId } });
+    if (savedSets) return { ok: false, error: "This exercise already has a saved set. Keep it in your workout." };
+    const profile = storedTrainingProfileSchema.safeParse(await tx.trainingProfile.findUnique({ where: { userId }, select: trainingProfileSelect }));
+    if (!profile.success) return { ok: false, error: "Update Training preferences before swapping exercises." };
+    if (!replacementExercises(plan, stepIndex, profile.data.equipment).some(({ id }) => id === replacementId)) {
+      return { ok: false, error: "This replacement is no longer available. Choose another exercise." };
+    }
+    const exercises = plan.exercises.map((step, index) => index === stepIndex
+      ? { ...step, exerciseId: replacementId, note: "See the movement guide for technique." }
+      : step);
+    const updated = workoutPlanSchema.safeParse({ ...plan, exercises });
+    if (!updated.success) return { ok: false, error: "This replacement does not fit the workout plan." };
+    await tx.workoutSession.update({ where: { id: sessionId, userId }, data: { plan: updated.data } });
+    return { ok: true, data: null };
+  });
+  if (result.ok) revalidatePath("/", "layout");
+  return result;
+}
 
 export async function startWorkout(input: unknown): Promise<ActionResult<{ sessionId: string }>> {
   const userId = await requireUserId();
