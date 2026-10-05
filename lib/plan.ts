@@ -119,6 +119,23 @@ export function hasPlanCoverage(focus: Focus, selected: Exercise[], candidates =
     selected.some(e => [...e.primary, ...(allowSecondary ? e.secondary : [])].some(h => heads.includes(h))));
 }
 
+export function replacementExercises(plan: WorkoutPlan, stepIndex: number, equipment: Equipment[]): Exercise[] {
+  const currentId = plan.exercises[stepIndex]?.exerciseId;
+  const current = currentId && getExercise(currentId);
+  if (!current) return [];
+  const used = new Set(plan.exercises.map(({ exerciseId }) => exerciseId));
+  const currentTiming = exerciseTiming(current);
+  const currentMinutes = currentTiming.setMinutes + currentTiming.restMinutes;
+  return EXERCISES.filter((exercise) => {
+    if (used.has(exercise.id) || exercise.groupId !== current.groupId || exercise.pattern !== current.pattern
+      || !equipment.includes(exercise.equipment)) return false;
+    const timing = exerciseTiming(exercise);
+    if (timing.setMinutes + timing.restMinutes > currentMinutes) return false;
+    const selected = plan.exercises.map(({ exerciseId }, index) => getExercise(index === stepIndex ? exercise.id : exerciseId)!);
+    return hasPlanCoverage(plan.focus, selected);
+  });
+}
+
 export function canPlanWorkout(focus: Focus, durationMin: (typeof DURATIONS_MIN)[number], equipment: Equipment[]): boolean {
   const candidates = candidateExercises(focus, equipment);
   const targets = planTargets(focus, durationMin);

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  candidateExercises, estimatePlanMinutes, isValidPlanSelection, planTargets, canPlanWorkout, exerciseTiming, resolveAutoFocus, resolveProfileAutoFocus,
+  candidateExercises, estimatePlanMinutes, isValidPlanSelection, planTargets, canPlanWorkout, exerciseTiming, replacementExercises, resolveAutoFocus, resolveProfileAutoFocus,
   type WorkoutPlan,
 } from "./plan.ts";
 import { planOutputSchema, workoutPlanSchema } from "./plan-schema.ts";
@@ -22,6 +22,20 @@ test("focus candidates include core for legs and rear delts for upper", () => {
   assert.ok(candidateExercises("upper").some(({ id }) => id === "face-pull"));
   assert.ok(!candidateExercises("upper").some(({ id }) => id === "leg-press"));
   assert.ok(!candidateExercises("push").some(({ id }) => id === "lat-pulldown"));
+});
+
+test("replacement candidates keep group, pattern, equipment, coverage and time", () => {
+  const push: WorkoutPlan = { focus: "push", title: "Push", summary: "Push day.", exercises:
+    (["machine-chest-press", "machine-shoulder-press", "cable-pushdown", "cable-lateral-raise", "pec-deck"] as const)
+      .map((exerciseId) => ({ exerciseId, sets: 2, note: "Control." })) };
+  const allowed = replacementExercises(push, 0, ["machine", "cable"]).map(({ id }) => id);
+  assert.ok(allowed.includes("wide-chest-press"));
+  assert.ok(allowed.includes("cable-crossover"));
+  assert.ok(!allowed.includes("barbell-bench-press")); // slower and unavailable
+  assert.ok(!allowed.includes("pec-deck")); // already in plan
+  assert.deepEqual(replacementExercises(push, 0, ["dumbbell"]), []); // only slower options
+  assert.ok(!replacementExercises(push, 1, ["machine"]).some(({ id }) => id === "reverse-pec-deck")); // same group, different pattern
+  assert.deepEqual(replacementExercises(push, 99, ["machine"]), []);
 });
 
 test("auto focus picks never trained patterns first, then oldest, with stable ties", () => {

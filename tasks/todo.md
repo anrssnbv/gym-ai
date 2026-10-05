@@ -798,3 +798,19 @@ The production action returned its generic error for a disposable account, then 
 ## Review
 
 Reviewed against specs 11, 12, 15, 16, the spec template, and current plan/session/set code. The four files are independent and include ownership, retry, and mobile checks. Markdown and whitespace checks passed. No application code changed; runtime tests are deferred to implementation.
+# Spec 20 — active workout exercise swaps
+
+- Goal: replace an unstarted planned exercise without changing saved sets, plan totals, or time ceiling.
+- Scope: active `/workout` rows, shared catalog candidate rules, authenticated JSON-plan update, focused tests and mobile verification.
+- Decisions: keep the original row/set count; only same-group, same-pattern, permitted, no-slower alternatives; validate again in one serializable transaction.
+- Acceptance: spec 20's success, rejection, retry, ownership, history, accessibility, and 360 px checks; tracker updated through implementation.
+
+- [x] Read spec 20, relevant Next.js docs, existing plan/session/set flows, and test patterns.
+- [x] Implement replacement filtering and authenticated action.
+- [x] Add the mobile workout sheet and locked-row behavior.
+- [x] Verify focused and full tests, lint, build, and manual browser behavior.
+- [x] Update tracker and review the final diff.
+
+## Review
+
+Shared filtering and the authenticated JSON-plan update preserve the original step count and estimate. The workout sheet shows valid alternatives, the movement guide, and a named confirmation. All 51 unit tests and 19 focused PostgreSQL integration checks pass; lint has one existing ignored Playwright helper warning, and TypeScript/build pass. Playwright at 360 × 640 verified the swap, keyboard focus/Escape, no horizontal overflow after fixing a long guide link, and failed-request feedback. The browser session expired before the UI retry finished; the action's idempotent retry passed in PostgreSQL checks. Temporary test data was removed. Authenticated production and physical-phone acceptance remain.
