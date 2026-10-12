@@ -8,17 +8,27 @@ import { FinishWorkoutButton } from "@/components/workout/finish-workout-button"
 import { SessionSets } from "@/components/workout/session-sets";
 import { GenerateSheet } from "@/components/workout/generate-sheet";
 import { SwapExerciseSheet } from "@/components/workout/swap-exercise-sheet";
+import { SavedWorkouts } from "@/components/workout/saved-workouts";
 import { requireUserId } from "@/lib/auth";
 import { formatVolume, summarizeSets } from "@/lib/game";
 import { getActiveSession, getProgressMap, getSessionDetail, getTrainingProfile } from "@/lib/queries";
 import { getExercise } from "@/lib/catalog";
 import { Progress } from "@/components/ui/progress";
 import { workoutProgress } from "@/lib/workout-progress";
-import { FOCUS_LABELS, replacementExercises } from "@/lib/plan";
+import { estimatePlanMinutes, FOCUS_LABELS, replacementExercises } from "@/lib/plan";
+import { workoutPlanSchema } from "@/lib/plan-schema";
+import { prisma } from "@/lib/prisma";
 
 export default async function WorkoutPage() {
   const userId = await requireUserId();
   const active = await getActiveSession(userId);
+  const savedRows = await prisma.savedWorkout.findMany({ where: { userId }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], select: { id: true, plan: true } });
+  const savedItems = savedRows.map(({ id, plan }) => {
+    const parsed = workoutPlanSchema.safeParse(plan);
+    if (!parsed.success) return { id, title: "Unavailable saved workout", focus: "Unknown", exercises: 0, sets: 0, minutes: 0, valid: false };
+    return { id, title: parsed.data.title, focus: FOCUS_LABELS[parsed.data.focus], exercises: parsed.data.exercises.length,
+      sets: parsed.data.exercises.reduce((total, step) => total + step.sets, 0), minutes: estimatePlanMinutes(parsed.data), valid: true };
+  });
   const [session, profile] = active
     ? await Promise.all([getSessionDetail(userId, active.id), getTrainingProfile(userId)])
     : [null, null] as const;
@@ -85,6 +95,7 @@ export default async function WorkoutPage() {
           </>
         ) : <SessionSets sets={session.sets} />}
         <FinishWorkoutButton secondary={!!next} />
+        <SavedWorkouts items={savedItems} />
       </section>
     );
   }
@@ -106,6 +117,7 @@ export default async function WorkoutPage() {
           <Link href="/exercises">Browse exercises</Link>
         </Button>
       </div>
+      <SavedWorkouts items={savedItems} />
     </section>
   );
 }

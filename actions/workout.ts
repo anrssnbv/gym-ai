@@ -6,6 +6,7 @@ import { generatePlan } from "@/lib/ai";
 import type { ActionResult } from "@/lib/action-result";
 import { requireUserId } from "@/lib/auth";
 import { getExercise } from "@/lib/catalog";
+import { Prisma } from "@/lib/generated/prisma/client";
 import { sessionEnd } from "@/lib/game";
 import { findOpenSession, getPlanningContext } from "@/lib/queries";
 import { DAILY_PLAN_LIMIT, DURATIONS_MIN, FOCUS_CHOICES, candidateExercises, canPlanWorkout, isValidPlanSelection, planTargets, replacementExercises, resolveProfileAutoFocus, type WorkoutPlan } from "@/lib/plan";
@@ -31,6 +32,77 @@ const swapSchema = z.object({
   expectedExerciseId: z.string().min(1).max(80),
   replacementId: z.string().min(1).max(80),
 });
+const idSchema = z.string().min(1).max(100);
+const repeatSchema = z.object({ savedWorkoutId: idSchema, requestId: z.uuid() });
+const activeRepeatError = "Finish your current workout before starting this saved plan.";
+
+export async function saveWorkout(input: unknown): Promise<ActionResult<{ savedWorkoutId: string }>> {
+  const userId = await requireUserId();
+  const parsed = idSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Invalid input" };
+  const source = await prisma.workoutSession.findFirst({ where: { id: parsed.data, userId }, select: { endedAt: true, plan: true } });
+  if (!source?.endedAt) return { ok: false, error: "Finish this workout before saving it." };
+  const plan = workoutPlanSchema.safeParse(source.plan);
+  if (!plan.success) return { ok: false, error: "This workout has no valid generated plan to save." };
+  const saved = await prisma.savedWorkout.upsert({
+    where: { userId_sourceSessionId: { userId, sourceSessionId: parsed.data } },
+    create: { userId, sourceSessionId: parsed.data, plan: plan.data },
+    update: {},
+    select: { id: true },
+  });
+  revalidatePath("/", "layout");
+  return { ok: true, data: { savedWorkoutId: saved.id } };
+}
+
+export async function removeSavedWorkout(input: unknown): Promise<ActionResult<null>> {
+  const userId = await requireUserId();
+  const parsed = idSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Invalid input" };
+  const removed = await prisma.savedWorkout.deleteMany({ where: { id: parsed.data, userId } });
+  if (!removed.count) return { ok: false, error: "Saved workout not found." };
+  revalidatePath("/", "layout");
+  return { ok: true, data: null };
+}
+
+export async function startSavedWorkout(input: unknown): Promise<ActionResult<{ sessionId: string }>> {
+  const userId = await requireUserId();
+  const parsed = repeatSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Invalid input" };
+  const { savedWorkoutId, requestId } = parsed.data;
+  let result: ActionResult<{ sessionId: string }>;
+  try {
+    result = await serializableTransaction<{ sessionId: string }>(async (tx) => {
+      const previous = await tx.workoutSession.findFirst({ where: { userId, repeatRequestId: requestId }, select: { id: true } });
+      if (previous) return { ok: true, data: { sessionId: previous.id } };
+      const saved = await tx.savedWorkout.findFirst({ where: { id: savedWorkoutId, userId }, select: { plan: true } });
+      if (!saved) return { ok: false, error: "Saved workout not found." };
+      const now = new Date();
+      const active = await findOpenSession(tx, userId, now);
+      if (active && !active.stale) return { ok: false, error: activeRepeatError };
+      const parsedPlan = workoutPlanSchema.safeParse(saved.plan);
+      if (!parsedPlan.success) return { ok: false, error: "This saved workout is no longer valid." };
+      const plan = parsedPlan.data;
+      const profile = storedTrainingProfileSchema.safeParse(await tx.trainingProfile.findUnique({ where: { userId }, select: trainingProfileSelect }));
+      if (!profile.success) return missingProfile;
+      const missing = plan.exercises.map(({ exerciseId }) => getExercise(exerciseId)!)
+        .find((exercise) => !profile.data.equipment.includes(exercise.equipment));
+      if (missing) return { ok: false, error: `${missing.name} needs ${missing.equipment}. Update Training preferences to start this plan.` };
+      if (!DURATIONS_MIN.some((duration) => isValidPlanSelection(plan, duration, profile.data.equipment))) {
+        return { ok: false, error: "This saved workout no longer meets the workout rules." };
+      }
+      if (active) await tx.workoutSession.update({ where: { id: active.id, userId }, data: { endedAt: sessionEnd(active.lastActivityAt, now) } });
+      const created = await tx.workoutSession.create({ data: { userId, plan, repeatRequestId: requestId, startedAt: now }, select: { id: true } });
+      return { ok: true, data: { sessionId: created.id } };
+    });
+  } catch (error) {
+    if (!(error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002")) throw error;
+    const previous = await prisma.workoutSession.findFirst({ where: { userId, repeatRequestId: requestId }, select: { id: true } });
+    if (!previous) return { ok: false, error: "Your workout changed on another screen. Try again." };
+    result = { ok: true, data: { sessionId: previous.id } };
+  }
+  if (result.ok) revalidatePath("/", "layout");
+  return result;
+}
 
 export async function swapPlannedExercise(input: unknown): Promise<ActionResult<null>> {
   const userId = await requireUserId();

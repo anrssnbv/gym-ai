@@ -4,19 +4,22 @@ import { LocalTime } from "@/components/local-time";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SessionSets } from "@/components/workout/session-sets";
+import { SaveWorkoutButton } from "@/components/workout/save-workout-button";
 import { requireUserId } from "@/lib/auth";
 import { formatDuration, formatVolume, sessionEndAt, summarizeSets } from "@/lib/game";
 import { getActiveSession, getSessionDetail } from "@/lib/queries";
 import { workoutProgress } from "@/lib/workout-progress";
 import { FOCUS_LABELS } from "@/lib/plan";
+import { prisma } from "@/lib/prisma";
 
 export default async function WorkoutSummaryPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const userId = await requireUserId();
   const { sessionId } = await params;
   const now = new Date();
-  const [session, active] = await Promise.all([
+  const [session, active, saved] = await Promise.all([
     getSessionDetail(userId, sessionId),
     getActiveSession(userId, now),
+    prisma.savedWorkout.findUnique({ where: { userId_sourceSessionId: { userId, sourceSessionId: sessionId } }, select: { id: true } }),
   ]);
   if (!session) notFound();
   if (active?.id === session.id) redirect("/workout");
@@ -55,6 +58,7 @@ export default async function WorkoutSummaryPage({ params }: { params: Promise<{
         ))}
       </dl>
       {planned && <p className="text-base tabular-nums text-copy-secondary">{planned.completed} / {planned.total} planned sets completed{planned.extras.length > 0 && ` · ${planned.extras.length} additional sets`}</p>}
+      {session.plan && session.endedAt && <SaveWorkoutButton sessionId={session.id} initiallySaved={!!saved} />}
       <section className="space-y-3" aria-labelledby="saved-sets-heading">
         <h2 id="saved-sets-heading" className="text-xl font-semibold">Saved sets</h2>
         <SessionSets sets={session.sets} />

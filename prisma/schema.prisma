@@ -38,9 +38,21 @@ model WorkoutSession {
   startedAt DateTime  @default(now())
   endedAt   DateTime?
   plan      Json?
+  repeatRequestId String? @unique
   sets      SetLog[]
 
   @@index([userId, startedAt])
+}
+
+model SavedWorkout {
+  id              String   @id @default(cuid())
+  userId          String
+  sourceSessionId String
+  plan            Json
+  createdAt       DateTime @default(now())
+
+  @@unique([userId, sourceSessionId])
+  @@index([userId, createdAt])
 }
 
 model PlanGeneration {

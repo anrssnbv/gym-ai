@@ -814,3 +814,21 @@ Reviewed against specs 11, 12, 15, 16, the spec template, and current plan/sessi
 ## Review
 
 Shared filtering and the authenticated JSON-plan update preserve the original step count and estimate. The workout sheet shows valid alternatives, the movement guide, and a named confirmation. All 51 unit tests and 19 focused PostgreSQL integration checks pass; lint has one existing ignored Playwright helper warning, and TypeScript/build pass. Playwright at 360 × 640 verified the swap, keyboard focus/Escape, no horizontal overflow after fixing a long guide link, and failed-request feedback. The browser session expired before the UI retry finished; the action's idempotent retry passed in PostgreSQL checks. Temporary test data was removed. Authenticated production and physical-phone acceptance remain.
+# Spec 21 — save and repeat workout
+
+## Specification and plan
+
+- Goal: save a completed generated plan and repeat it as a clean session without AI.
+- Scope: additive Prisma migration, owned actions, summary/Workout UI, focused action and mobile checks.
+- Decisions: store an immutable plan snapshot; validate current preferences at each repeat; keep one request ID across retries.
+- Acceptance: idempotent saves/starts, safe ownership and conflict errors, zero copied sets, usable 360 px controls, tests/lint/build.
+
+- [x] Add the schema and migration; mark progress.
+- [x] Implement owned save, repeat and remove actions with validation and retry safety.
+- [x] Add summary and Workout tab controls and error states.
+- [x] Verify database and UI behavior; review the diff and update tracker.
+
+## Review
+
+- The additive migration applied successfully to the configured PostgreSQL database; old session columns and rows are untouched by its SQL. A saved snapshot retains its source plan; repeat sessions have new IDs and no sets. Duplicate save, double-tap/retry, active conflict, changed equipment, malformed plan, signed-out and foreign IDs passed focused integration checks. A first remote test run had a transaction start timeout; a rerun passed, so remote connection latency remains a test reliability limit.
+- Unit 51/51, focused PostgreSQL 5/5, TypeScript, lint (one existing Playwright helper warning), and production build passed. A temporary Playwright preview at 360 px confirmed 48 px buttons, keyboard tab order, and no overflow; it was removed. Authenticated browser and physical-phone flow remain unchecked because the browser has no signed-in session.
