@@ -132,6 +132,21 @@ export async function getRecentSets(userId: string, exerciseId: string, take = 1
   });
 }
 
+export async function getPreviousExerciseSession(userId: string, exerciseId: string, currentSessionId: string | null) {
+  const latest = await prisma.setLog.findFirst({
+    where: { userId, exerciseId, ...(currentSessionId ? { sessionId: { not: currentSessionId } } : {}), session: { userId } },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    select: { sessionId: true, session: { select: { startedAt: true } } },
+  });
+  if (!latest) return null;
+  const sets = await prisma.setLog.findMany({
+    where: { userId, exerciseId, sessionId: latest.sessionId, session: { userId } },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    select: { id: true, createdAt: true, weightKg: true, reps: true, leveledUp: true },
+  });
+  return { date: latest.session.startedAt, sets };
+}
+
 export async function getSessionDetail(userId: string, sessionId: string) {
   const session = await prisma.workoutSession.findFirst({
     where: { id: sessionId, userId },

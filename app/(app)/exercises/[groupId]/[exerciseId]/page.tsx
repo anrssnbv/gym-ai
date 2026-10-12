@@ -8,7 +8,7 @@ import { MuscleMap, exerciseIntensity } from "@/components/muscle-map/muscle-map
 import { getExercise, getGroup, MUSCLE_HEADS } from "@/lib/catalog";
 import { roundSeconds } from "@/lib/game";
 import { requireUserId } from "@/lib/auth";
-import { getActivePlanStep, getLevelState, getRecentSets } from "@/lib/queries";
+import { getActiveSession, getActivePlanStep, getLevelState, getPreviousExerciseSession, getRecentSets } from "@/lib/queries";
 
 export default async function ExercisePage({
   params,
@@ -20,11 +20,14 @@ export default async function ExercisePage({
   const exercise = getExercise(exerciseId);
   if (!group || !exercise || exercise.groupId !== groupId) notFound();
   const userId = await requireUserId();
-  const [state, sets, planStep] = await Promise.all([
+  const [state, sets, planStep, previousSession] = await Promise.all([
     getLevelState(userId, exercise.id),
     getRecentSets(userId, exercise.id, 10),
     getActivePlanStep(userId, exercise.id),
+    getActiveSession(userId).then((active) => getPreviousExerciseSession(userId, exercise.id, active?.id ?? null)),
   ]);
+  const history = [...new Map([...sets, ...(previousSession?.sets ?? [])].map((set) => [set.id, set])).values()]
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime() || b.id.localeCompare(a.id));
 
   return (
     <section>
@@ -59,7 +62,8 @@ export default async function ExercisePage({
         key={exercise.id}
         exercise={exercise}
         state={state}
-        sets={sets.map((set) => ({ ...set, createdAt: set.createdAt.toISOString() }))}
+        sets={history.map((set) => ({ ...set, createdAt: set.createdAt.toISOString() }))}
+        previousSession={previousSession && { date: previousSession.date.toISOString(), sets: previousSession.sets.map(({ weightKg, reps }) => ({ weightKg, reps })) }}
         planStep={planStep && { done: planStep.done, total: planStep.sets }}
         learningContent={<>
           <ExerciseDemo exerciseId={exercise.id} />
