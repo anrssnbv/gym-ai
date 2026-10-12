@@ -4,6 +4,8 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
+- Spec 21 — **implemented and locally verified**: completed generated sessions can be saved once and repeated as clean sessions without AI or quota use. The snapshot is validated against current equipment and plan rules; owned save/start/remove actions include retry-safe starts and active-session protection. Focused PostgreSQL checks passed, including concurrent retry and ownership. Unit tests, lint, TypeScript, and build pass. At 360 px, a temporary local preview showed 48 px controls, keyboard access, and no horizontal overflow; the preview was removed. The signed-out browser could not exercise the authenticated screen; physical-phone and production checks remain.
+
 - Spec 20 — **implemented and locally verified**: an unstarted planned exercise can be swapped for a same-group, same-pattern, permitted, no-slower catalog option. The owned transaction preserves row order, set count, history, and plan coverage; the 360 px sheet includes a guide link, confirmation, empty/error states, and focus return. All 51 unit tests, 19 focused PostgreSQL checks, lint (one existing Playwright helper warning), TypeScript, and build pass. Playwright verified a live swap, stable 0/10 count, no horizontal overflow, Escape/focus, and a failed-request Retry state. The retry could not complete after the local browser session expired; server-side idempotent retry passed. Temporary browser-test session was removed. Authenticated production and physical-phone checks remain.
 
 - Spec 19 — **implemented and deployed**: approved anatomy covers all 27 regions; local and production verification pass. Physical-phone acceptance pending.
