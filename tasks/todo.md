@@ -832,3 +832,18 @@ Shared filtering and the authenticated JSON-plan update preserve the original st
 
 - The additive migration applied successfully to the configured PostgreSQL database; old session columns and rows are untouched by its SQL. A saved snapshot retains its source plan; repeat sessions have new IDs and no sets. Duplicate save, double-tap/retry, active conflict, changed equipment, malformed plan, signed-out and foreign IDs passed focused integration checks. A first remote test run had a transaction start timeout; a rerun passed, so remote connection latency remains a test reliability limit.
 - Unit 51/51, focused PostgreSQL 5/5, TypeScript, lint (one existing Playwright helper warning), and production build passed. A temporary Playwright preview at 360 px confirmed 48 px buttons, keyboard tab order, and no overflow; it was removed. Authenticated browser and physical-phone flow remain unchecked because the browser has no signed-in session.
+# Spec 22 — previous workout values
+
+- Goal: show the latest prior exercise session as a reference before and during set logging.
+- Scope: owned indexed query, exercise-page loading, labelled reference and existing history. No schema or game-rule changes.
+- Decisions: exclude the active session; show three values plus a remaining count; include all prior sets in history.
+- Acceptance: stable reference during logging/Undo, ownership and exercise isolation, empty state, dumbbell wording, keyboard/360 px checks, tests/lint/build.
+
+- [x] Implement and test the owned previous-session query.
+- [x] Wire the reference and complete prior history into the exercise screen.
+- [x] Verify controls, mobile layout and required checks; update progress.
+
+## Review
+
+- Reused the indexed SetLog reads and existing LocalTime/formatKg controls. Excluding the active session keeps the reference stable without new persistence. Merged prior-session sets into the existing recent history so its ten-row limit cannot truncate that session. No logging, calibration or progression code changed.
+- Real PostgreSQL checks passed for logged ordering, stale prior sessions, empty state, both ownership sides, exercise isolation, calibration/adjust/log/Undo and Finish rollover. Unit 51/51, lint (one existing Playwright helper warning), and production build passed. Playwright's temporary 360 px component preview verified three values plus +2 more, per-dumbbell wording, empty state, keyboard Start, running timer, no overflow, blank rep input and Escape focus return. Preview and test data removed. Authenticated full-page and physical numeric-keyboard checks remain.

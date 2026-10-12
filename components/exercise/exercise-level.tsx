@@ -15,6 +15,7 @@ import { formatKg, roundSeconds, TARGET_REPS } from "@/lib/game";
 import type { LevelState } from "@/lib/game";
 import { calibrateExercise, adjustExercise, logSet } from "@/actions/exercise";
 import { callAction } from "@/lib/action-result";
+import { LocalTime } from "@/components/local-time";
 
 interface Round {
   setId: string;
@@ -26,7 +27,7 @@ interface Round {
   limitReached: boolean;
 }
 
-export function ExerciseLevel({ exercise, state, sets, planStep, learningContent }: { exercise: Exercise; state: LevelState | null; sets: HistorySet[]; planStep?: { done: number; total: number } | null; learningContent?: ReactNode }) {
+export function ExerciseLevel({ exercise, state, sets, previousSession, planStep, learningContent }: { exercise: Exercise; state: LevelState | null; sets: HistorySet[]; previousSession: { date: string; sets: { weightKg: number; reps: number }[] } | null; planStep?: { done: number; total: number } | null; learningContent?: ReactNode }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -106,6 +107,10 @@ export function ExerciseLevel({ exercise, state, sets, planStep, learningContent
     <>
     <section className="mt-4 space-y-4 rounded-2xl border border-line bg-surface p-4" aria-label="Exercise controls">
       {planStep && <p className="text-sm tabular-nums text-copy-secondary" aria-live="polite">{plannedDone} / {planStep.total} sets completed</p>}
+      <section aria-label="Last workout" className="space-y-1 text-sm text-copy-secondary">
+        <p className="font-medium">Last workout{previousSession && <> · <LocalTime date={previousSession.date} options={{ year: "numeric", month: "short", day: "numeric" }} /></>}</p>
+        {previousSession ? <p className="tabular-nums">{previousSession.sets.slice(0, 3).map((set) => `${formatKg(set.weightKg)} × ${set.reps} reps`).join(" · ")}{previousSession.sets.length > 3 && ` · +${previousSession.sets.length - 3} more`}{exercise.equipment === "dumbbell" && " · per dumbbell"}</p> : <p>No previous workout for this exercise.</p>}
+      </section>
       {state === null ? (
         <>
           <Lock className="size-8 text-copy-muted" aria-hidden="true" />
